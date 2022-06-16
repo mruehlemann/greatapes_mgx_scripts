@@ -10,8 +10,8 @@
 ###########################
 echo $SLURMD_NODENAME
 
-source /work_ifs/sukmb276/Metagenomes/projects/ApesComplete/greatapes_mgx_scripts/00_sources.txt
-
+scriptdir="/work_ifs/sukmb276/Metagenomes/projects/ApesComplete/greatapes_mgx_scripts"
+source $scriptdir/00_sources.txt
 cd $workfolder
 
 source activate metagenome_env
