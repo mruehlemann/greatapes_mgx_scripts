@@ -20,7 +20,7 @@ source $scriptdir/00_sources.txt
 this_local=${all_local[$SLURM_ARRAY_TASK_ID]}
 mkdir -p $workfolder/subgroups/${this_local}
 local_samples_indices=$(awk -veth=${this_local} '{if($2==eth) print (NR-1)}' $groupingfile | tr '\n' ',' | sed 's/[,]$//')
-local_samples=$(awk -veth=${this_local} '{if($3==eth) print $1}' $groupingfile)
+local_samples=$(awk -veth=${this_local} '{if($2==eth) print $1}' $groupingfile)
 
 ##################################
 ####    start collection   ########

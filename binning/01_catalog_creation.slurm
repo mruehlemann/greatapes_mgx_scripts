@@ -12,13 +12,12 @@ echo $SLURMD_NODENAME
 
 scriptdir="/work_ifs/sukmb276/Metagenomes/projects/ApesComplete/greatapes_mgx_scripts"
 source $scriptdir/00_sources.txt
+
 cd $workfolder
 
 source activate metagenome_env
 
 #ls $workfolder/assemblies > $workfolder/samples_available.txt
-
-all_local=($(cut -d ' ' -f 2 /work_ifs/sukmb276/Metagenomes/projects/ApesComplete/groupings.txt | sort | uniq))
 
 ####################################
 ####    GROUP SELECTION     ########
@@ -26,7 +25,7 @@ all_local=($(cut -d ' ' -f 2 /work_ifs/sukmb276/Metagenomes/projects/ApesComplet
 
 this_local=${all_local[$SLURM_ARRAY_TASK_ID]}
 mkdir -p $workfolder/subgroups/${this_local}
-local_samples=$(awk -veth=${this_local} '{if($2==eth) print $1}' /work_ifs/sukmb276/Metagenomes/projects/ApesComplete/groupings.txt)
+local_samples=$(awk -veth=${this_local} '{if($2==eth) print $1}' $groupingfile)
 cd $TMPDIR
 
 ####################################
