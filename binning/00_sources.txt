@@ -1,0 +1,5 @@
+workfolder="/work_ifs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final"
+datafolder="/work_ifs/sukmb276/Metagenomes/projects/ApesComplete/output/Samples_new"
+basefolder="/work_ifs/sukmb276/Metagenomes/projects/ApesComplete/"
+
+all_local=($(cut -d ' ' -f 2 $basefolder/groupings.txt | sort | uniq))
