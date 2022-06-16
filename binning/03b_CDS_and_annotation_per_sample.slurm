@@ -2,7 +2,7 @@
 #SBATCH -c 4
 #SBATCH --mem=40gb
 #SBATCH --time=10-00:00
-#SBATCH --output=/work_ifs/ikmb_repository/shared/microbiome/GMbC_binning/log/%A_%a.out
+#SBATCH --output=/work_ifs/sukmb276/Metagenomes/projects/ApesComplete/output/log/%A_%a.out
 #SBATCH --job-name="mb_03a_cds"
 
 ###########################
@@ -43,4 +43,6 @@ cat ${s}.hmm.tigr.hit.out | grep -v "^#" | awk '{print $1"\t"$3"\t"$5}' > ${s}.t
 cat ${s}.hmm.pfam.hit.out | grep -v "^#" | awk '{print $1"\t"$4"\t"$5}' > ${s}.pfam
 cat ${s}.pfam ${s}.tigr > $workfolder/samples/${s}/${s}.hmm
 
-jgi_summarize_bam_contig_depths --outputDepth $workfolder/samples/${s}/${s}.depth.txt $datafolder/${s}/${s}_final.bam
+cp $datafolder/${s}/${s}_depth.txt $workfolder/samples/${s}/${s}.depth.txt
+
+#jgi_summarize_bam_contig_depths --outputDepth $workfolder/samples/${s}/${s}.depth.txt $datafolder/${s}/${s}_final.bam
