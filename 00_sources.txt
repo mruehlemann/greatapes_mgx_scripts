@@ -9,5 +9,6 @@ all_samples=($(cut -f 1 $groupingfile))
 
 PARALLEL="/work_ifs/sukmb276/software/bin/parallel"
 MAGSCOT_EXEC="/work_ifs/sukmb276/github/MAGScoT/MAGScoT.R"
+PYTHON=" /home/sukmb276/.conda/envs/binning_env/bin/python"
 
 PROJECTID="GreatApes"

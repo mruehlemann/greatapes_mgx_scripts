@@ -2,9 +2,9 @@ library(dplyr)
 
 local=rev(strsplit(getwd(),split="/")[[1]])[1]
 
-cluster_95 = read.table(paste0(local,".dRep_fastANI_95.csv"), stringsAsFactors=F, head=T, sep=",") %>% mutate(cluster_95=paste0(secondary_cluster)) %>% select(genome, cluster_95)
-cluster_97 = read.table(paste0(local,".dRep_fastANI_97.csv"), stringsAsFactors=F, head=T, sep=",") %>% mutate(cluster_97=paste0(secondary_cluster)) %>% select(genome, cluster_97)
-cluster_99 = read.table(paste0(local,".dRep_fastANI_99.csv"), stringsAsFactors=F, head=T, sep=",") %>% mutate(cluster_99=paste0(secondary_cluster)) %>% select(genome, cluster_99)
+cluster_95 = read.table(paste0(local,".dRep_fastANI_95.csv"), stringsAsFactors=F, head=T, sep=",") %>% mutate(cluster_95=paste0(secondary_cluster)) %>% mutate(genome=gsub(".fa$","",genome)) %>% select(genome, cluster_95)
+cluster_97 = read.table(paste0(local,".dRep_fastANI_97.csv"), stringsAsFactors=F, head=T, sep=",") %>% mutate(cluster_97=paste0(secondary_cluster)) %>% mutate(genome=gsub(".fa$","",genome)) %>% select(genome, cluster_97)
+cluster_99 = read.table(paste0(local,".dRep_fastANI_99.csv"), stringsAsFactors=F, head=T, sep=",") %>% mutate(cluster_99=paste0(secondary_cluster)) %>% mutate(genome=gsub(".fa$","",genome)) %>% select(genome, cluster_99)
 
 clusters= cluster_95 %>% left_join(cluster_97)  %>% left_join(cluster_99)
 

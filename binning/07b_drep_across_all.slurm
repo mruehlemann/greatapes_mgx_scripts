@@ -42,7 +42,7 @@ cd $TMPDIR
 cut -f 1 $workfolder/allgroups/${PROJECTID}.rep97.cleanbins_list | sed '/^$/d' > genomes_list
 dRep compare -g genomes_list -p $SLURM_CPUS_PER_TASK --S_algorithm fastANI -sa 0.95 -d .
 cp data_tables/Cdb.csv $workfolder/allgroups/${PROJECTID}.rep97.dRep_95.csv
-python $scriptdir/binning/07a_drep_fastANI99.py
+$PYTHON $scriptdir/binning/07a_drep_fastANI99.py
 cp data_tables/Cdb_97.csv $workfolder/allgroups/${PROJECTID}.rep97.dRep_97.csv
 cp data_tables/Cdb_99.csv $workfolder/allgroups/${PROJECTID}.rep97.dRep_99.csv
 conda deactivate
