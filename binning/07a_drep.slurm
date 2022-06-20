@@ -35,7 +35,7 @@ mkdir -p genome_links
 
 for i in $local_samples; do ls $workfolder/samples/$i/cleanbins/*.fa; done | awk -F '/' '{print $0"\t"$NF}' | sed 's/[.]fa$//' >  $workfolder/subgroups/$this_local/$this_local.cleanbins_list
 
-head -n 1 $workfolder/samples/$(echo $local_samples | cut -d ' ' -f 1)/*.refined.out > ${this_local}.refined.out
+head -n 1 $workfolder/samples/$(ls $workfolder/samples | head -n 1 | cut -d ' ' -f 1)/*.refined.out > ${this_local}.refined.out
 for i in $local_samples; do cat $workfolder/samples/$i/$i.refined.out | grep -v "uniqueSCGs.gtdb_rel207_bac120"; done >> ${this_local}.refined.out
 
 cd $TMPDIR

@@ -33,3 +33,16 @@ module load R
 cd $workfolder/subgroups/${this_local}
 Rscript $scriptdir/binning/02c_collect_mapping.R
 sed -i "s/[.]var/-var/g" ${this_local}.all_depth.tsv
+
+
+
+for i in $(seq 8 12); do
+  this_local=${all_local[$i]}
+  echo $this_local
+  mkdir -p $workfolder/subgroups/${this_local}
+  local_samples_indices=$(awk -veth=${this_local} '{if($2==eth) print (NR-1)}' $groupingfile | tr '\n' ',' | sed 's/[,]$//')
+  local_samples=$(awk -veth=${this_local} '{if($2==eth) print $1}' $groupingfile)
+  cd $workfolder/subgroups/${this_local}
+  Rscript $scriptdir/binning/02c_collect_mapping.R
+  sed -i "s/[.]var/-var/g" ${this_local}.all_depth.tsv
+done

@@ -26,15 +26,12 @@ mkdir -p $workfolder/allgroups
 module load miniconda3
 source activate binning_env
 
-head -n 1 $workfolder/samples/$(ls $workfolder/samples | head -n 1)/*.refined.out > $workfolder/allgroups/GMbC.rep97.refined.out
+head -n 1 $workfolder/samples/$(ls $workfolder/samples | head -n 1)/*.refined.out > $workfolder/allgroups/${PROJECTID}.rep97.refined.out
 
-for this_local in ${all_local[@]};do
-
+for this_local in Gberingei Ggorilla HsA1 HsA2 HsG Ppan Ptschw Pttrog Ptver;do
 cd $workfolder/subgroups/$this_local/
-
-cut -f 1 ${this_local}.dRep_cluster97_representatives.tsv  | xargs -I {} grep {} ${this_local}.cleanbins_list >>  $workfolder/allgroups/${PROJECTID}.rep97.cleanbins_list
-cut -f 1 ${this_local}.dRep_cluster97_representatives.tsv  | xargs -I {} grep {} ${this_local}.refined.out  >>  $workfolder/allgroups/${PROJECTID}.rep97.refined.out
-
+cut -f 1 ${this_local}.dRep_cluster97_representatives.tsv  | xargs -I {} grep -w {} ${this_local}.cleanbins_list >>  $workfolder/allgroups/${PROJECTID}.rep97.cleanbins_list
+cut -f 1 ${this_local}.dRep_cluster97_representatives.tsv  | xargs -I {} grep -w {} ${this_local}.refined.out  >>  $workfolder/allgroups/${PROJECTID}.rep97.refined.out
 done
 
 
@@ -50,7 +47,7 @@ conda deactivate
 cd /$workfolder/allgroups/
 
 module load R
-Rscript $scriptdir/binning/binning/07b_drep_all_get_representative.R
+Rscript $scriptdir/binning/07b_drep_all_get_representative.R
 
 
 while read line; do

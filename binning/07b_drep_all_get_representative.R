@@ -1,6 +1,6 @@
 library(dplyr)
 
-clusters = read.table("GreatApes.rep97.dRep_95.csv", stringsAsFactors=F, head=T, sep=",") %>% mutate(cluster_95=paste0(secondary_cluster)) %>% select(genome, cluster_95)
+clusters = read.table("GreatApes.rep97.dRep_95.csv", stringsAsFactors=F, head=T, sep=",") %>% mutate(cluster_95=paste0(secondary_cluster)) %>% select(genome, cluster_95) %>% mutate(genome=gsub(".fa$","",genome))
 
 
 scores = read.table("GreatApes.rep97.refined.out", head=T, stringsAsFactors=F) %>% tibble::rownames_to_column("genome") %>% mutate(score.gtdb_rel207_ar53 = ifelse(is.na(score.gtdb_rel207_ar53), 0, score.gtdb_rel207_ar53), score.gtdb_rel207_bac120 = ifelse(is.na(score.gtdb_rel207_bac120), 0, score.gtdb_rel207_ar53)) %>%
@@ -12,8 +12,8 @@ cl95_reps = clusters %>% arrange(cluster_95, -score) %>% distinct_at(.vars="clus
 
 clusters = clusters %>% left_join(cl95_reps %>% select(cluster_95, cluster_95_final))
 
-write.table(clusters, paste0("GMbC", ".dRep_cluster.tsv"), sep="\t", row.names=F,quote=F)
-write.table(cl95_reps, paste0("GMbC", ".dRep_cluster95_representatives.tsv"), sep="\t", row.names=F,quote=F)
+write.table(clusters, paste0("GreatApes", ".dRep_cluster.tsv"), sep="\t", row.names=F,quote=F)
+write.table(cl95_reps, paste0("GreatApes", ".dRep_cluster95_representatives.tsv"), sep="\t", row.names=F,quote=F)
 
 all_sub = list.files("../subgroups/")
 all_sub = all_sub[all_sub!="alltax"]
