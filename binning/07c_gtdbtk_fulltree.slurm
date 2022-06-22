@@ -27,11 +27,28 @@ cd $workfolder/allgroups
 
 gtdbtk classify_wf --batchfile $workfolder/allgroups/${PROJECTID}.representatives_list --cpus $SLURM_CPUS_PER_TASK -x fa --pplacer_cpus $SLURM_CPUS_PER_TASK --full_tree --out_dir gtdbtk_r207v2_out --prefix ${PROJECTID}_fulltree
 
+head -n 1 gtdbtk_r207v2_out/GreatApes_fulltree.ar53.summary.tsv | cut -f 1-2 > ${PROJECTID}_final_tax.tsv
+tail -n+2 gtdbtk_r207v2_out/GreatApes_fulltree.ar53.summary.tsv | cut -f 1-2 >> ${PROJECTID}_final_tax.tsv
+tail -n+2 gtdbtk_r207v2_out/GreatApes_fulltree.bac120.summary.tsv | cut -f 1-2 >> ${PROJECTID}_final_tax.tsv
+
+
 cd gtdbtk_r207v2_out/align
-gtdbtk infer --msa_file ${PROJECTID}_fulltree.ar53.user_msa.fasta.gz --cpus 24 --out_dir ar53_infer_tree
-gtdbtk infer --msa_file ${PROJECTID}_fulltree.bac120.user_msa.fasta.gz --cpus 24 --out_dir bac120_infer_tree
+gtdbtk infer --msa_file ${PROJECTID}_fulltree.ar53.user_msa.fasta.gz --cpus $SLURM_CPUS_PER_TASK --out_dir ar53_infer_tree
+gtdbtk infer --msa_file ${PROJECTID}_fulltree.bac120.user_msa.fasta.gz --cpus $SLURM_CPUS_PER_TASK --out_dir bac120_infer_tree
 
 conda deactivate
+
+
+for this_local in Gberingei Ggorilla HsA1 HsA2 HsG Ppan Ptschw Pttrog Ptver;do
+cat $workfolder/subgroups/$this_local/$this_local.cleanbins_list
+done > ${PROJECTID}.cleanbins_list
+
+gtdbtk identify --batchfile $workfolder/allgroups/${PROJECTID}.cleanbins_list --cpus $SLURM_CPUS_PER_TASK -x fa  --out_dir ${PROJECTID}_cleanbins --prefix ${PROJECTID}_cleanbins
+gtdbtk align --identify_dir ${PROJECTID}_cleanbins --out_dir ${PROJECTID}_cleanbins --prefix ${PROJECTID}_cleanbins --skip_gtdb_refs --cpus $SLURM_CPUS_PER_TASK
+
+gunzip GreatApes_cleanbins/align/GreatApes_cleanbins.ar53.user_msa.fasta.gz
+gunzip GreatApes_cleanbins/align/GreatApes_cleanbins.bac120.user_msa.fasta.gz
+
 #
 #
 # source activate mashtee_env

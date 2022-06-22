@@ -18,31 +18,11 @@ source $scriptdir/00_sources.txt
 ###########################
 ####    VAMB        #######
 ###########################
+module load R
 
-source activate metagenome_env
-cd $TMPDIR
+cd $workfolder
 
-while read line; do
-echo $line
-read path genome <<< $(echo $line)
-awk -v genome=$genome '/^>/ {print ">"genome"_contig_" ++i; next}{print}' $path > ${genome}.fna
-done < $workfolder/allgroups/${PROJECTID}.representatives_list
-
-cat ${PROJECTID}_cluster95_*.fna >  ${PROJECTID}.catalogue.fna
-
-minimap2 -I100G -d ${PROJECTID}.catalogue.mmi ${PROJECTID}.catalogue.fna # make index
-
-conda deactivate
-conda activate binning_env
-
-salmon index -t ${PROJECTID}.catalogue.fna -i ${PROJECTID}_salmon_index
-
-gzip ${PROJECTID}.catalogue.fna
-
-cp ${PROJECTID}.catalogue.mmi ${PROJECTID}.catalogue.fna.gz  $workfolder/allgroups
-cp -r ${PROJECTID}_salmon_index $workfolder/allgroups/salmon_index
-
-
+Rscript 07f_salmon_all.R
 #
 #
 # source activate mashtee_env
