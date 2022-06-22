@@ -7,13 +7,15 @@ library(Quartet)
 ###
 this = rev(strsplit(getwd(), split="/")[[1]])[1]
 
+blacklist=c("H07606-L1_cleanbin_000073")
+
 type_recode=data.frame(short=c("Ggorilla","Gberingei","HsA1","HsA2","HsG","Ptschw","Pttrog","Ptver","Ppan"), short2=c("Ggorilla","Gberingei","Hs","Hs","Hs","Ptschw","Pttrog","Ptver","Ppan"), long=c("Gorilla_gorilla_gorilla","Gorilla_beringei_beringei","Homo_sapiens_sapiens","Homo_sapiens_sapiens","Homo_sapiens_sapiens","Pan_troglodytes_schweinfurthii","Pan_troglodytes_troglodytes","Pan_troglodytes_verus","Pan_paniscus"),stringsAsFactors=F)
 
 host = read.table("/work_ifs/sukmb276/Metagenomes/projects/ApesComplete/groupings.txt", stringsAsFactors = F)
 colnames(host) = c("sample","host")
 all_groups = readRDS("../../groups_all.Rds")
 this_groups = all_groups %>% filter(group == this)
-all_genomes = read.table("../../../allgroups/GreatApes.all_genomes.tsv", head=T, stringsAsFactors=F) %>%
+all_genomes = read.table("../../../allgroups/GreatApes.all_genomes.tsv", head=T, stringsAsFactors=F) %>% filter(!genome %in% blacklist) %>% 
   filter(!is.na(GreatApes_95_final), genome %in% this_groups$genome) %>% mutate(sample=substr(genome,1,9)) %>% left_join(host) %>% left_join(type_recode, by=c("host"="short"))
 
 
