@@ -53,7 +53,7 @@ host.D <- as.matrix(readDist("/home/sukmb276/Isilon/references/mtDNA/subset/pwdi
 rownames(host.D)<-colnames(host.D)<-sapply(rownames(host.D), function(x){gsub("[.]","_",strsplit(x,split="-")[[1]][2])})
 
 host_tree = mad(bionj(host.D), output_mode="full")[[6]][[1]]
-this_host_tree = drop.tip(host_tree, type_recode %>% filter(!short %in% all_genomes$host) %>% pull(long))
+this_host_tree = drop.tip(host_tree, type_recode %>% filter(!short2 %in% all_genomes$short2) %>% pull(long))
 
 n_host = length(this_host_tree$tip.label)
 n_genomes = nrow(all_genomes)
