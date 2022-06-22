@@ -22,21 +22,21 @@ aln <- read.phyDat(paste0(this, ".user_msa.fasta"), type="AA", format="fasta")
 aln2=as.character(aln)
 
 para.D  <- as.matrix(dist.ml(aln, "WAG"))
-saveRDS(para.D, paste0(this, ".bac120.user_msa.matrix.Rds"))
+saveRDS(para.D, paste0(this, ".user_msa.matrix.Rds"))
 
 source("~/Isilon/Metagenomes/software/Rscripts/mad.R")
 
 dir.create("trees",recursive=T, showWarnings=F)
 
-tree_fastme = fastme.bal(para.D, nni=T, spr=T, tbr=T)
-tree_fastme_bs=boot.phylo(tree_fastme, aln2, FUN=function(xx) fastme.bal(dist.ml(as.phyDat(xx, type="AA"), "WAG"), nni=T, spr=T, tbr=T), B=1000)
-tree_fastme$node.label = tree_fastme_bs/1000
-write.tree(tree_fastme, paste0("trees/",this, ".aln.fastme.bs.nwk"))
-fastme_tree_rooted<-mad(tree_fastme, output_mode="full")[[6]][[1]]
-write.tree(fastme_tree_rooted, paste0("trees/",this, ".aln.fastme.bs.nwk"))
+# tree_fastme = fastme.bal(para.D, nni=T, spr=T, tbr=T)
+# tree_fastme_bs=boot.phylo(tree_fastme, aln2, FUN=function(xx) fastme.bal(dist.ml(as.phyDat(xx, type="AA"), "WAG"), nni=T, spr=T, tbr=T), B=1000)
+# tree_fastme$node.label = tree_fastme_bs/1000
+# write.tree(tree_fastme, paste0("trees/",this, ".aln.fastme.bs.nwk"))
+# fastme_tree_rooted<-mad(tree_fastme, output_mode="full")[[6]][[1]]
+# write.tree(fastme_tree_rooted, paste0("trees/",this, ".aln.fastme.bs.nwk"))
 
 tree_bionj = bionj(para.D)
-tree_bionj_bs=boot.phylo(tree_bionj, aln2, FUN=function(xx) fastme.bal(dist.ml(as.phyDat(xx, type="AA"), "WAG"), nni=T, spr=T, tbr=T), B=1000)
+tree_bionj_bs=boot.phylo(tree_bionj, aln2, FUN=function(xx) bionj(dist.ml(as.phyDat(xx, type="AA"), "WAG")), B=1000, mc.cores = 1)
 tree_bionj$node.label = tree_bionj_bs/1000
 write.tree(tree_bionj,  paste0("trees/",this, ".aln.bionj.bs.nwk"))
 bionj_tree_rooted<-mad(tree_bionj, output_mode="full")[[6]][[1]]
@@ -58,7 +58,7 @@ this_host_tree = drop.tip(host_tree, type_recode %>% filter(!short %in% all_geno
 n_host = length(this_host_tree$tip.label)
 n_genomes = nrow(all_genomes)
 
-nperm_initial = 10
+nperm_initial = 100
 
 source("/work_ifs/sukmb276/Metagenomes/projects/ApesComplete/greatapes_mgx_scripts/cospec_analysis/02_functions.R")
 
@@ -113,4 +113,4 @@ p_final_parafit = 1-colSums((all_hommola_p %>% t) < 0.05)/(nperm_parafit+1)
 
 output_parafit = data.frame(output_hommola, nperm_parafit=nperm_parafit, p_parafit=p_final_parafit)
 
-write.table(output_hommola, paste0(this,".cospec.out"), row.names=F, sep="\t")
+write.table(output_parafit, paste0(this,".cospec.out"), row.names=F, sep="\t")

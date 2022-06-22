@@ -3,7 +3,7 @@
 #SBATCH --mem=10gb
 #SBATCH --time=1-00:00
 #SBATCH --output=/work_ifs/sukmb276/Metagenomes/projects/ApesComplete/output/log/%A_%a.out
-#SBATCH --job-name="mb_08a"
+#SBATCH --job-name="ca_02"
 
 ###########################
 ####    SETUP     #######
@@ -26,13 +26,10 @@ genomes=$(awk -v tg=$thissubgroup '{if($1 == tg){print $3}}' groups_all_candidat
 mkdir -p subgroups/${thissubgroup}
 cd subgroups/${thissubgroup}
 
+cat /work_ifs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final/allgroups/GreatApes_cleanbins/align/GreatApes_cleanbins.bac120.user_msa.fasta /work_ifs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final/allgroups/GreatApes_cleanbins/align/GreatApes_cleanbins.ar53.user_msa.fasta > tmp_all_msa.fasta
 
-echo ${genomes[@]} | tr ' ' "\n" | ~/Isilon/software/bin/faSomeRecords /work_ifs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final/allgroups/GreatApes_cleanbins/align/GreatApes_cleanbins.bac120.user_msa.fasta /dev/stdin ${thissubgroup}.user_msa.fasta
-
-
-ls fasta/ | cut -d '_' -f 2-4 | ~/Isilon/software/bin/faSomeRecords /home/sukmb276/Isilon/Metagenomes/projects/ApesComplete/output/201125_analysis_new/02c_Taxonomy_GTDBr202/gtdbtk_output/all.bac120.user_msa.fasta /dev/stdin ${thisbin}.bac120.user_msa.fasta
-if [ "$(wc -l ${thisbin}.bac120.user_msa.fasta | cut -f 1 -d ' ')" == "0" ]; then
-ls fasta/ | cut -d '_' -f 2-4 | ~/Isilon/software/bin/faSomeRecords /home/sukmb276/Isilon/Metagenomes/projects/ApesComplete/output/201125_analysis_new/02c_Taxonomy_GTDBr202/gtdbtk_output/all.ar122.user_msa.fasta /dev/stdin ${thisbin}.bac120.user_msa.fasta
-fi
+echo ${genomes[@]} | tr ' ' "\n" | ~/Isilon/software/bin/faSomeRecords tmp_all_msa.fasta /dev/stdin ${thissubgroup}.user_msa.fasta
+rm tmp_all_msa.fasta
 
 source activate r_microbiome_env
+Rscript $scriptdir/cospec_analysis/02_cospec_analysis.R
