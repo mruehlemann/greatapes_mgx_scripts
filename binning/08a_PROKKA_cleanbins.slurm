@@ -29,7 +29,7 @@ source activate PROKKA
 
 cd $workfolder/samples/${s}
 mkdir prokka_annot
-for cb in $(ls cleanbins | cut -d '.' -f 1)
+for cb in $(ls cleanbins | cut -d '.' -f 1); do
 read domain phylum class order family genus species <<< $(grep $cb $workfolder/allgroups/GreatApes.cleanbins_tax.tsv | cut -f 2 | tr ' ' '_' | tr ';' ' ')
 prokka --cpus $SLURM_CPUS_PER_TASK --outdir prokka_annot/$cb/ --locustag ${cb}_CDS --genus $genus --species $species --prefix ${cb} cleanbins/${cb}.fa
 done
