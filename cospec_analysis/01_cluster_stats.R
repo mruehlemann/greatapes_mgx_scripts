@@ -1,7 +1,7 @@
 library(tidyverse)
 
 all_genomes = read.table("GreatApes.all_genomes.tsv", head=T, stringsAsFactors=F) %>% filter(!is.na(GreatApes_95_final))
-tax=read.table("GreatApes_final_tax.tsv", head=T, stringsAsFactors=F, sep="\t")
+tax=read.table("GreatApes.cleanbins_tax.tsv", head=T, stringsAsFactors=F, sep="\t")
 colnames(tax) = c("bin","classification")
 
 tax2 = sapply(tax$classification, function(x) strsplit(x, split=";")[[1]]) %>%
@@ -10,7 +10,7 @@ tax2 = sapply(tax$classification, function(x) strsplit(x, split=";")[[1]]) %>%
 colnames(tax2) = c("bin","kingdom","phylum","class","order","family","genus","species")
 tax2$species=gsub(" ","_",tax2$species)
 
-all_genomes = all_genomes %>% left_join(tax2, by=c("GreatApes_95_final"="bin"))
+all_genomes = all_genomes %>% left_join(tax2, by=c("genome"="bin"))
 all_genomes$host = sapply(all_genomes$cluster_97_final, function(x) strsplit(x, split="_")[[1]][1])
 
 group_stats=lapply(c("family","genus","species","GreatApes_95_final"), function(x){
@@ -63,6 +63,10 @@ treegroupsar_long = lapply(subtree_stats_ar$id, function(x) all_genomes %>% filt
 #####
 groups_all = bind_rows(taxgroups_long, treegroupsbac_long,treegroupsar_long)
 
+### L1_cleanbin_000073 is an MX02 archaean wrongly clustered with bacteria by dRep which causes trouble in the marker alignment
+groups_all[groups_all$level=="BAC120SUB" & groups_all$genome=="H07606-L1_cleanbin_000073","group"]="NoCluster"
+
+
 library(digest)
 
 groups_all_stats=lapply(unique(groups_all$group), function(x){
@@ -87,7 +91,7 @@ groups_all_stats=lapply(unique(groups_all$group), function(x){
 	}) %>% do.call("bind_rows",.)
 
 
-groups_all_stats_candidates = groups_all_stats %>% arrange(grouping) %>% map_df(rev) %>% filter(!duplicated(hash), n_genomes >= 10, tot_host >= 4, tot_hostn2 >=2, tot_hostgroups >= 2, n_genomes <= 500) %>% arrange(-n_genomes)
+groups_all_stats_candidates = groups_all_stats %>% arrange(grouping) %>% map_df(rev) %>% filter(!duplicated(hash), n_genomes >= 10, tot_host >= 4, tot_hostn2 >=2, tot_hostgroups >= 2, n_genomes <= 500, n_fam==1) %>% arrange(-n_genomes)
 groups_all_candidates = groups_all %>% filter(group %in% groups_all_stats_candidates$group)
 
 dir.create("../cospec_analysis", recursive=T)

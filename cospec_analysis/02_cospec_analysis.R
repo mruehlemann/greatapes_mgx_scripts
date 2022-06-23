@@ -7,7 +7,7 @@ library(Quartet)
 ###
 this = rev(strsplit(getwd(), split="/")[[1]])[1]
 
-blacklist=c("H07606-L1_cleanbin_000073")
+blacklist=c()
 
 type_recode=data.frame(short=c("Ggorilla","Gberingei","HsA1","HsA2","HsG","Ptschw","Pttrog","Ptver","Ppan"), short2=c("Ggorilla","Gberingei","Hs","Hs","Hs","Ptschw","Pttrog","Ptver","Ppan"), long=c("Gorilla_gorilla_gorilla","Gorilla_beringei_beringei","Homo_sapiens_sapiens","Homo_sapiens_sapiens","Homo_sapiens_sapiens","Pan_troglodytes_schweinfurthii","Pan_troglodytes_troglodytes","Pan_troglodytes_verus","Pan_paniscus"),stringsAsFactors=F)
 
@@ -15,7 +15,7 @@ host = read.table("/work_ifs/sukmb276/Metagenomes/projects/ApesComplete/grouping
 colnames(host) = c("sample","host")
 all_groups = readRDS("../../groups_all.Rds")
 this_groups = all_groups %>% filter(group == this)
-all_genomes = read.table("../../../allgroups/GreatApes.all_genomes.tsv", head=T, stringsAsFactors=F) %>% filter(!genome %in% blacklist) %>% 
+all_genomes = read.table("../../../allgroups/GreatApes.all_genomes.tsv", head=T, stringsAsFactors=F) %>% filter(!genome %in% blacklist) %>%
   filter(!is.na(GreatApes_95_final), genome %in% this_groups$genome) %>% mutate(sample=substr(genome,1,9)) %>% left_join(host) %>% left_join(type_recode, by=c("host"="short"))
 
 
@@ -42,7 +42,7 @@ tree_bionj_bs=boot.phylo(tree_bionj, aln2, FUN=function(xx) bionj(dist.ml(as.phy
 tree_bionj$node.label = tree_bionj_bs/1000
 write.tree(tree_bionj,  paste0("trees/",this, ".aln.bionj.bs.nwk"))
 bionj_tree_rooted<-mad(tree_bionj, output_mode="full")[[6]][[1]]
-write.tree(bionj_tree_rooted,  paste0("trees/",this, ".aln.bionj.bs.nwk"))
+write.tree(bionj_tree_rooted,  paste0("trees/",this, ".aln.bionj.rooted.bs.nwk"))
 
 this_tree = tree_bionj
 this_tree_labels = this_tree$tip.label
@@ -68,13 +68,13 @@ source("/work_ifs/sukmb276/Metagenomes/projects/ApesComplete/greatapes_mgx_scrip
 
 nperm=nperm_initial
 all_treedist_p=cospec_treebased(all_genomes, this_tree, this_host_tree, nperm)
-p_final = 1-colSums((all_treedist_p %>% t) < 0.05)/(nperm+1)
+p_final = round(1-colSums((all_treedist_p %>% t) < 0.05)/(nperm+1),5)
 
 if(any(p_final < 0.1)){
 all_treedist_p2=cospec_treebased(all_genomes, this_tree, this_host_tree, 900)
 all_treedist_p = cbind(all_treedist_p, all_treedist_p2)
 nperm=1000
-p_final = 1-colSums((all_treedist_p %>% t) < 0.05)/(nperm+1)
+p_final = round(1-colSums((all_treedist_p %>% t) < 0.05)/(nperm+1),5)
 }
 
 output_treebased = data.frame(p_final) %>% t %>% data.frame(subtree=this, n_host=n_host, n_genomes=n_genomes, nperm_treebased = nperm, .)
@@ -92,10 +92,10 @@ if(p_final_hommola < 0.1){
 all_cospec_hommola2=cospec_hommola(all_genomes, para.D, host.D, 900)
 all_hommola_p = c(all_cospec_hommola, all_cospec_hommola2)
 nperm_hommola=1000
-p_final_hommola = 1-colSums((all_hommola_p %>% t) < 0.05)/(nperm_hommola+1)
+p_final_hommola = 1-sum((all_hommola_p %>% t) < 0.05)/(nperm_hommola+1)
 }
 
-output_hommola = data.frame(output_treebased, nperm_hommola=nperm_hommola, p_hommola=p_final_hommola)
+output_hommola = data.frame(output_treebased, nperm_hommola=nperm_hommola, p_hommola=round(p_final_hommola,5))
 
 write.table(output_hommola, paste0(this,".cospec.out"), row.names=F, sep="\t")
 
@@ -103,16 +103,16 @@ write.table(output_hommola, paste0(this,".cospec.out"), row.names=F, sep="\t")
 ### ParaFit
 
 nperm_parafit=nperm_initial
-all_cospec_parafit=cospec_parafit(all_genomes, para.D, host.D, nperm_hommola)
+all_cospec_parafit=cospec_parafit(all_genomes, para.D, host.D, nperm_parafit)
 p_final_parafit = 1-sum(all_cospec_parafit < 0.05)/(nperm_parafit+1)
 
 if(p_final_parafit < 0.1){
 all_cospec_parafit2=cospec_parafit(all_genomes, para.D, host.D, 900)
 all_parafit_p = c(all_cospec_parafit, all_cospec_parafit2)
 nperm_parafit=1000
-p_final_parafit = 1-colSums((all_hommola_p %>% t) < 0.05)/(nperm_parafit+1)
+p_final_parafit = 1-sum((all_parafit_p %>% t) < 0.05)/(nperm_parafit+1)
 }
 
-output_parafit = data.frame(output_hommola, nperm_parafit=nperm_parafit, p_parafit=p_final_parafit)
+output_parafit = data.frame(output_hommola, nperm_parafit=nperm_parafit, p_parafit=round(p_final_parafit,5))
 
 write.table(output_parafit, paste0(this,".cospec.out"), row.names=F, sep="\t")

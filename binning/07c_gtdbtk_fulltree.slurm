@@ -27,9 +27,9 @@ cd $workfolder/allgroups
 
 gtdbtk classify_wf --batchfile $workfolder/allgroups/${PROJECTID}.representatives_list --cpus $SLURM_CPUS_PER_TASK -x fa --pplacer_cpus $SLURM_CPUS_PER_TASK --full_tree --out_dir gtdbtk_r207v2_out --prefix ${PROJECTID}_fulltree
 
-head -n 1 gtdbtk_r207v2_out/GreatApes_fulltree.ar53.summary.tsv | cut -f 1-2 > ${PROJECTID}_final_tax.tsv
-tail -n+2 gtdbtk_r207v2_out/GreatApes_fulltree.ar53.summary.tsv | cut -f 1-2 >> ${PROJECTID}_final_tax.tsv
-tail -n+2 gtdbtk_r207v2_out/GreatApes_fulltree.bac120.summary.tsv | cut -f 1-2 >> ${PROJECTID}_final_tax.tsv
+head -n 1 gtdbtk_r207v2_out/${PROJECTID}_fulltree.ar53.summary.tsv | cut -f 1-2 > ${PROJECTID}.cluster_final_tax.tsv
+tail -n+2 gtdbtk_r207v2_out/${PROJECTID}_fulltree.ar53.summary.tsv | cut -f 1-2 >>  ${PROJECTID}.cluster_final_tax.tsv
+tail -n+2 gtdbtk_r207v2_out/${PROJECTID}_fulltree.bac120.summary.tsv | cut -f 1-2 >>  ${PROJECTID}.cluster_final_tax.tsv
 
 
 cd gtdbtk_r207v2_out/align
@@ -45,9 +45,18 @@ done > ${PROJECTID}.cleanbins_list
 
 gtdbtk identify --batchfile $workfolder/allgroups/${PROJECTID}.cleanbins_list --cpus $SLURM_CPUS_PER_TASK -x fa  --out_dir ${PROJECTID}_cleanbins --prefix ${PROJECTID}_cleanbins
 gtdbtk align --identify_dir ${PROJECTID}_cleanbins --out_dir ${PROJECTID}_cleanbins --prefix ${PROJECTID}_cleanbins --skip_gtdb_refs --cpus $SLURM_CPUS_PER_TASK
+gtdbtk align --identify_dir ${PROJECTID}_cleanbins --out_dir ${PROJECTID}_cleanbins --prefix ${PROJECTID}_cleanbins --cpus $SLURM_CPUS_PER_TASK
+gtdbtk classify --align_dir ${PROJECTID}_cleanbins --batchfile $workfolder/allgroups/${PROJECTID}.cleanbins_list --out_dir ${PROJECTID}_cleanbins --prefix ${PROJECTID}_cleanbins --cpus $SLURM_CPUS_PER_TASK --pplacer_cpus $SLURM_CPUS_PER_TASK
 
 gunzip GreatApes_cleanbins/align/GreatApes_cleanbins.ar53.user_msa.fasta.gz
 gunzip GreatApes_cleanbins/align/GreatApes_cleanbins.bac120.user_msa.fasta.gz
+
+head -n 1 GreatApes_cleanbins/${PROJECTID}_cleanbins.ar53.summary.tsv | cut -f 1-2 > ${PROJECTID}.cleanbins_tax.tsv
+tail -n+2 GreatApes_cleanbins/${PROJECTID}_cleanbins.ar53.summary.tsv | cut -f 1-2 >>  ${PROJECTID}.cleanbins_tax.tsv
+tail -n+2 GreatApes_cleanbins/${PROJECTID}_cleanbins.bac120.summary.tsv | cut -f 1-2 >>  ${PROJECTID}.cleanbins_tax.tsv
+
+
+
 
 #
 #
