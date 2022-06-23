@@ -10,7 +10,7 @@ sf_per_bin = sf %>% mutate(totreads=sum(NumReads), bin = gsub("_contig_[0-9]+", 
 	mutate(rpk = NumReads/(EffectiveLength/readthresh)) %>% filter(NumReads>=1000) %>%
 	mutate(scaleFactor = sum(rpk)/1000000, tpm=rpk/scaleFactor , sample=this) %>% filter(tpm>=250) %>% mutate(scaleFactor = sum(rpk)/1000000, tpm=rpk/scaleFactor)
 
-tax=read.table("/work_ifs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final/allgroups/GreatApes_final_tax.tsv", head=T, stringsAsFactors=F, sep="\t")
+tax=read.table("/work_ifs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final/allgroups/GreatApes.cluster_final_tax.tsv", head=T, stringsAsFactors=F, sep="\t")
 colnames(tax) = c("bin","classification")
 
 tax2 = sapply(tax$classification, function(x) strsplit(x, split=";")[[1]]) %>%
