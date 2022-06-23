@@ -55,7 +55,7 @@ cospec_hommola = function(all_genomes, micro_distmat, host_distmat, n_perm){
           y_shuf1=as.vector(unlist(sapply(seq_along(par1[-1]), function(x) as.matrix(micro_distmat.subset1)[shuf_par1[x],shuf_par1[(x+1):length(par1)]])))
           cor(x_shuf1,y_shuf1)})
 
-  subset_p = 1- (sum((permut - co1) > 0) / 1000)
+  subset_p = 1- (sum((permut - co1) < 0) / 1000)
   return(subset_p)
 })
 return(allperm)

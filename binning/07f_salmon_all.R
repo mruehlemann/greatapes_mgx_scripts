@@ -1,7 +1,7 @@
 library(tidyverse)
 
 allsamples = list.files("samples")
-
+allsamples = allsamples[!allsamples %in% c("H07680-L1", "H07609-L1", "G02618-L1")]
 alltax = lapply(allsamples, function(x) read.table(paste0("samples/",x,"/",x,".final_tax.tsv"), head=T, stringsAsFactors=F)) %>% do.call("bind_rows",.) %>% data.frame(stringsAsFactors=F)
 
 for(lv in unique(alltax$level)){

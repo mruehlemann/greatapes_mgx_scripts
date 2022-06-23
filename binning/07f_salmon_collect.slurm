@@ -22,7 +22,7 @@ module load R
 
 cd $workfolder
 
-Rscript 07f_salmon_all.R
+Rscript $scriptdir/binning/07f_salmon_all.R
 #
 #
 # source activate mashtee_env
