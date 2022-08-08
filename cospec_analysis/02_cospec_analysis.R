@@ -9,10 +9,11 @@ this = rev(strsplit(getwd(), split="/")[[1]])[1]
 
 blacklist=c()
 
-type_recode=data.frame(short=c("Ggorilla","Gberingei","HsA1","HsA2","HsG","Ptschw","Pttrog","Ptver","Ppan"), short2=c("Ggorilla","Gberingei","Hs","Hs","Hs","Ptschw","Pttrog","Ptver","Ppan"), long=c("Gorilla_gorilla_gorilla","Gorilla_beringei_beringei","Homo_sapiens_sapiens","Homo_sapiens_sapiens","Homo_sapiens_sapiens","Pan_troglodytes_schweinfurthii","Pan_troglodytes_troglodytes","Pan_troglodytes_verus","Pan_paniscus"),stringsAsFactors=F)
+type_recode=data.frame(short=c("Ggorilla","Gberingei","HsA1","HsA2","HsG","Ptschw","Pttrog","Ptver","Ppan","HsUHGG"), short2=c("Ggorilla","Gberingei","Hs","Hs","Hs","Ptschw","Pttrog","Ptver","Ppan","Hs"), long=c("Gorilla_gorilla_gorilla","Gorilla_beringei","Homo_sapiens","Homo_sapiens","Homo_sapiens","Pan_troglodytes_schweinfurthii","Pan_troglodytes_troglodytes","Pan_troglodytes_verus","Pan_paniscus","Homo_sapiens"),stringsAsFactors=F)
 
 host = read.table("/work_ifs/sukmb276/Metagenomes/projects/ApesComplete/groupings.txt", stringsAsFactors = F)
 colnames(host) = c("sample","host")
+host = bind_rows(host, data.frame(sample="MGYG00000",host="HsUHGG"))
 all_groups = readRDS("../../groups_all.Rds")
 this_groups = all_groups %>% filter(group == this)
 all_genomes = read.table("../../../allgroups/GreatApes.all_genomes.tsv", head=T, stringsAsFactors=F) %>% filter(!genome %in% blacklist) %>%
@@ -51,10 +52,14 @@ this_tree_labels = this_tree$tip.label
 
 ### Test Prep
 
-host.D <- as.matrix(readDist("/home/sukmb276/Isilon/references/mtDNA/subset/pwdistmat"))
-rownames(host.D)<-colnames(host.D)<-sapply(rownames(host.D), function(x){gsub("[.]","_",strsplit(x,split="-")[[1]][2])})
+#host.D2 <- as.matrix(readDist("/home/sukmb276/Isilon/references/mtDNA/subset/pwdistmat"))
+#rownames(host.D)<-colnames(host.D)<-sapply(rownames(host.D), function(x){gsub("[.]","_",strsplit(x,split="-")[[1]][2])})
 
-host_tree = mad(bionj(host.D), output_mode="full")[[6]][[1]]
+#host_tree = mad(bionj(host.D), output_mode="full")[[6]][[1]]
+
+host_tree = mad(read.nexus("/work_ifs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final/cospec_analysis/host_trees_10kTrees/consensusTree_10kTrees_Primates_Version3_chrono.nex"),output_mode="full")[[6]][[1]]
+host.D = cophenetic(host_tree)
+
 this_host_tree = drop.tip(host_tree, type_recode %>% filter(!short2 %in% all_genomes$short2) %>% pull(long))
 
 n_host = length(this_host_tree$tip.label)

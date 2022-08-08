@@ -31,18 +31,19 @@ head -n 1 gtdbtk_r207v2_out/${PROJECTID}_fulltree.ar53.summary.tsv | cut -f 1-2 
 tail -n+2 gtdbtk_r207v2_out/${PROJECTID}_fulltree.ar53.summary.tsv | cut -f 1-2 >>  ${PROJECTID}.cluster_final_tax.tsv
 tail -n+2 gtdbtk_r207v2_out/${PROJECTID}_fulltree.bac120.summary.tsv | cut -f 1-2 >>  ${PROJECTID}.cluster_final_tax.tsv
 
-gtdbtk root --input_tree gtdbtk_r207v2_out/align/bac120_infer_tree/gtdbtk.unrooted.tree --outgroup_taxon p__Patescibacteria --output_tree gtdbtk_r207v2_out/align/bac120_infer_tree/gtdbtk.rooted.tree --gtdbtk_classification_file GreatApes.cluster_final_tax.tsv
-gtdbtk root --input_tree gtdbtk_r207v2_out/align/ar53_infer_tree/gtdbtk.unrooted.tree --outgroup_taxon p__Methanobacteriota --output_tree gtdbtk_r207v2_out/align/ar53_infer_tree/gtdbtk.rooted.tree --gtdbtk_classification_file GreatApes.cluster_final_tax.tsv
-
-echo "library(ape); tree_bac = read.tree('gtdbtk_r207v2_out/align/bac120_infer_tree/gtdbtk.rooted.tree'); tree_ar = read.tree('gtdbtk_r207v2_out/align/ar53_infer_tree/gtdbtk.rooted.tree'); tree=bind.tree(tree_bac, tree_ar); write.tree(tree, 'GreatApes.bac120+ar53.unrooted.tre')" | R CMD BATCH /dev/stdin
-rm stdin.Rout
-
-gtdbtk root --input_tree GreatApes.bac120+ar53.unrooted.tre --outgroup_taxon d__Archaea --output_tree GreatApes.bac120+ar53.rooted.tre --gtdbtk_classification_file GreatApes.cluster_final_tax.tsv
-
-
 cd gtdbtk_r207v2_out/align
 gtdbtk infer --msa_file ${PROJECTID}_fulltree.ar53.user_msa.fasta.gz --cpus $SLURM_CPUS_PER_TASK --out_dir ar53_infer_tree
 gtdbtk infer --msa_file ${PROJECTID}_fulltree.bac120.user_msa.fasta.gz --cpus $SLURM_CPUS_PER_TASK --out_dir bac120_infer_tree
+
+cd ..
+
+gtdbtk root --input_tree gtdbtk_r207v2_out/align/bac120_infer_tree/gtdbtk.unrooted.tree --outgroup_taxon p__Patescibacteria --output_tree gtdbtk_r207v2_out/align/bac120_infer_tree/gtdbtk.rooted.tree --gtdbtk_classification_file GreatApes.cluster_final_tax.tsv
+gtdbtk root --input_tree gtdbtk_r207v2_out/align/ar53_infer_tree/gtdbtk.unrooted.tree --outgroup_taxon p__Thermoplasmatota --output_tree gtdbtk_r207v2_out/align/ar53_infer_tree/gtdbtk.rooted.tree --gtdbtk_classification_file GreatApes.cluster_final_tax.tsv
+
+echo "(" > ${PROJECTID}.bac120+ar53.rooted.tre
+cat gtdbtk_r207v2_out/align/bac120_infer_tree/gtdbtk.rooted.tree | tr ";" "," >> ${PROJECTID}.bac120+ar53.rooted.tre
+cat gtdbtk_r207v2_out/align/ar53_infer_tree/gtdbtk.rooted.tree | tr -d ";" >> ${PROJECTID}.bac120+ar53.rooted.tre
+echo ")1:1;" >> ${PROJECTID}.bac120+ar53.rooted.tre
 
 conda deactivate
 

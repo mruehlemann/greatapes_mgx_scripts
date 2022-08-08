@@ -71,11 +71,11 @@ library(digest)
 
 groups_all_stats=lapply(unique(groups_all$group), function(x){
 	print(x)
-	df=groups_all %>% filter(group==x) %>% left_join(all_genomes) %>% mutate(hostgroup = substr(host,1,1), host=ifelse(grepl("Hs",host),"Hs",host))
+	df=groups_all %>% filter(group==x) %>% left_join(all_genomes) %>% mutate(hostgroup = substr(host,1,1), host2=ifelse(grepl("Hs",host),"Hs",host))
 	df2 = df %>% group_by(group) %>% summarize(n_genomes=n()) %>%
 	left_join(df %>% group_by(group) %>% summarize(n_clusters=n())) %>%
-	left_join(df %>% group_by(host, group) %>% summarize(n=n()) %>% group_by(group) %>% summarize(tot_host=n())) %>%
-	left_join(df %>% group_by(host, group) %>% summarize(n=n()) %>% filter(n>=2) %>% group_by(group) %>% summarize(tot_hostn2=n())) %>%
+	left_join(df %>% group_by(host2, group) %>% summarize(n=n()) %>% group_by(group) %>% summarize(tot_host=n())) %>%
+	left_join(df %>% group_by(host2, group) %>% summarize(n=n()) %>% filter(n>=2) %>% group_by(group) %>% summarize(tot_hostn2=n())) %>%
 	left_join(df %>% group_by(hostgroup, group) %>% summarize(n=n()) %>% group_by(group) %>% summarize(tot_hostgroups=n()))
 	df3 =  table(factor(df$host, levels=unique(all_genomes$host))) %>% data.frame() %>% column_to_rownames("Var1") %>% t %>% data.frame(row.names=x) %>% rownames_to_column("group") %>% left_join(df2, .) %>% data.frame
 	df3$n_phy = length(unique(df$phylum))
