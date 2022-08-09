@@ -42,8 +42,8 @@ dir.create("trees",recursive=T, showWarnings=F)
 # write.tree(fastme_tree_rooted, paste0("trees/",this, ".aln.fastme.bs.nwk"))
 
 tree_bionj = bionj(para.D)
-tree_bionj_bs=boot.phylo(tree_bionj, aln2, FUN=function(xx) bionj(dist.ml(as.phyDat(xx, type="AA"), "WAG")), B=1000, mc.cores = 1)
-tree_bionj$node.label = tree_bionj_bs/1000
+tree_bionj_bs=boot.phylo(tree_bionj, aln2, FUN=function(xx) bionj(dist.ml(as.phyDat(xx, type="AA"), "WAG")), B=100, mc.cores = 1)
+tree_bionj$node.label = tree_bionj_bs/100
 write.tree(tree_bionj,  paste0("trees/",this, ".aln.bionj.bs.nwk"))
 bionj_tree_rooted<-mad(tree_bionj, output_mode="full")[[6]][[1]]
 write.tree(bionj_tree_rooted,  paste0("trees/",this, ".aln.bionj.rooted.bs.nwk"))
@@ -124,3 +124,12 @@ p_final_parafit = 1-sum((all_parafit_p %>% t) < 0.05)/(nperm_parafit+1)
 output_parafit = data.frame(output_hommola, nperm_parafit=nperm_parafit, p_parafit=round(p_final_parafit,5))
 
 write.table(output_parafit, paste0(this,".cospec.out"), row.names=F, sep="\t")
+
+if(any(c(p_final, p_final_hommola, p_final_parafit)<0.05)){
+  tree_bionj_bs=boot.phylo(tree_bionj, aln2, FUN=function(xx) bionj(dist.ml(as.phyDat(xx, type="AA"), "WAG")), B=1000, mc.cores = 1)
+  tree_bionj$node.label = tree_bionj_bs/1000
+  write.tree(tree_bionj,  paste0("trees/",this, ".aln.bionj.bs.nwk"))
+  #bionj_tree_rooted<-mad(tree_bionj, output_mode="full")[[6]][[1]]
+  bionj_tree_rooted$node.label = tree_bionj_bs/1000
+  write.tree(bionj_tree_rooted,  paste0("trees/",this, ".aln.bionj.rooted.bs.nwk"))
+}
