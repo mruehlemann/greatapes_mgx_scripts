@@ -16,12 +16,14 @@ colnames(host) = c("sample","host")
 host = bind_rows(host, data.frame(sample="MGYG00000",host="HsUHGG"))
 all_groups = readRDS("../../groups_all.Rds")
 this_groups = all_groups %>% filter(group == this)
-all_genomes = read.table("../../../allgroups/GreatApes.all_genomes.tsv", head=T, stringsAsFactors=F) %>% filter(!genome %in% blacklist) %>%
-  filter(!is.na(GreatApes_95_final), genome %in% this_groups$genome) %>% mutate(sample=substr(genome,1,9)) %>% left_join(host) %>% left_join(type_recode, by=c("host"="short"))
 
 aa <- read.aa(paste0(this, ".user_msa.fasta"), format="fasta")
 len_maj_vote=names(which.max(table(unlist(lapply(aa, length)))))
 aa=aa[lapply(aa, length) == len_maj_vote]
+
+all_genomes = read.table("../../../allgroups/GreatApes.all_genomes.tsv", head=T, stringsAsFactors=F) %>% filter(!genome %in% blacklist) %>%
+  filter(!is.na(GreatApes_95_final), genome %in% this_groups$genome, genome %in% names(aa)) %>% mutate(sample=substr(genome,1,9)) %>% left_join(host) %>% left_join(type_recode, by=c("host"="short"))
+
 ### alignemnt to distance matrix
 #aln <- read.phyDat(paste0(this, ".user_msa.fasta"), type="AA", format="fasta")
 aln=phyDat(aa, "AA", return.index = TRUE)
