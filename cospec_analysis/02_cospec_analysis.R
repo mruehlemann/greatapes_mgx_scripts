@@ -7,7 +7,7 @@ library(Quartet)
 ###
 this = rev(strsplit(getwd(), split="/")[[1]])[1]
 
-blacklist=c("H07606-L1_cleanbin_000062")
+blacklist=c()
 
 type_recode=data.frame(short=c("Ggorilla","Gberingei","HsA1","HsA2","HsG","Ptschw","Pttrog","Ptver","Ppan","HsUHGG"), short2=c("Ggorilla","Gberingei","Hs","Hs","Hs","Ptschw","Pttrog","Ptver","Ppan","Hs"), long=c("Gorilla_gorilla_gorilla","Gorilla_beringei","Homo_sapiens","Homo_sapiens","Homo_sapiens","Pan_troglodytes_schweinfurthii","Pan_troglodytes_troglodytes","Pan_troglodytes_verus","Pan_paniscus","Homo_sapiens"),stringsAsFactors=F)
 
@@ -19,9 +19,12 @@ this_groups = all_groups %>% filter(group == this)
 all_genomes = read.table("../../../allgroups/GreatApes.all_genomes.tsv", head=T, stringsAsFactors=F) %>% filter(!genome %in% blacklist) %>%
   filter(!is.na(GreatApes_95_final), genome %in% this_groups$genome) %>% mutate(sample=substr(genome,1,9)) %>% left_join(host) %>% left_join(type_recode, by=c("host"="short"))
 
-
+aa <- read.aa(paste0(this, ".user_msa.fasta"), format="fasta")
+len_maj_vote=names(which.max(table(unlist(lapply(aa, length)))))
+aa=aa[lapply(aa, length) == len_maj_vote]
 ### alignemnt to distance matrix
-aln <- read.phyDat(paste0(this, ".user_msa.fasta"), type="AA", format="fasta")
+#aln <- read.phyDat(paste0(this, ".user_msa.fasta"), type="AA", format="fasta")
+aln=phyDat(aa, "AA", return.index = TRUE)
 aln2=as.character(aln)
 
 para.D  <- as.matrix(dist.ml(aln, "WAG"))
