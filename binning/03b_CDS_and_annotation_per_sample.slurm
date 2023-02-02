@@ -44,6 +44,7 @@ cat ${s}.hmm.tigr.hit.out | grep -v "^#" | awk '{print $1"\t"$3"\t"$5}' > ${s}.t
 cat ${s}.hmm.pfam.hit.out | grep -v "^#" | awk '{print $1"\t"$4"\t"$5}' > ${s}.pfam
 cat ${s}.pfam ${s}.tigr > $workfolder/samples/${s}/${s}.hmm
 
-cp $datafolder/${s}/${s}_depth.txt $workfolder/samples/${s}/${s}.depth.txt
+#cp $datafolder/${s}/${s}_depth.txt $workfolder/samples/${s}/${s}.depth.txt
+grep $s $workfolder/subgroups/${this_local}/${this_local}.${s}.depth.txt > $workfolder/samples/${s}/${s}.depth.txt
 
 #jgi_summarize_bam_contig_depths --outputDepth $workfolder/samples/${s}/${s}.depth.txt $datafolder/${s}/${s}_final.bam

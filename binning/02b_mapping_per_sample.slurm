@@ -39,5 +39,11 @@ minimap2 -t ${SLURM_CPUS_PER_TASK} -N 50 -ax sr  $workfolder/subgroups/${this_lo
 samtools view -F 3584 -b --threads ${SLURM_CPUS_PER_TASK} $s.minimap.sam | samtools sort > bams/$s.minimap.bam
 rm $s.minimap.sam
 #done
-
 jgi_summarize_bam_contig_depths --outputDepth $workfolder/subgroups/${this_local}/${this_local}.${s}.depth.txt bams/*
+
+
+cat $datafolder/${s}/$s.spades_contigs.fasta  | awk '/^>/ {printf("\n%s\n",$0);next; } { printf("%s",$0);}  END {printf("\n");}'  | awk 'BEGIN {RS = ">" ; ORS = ""} length($2) >= 2000 {print ">"$0}' > ${s}.sample.fasta
+minimap2 -I100G -d ${s}.catalogue.mmi ${s}.sample.fasta # make index
+minimap2 -t ${SLURM_CPUS_PER_TASK} -N 50 -ax sr  ${s}.catalogue.mmi $datafolder/$s/${s}.clean.R1.fastq.gz $datafolder/$s/${s}.clean.R2.fastq.gz > $s.self.minimap.sam
+samtools view -F 3584 -b --threads ${SLURM_CPUS_PER_TASK} $s.self.minimap.sam | samtools sort > $datafolder/${s}/${s}_final.bam
+
