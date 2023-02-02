@@ -37,7 +37,7 @@ for s in ${local_samples}; do
 ava=$(ls -d $datafolder/${s})
 if [ "$ava" == "" ]; then continue; fi
 echo $s
-cat $datafolder/${s}/$s.spades_contigs.fasta  | sed 's/\t/\n/' | awk 'BEGIN {RS = ">" ; ORS = ""} length($2) >= 2000 {print ">"$0}' > ${s}.sample.fasta
+cat $datafolder/${s}/$s.spades_contigs.fasta  | awk '/^>/ {printf("\n%s\n",$0);next; } { printf("%s",$0);}  END {printf("\n");}'  | awk 'BEGIN {RS = ">" ; ORS = ""} length($2) >= 2000 {print ">"$0}' > ${s}.sample.fasta
 done
 
 cat *.sample.fasta > ${this_local}.catalogue.fna

@@ -16,7 +16,7 @@ source $scriptdir/00_sources.txt
 ####    SAMPLE SELECTION     ########
 ####################################
 adddatafolder="/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/campbell_et_al"
-addsamples=($(grep Congo $adddatafolder/meta2.txt | grep -v Homo | cut -f 1))
+addsamples=($(cat $basefolder/groupings_campbell.txt  | cut -f 1))
 
 s=${addsamples[$SLURM_ARRAY_TASK_ID]}
 cd $TMPDIR
@@ -29,7 +29,7 @@ cd $TMPDIR
 module load miniconda3
 source activate mgx_tools_env
 
-
+#39
 ADAPTERS="/work_beegfs/ikmb_repository/software/bbmap/38.57/resources/nextera.fa.gz"
 genome_index="/work_beegfs/sukmb276/references/bbmask_references/hg19/"
 READMINLEN=60

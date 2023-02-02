@@ -30,7 +30,7 @@ this_local=${all_local[$SLURM_ARRAY_TASK_ID]}
 module load miniconda3
 source activate vamb_gpu_env
 
-for i in $(seq 0 12); do
-this_local=${all_local[$i]}
+#for i in $(seq 0 12); do
+#this_local=${all_local[$i]}
 vamb --cuda -p ${SLURM_CPUS_PER_TASK} --outdir $workfolder/subgroups/${this_local}/VAMB_out --fasta $workfolder/subgroups/${this_local}/${this_local}.catalogue.fna.gz --jgi $workfolder/subgroups/${this_local}/${this_local}.all_depth.tsv -o _contig_
-done
+#done

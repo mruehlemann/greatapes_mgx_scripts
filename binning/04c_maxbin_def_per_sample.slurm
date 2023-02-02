@@ -20,7 +20,7 @@ source $scriptdir/00_sources.txt
 s=${all_samples[$SLURM_ARRAY_TASK_ID]}
 cd $TMPDIR
 
-this_local=$(grep -w $s $basefolder/groupings.txt | cut -f 2 )
+this_local=$(grep -w $s $groupingfile | cut -f 2 )
 
 ###########################
 ####    MAXBIN2    #######
