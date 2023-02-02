@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH -c 8
-#SBATCH --mem=120Gb
-#SBATCH --time=10-00:00
+#SBATCH -c 4
+#SBATCH --mem=40Gb
+#SBATCH --time=1-00:00
 #SBATCH --output=/work_ifs/sukmb276/Metagenomes/projects/ApesComplete/output/log/%A_%a.out
 #SBATCH --job-name="mb_02b_map"
 
@@ -27,6 +27,7 @@ this_local=$(grep -w $s $groupingfile | cut -f 2 )
 ###########################
 
 source activate metagenome_env
+module load samtools
 
 mkdir -p bams
 
