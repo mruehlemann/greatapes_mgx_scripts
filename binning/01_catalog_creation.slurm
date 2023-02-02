@@ -10,7 +10,7 @@
 ###########################
 echo $SLURMD_NODENAME
 
-scriptdir="/work_ifs/sukmb276/Metagenomes/projects/ApesComplete/greatapes_mgx_scripts"
+scriptdir="/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/greatapes_mgx_scripts"
 source $scriptdir/00_sources.txt
 
 cd $workfolder
@@ -37,7 +37,7 @@ for s in ${local_samples}; do
 ava=$(ls -d $datafolder/${s})
 if [ "$ava" == "" ]; then continue; fi
 echo $s
-cat $datafolder/${s}/$s.spades_contigs.fasta | awk '/^>/ {printf("%s%s\t",(N>0?"\n":""),$0);N++;next;} {printf("%s",$0);} END {printf("\n");}' | sed 's/\t/\n/' | awk 'BEGIN {RS = ">" ; ORS = ""} length($2) >= 2000 {print ">"$0}' > ${s}.sample.fasta
+cat $datafolder/${s}/$s.spades_contigs.fasta  | sed 's/\t/\n/' | awk 'BEGIN {RS = ">" ; ORS = ""} length($2) >= 2000 {print ">"$0}' > ${s}.sample.fasta
 done
 
 cat *.sample.fasta > ${this_local}.catalogue.fna

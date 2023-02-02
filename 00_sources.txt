@@ -2,7 +2,7 @@ workfolder="/work_ifs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_a
 datafolder="/work_ifs/sukmb276/Metagenomes/projects/ApesComplete/output/Samples_new"
 basefolder="/work_ifs/sukmb276/Metagenomes/projects/ApesComplete/"
 
-groupingfile="$basefolder/groupings_nozoo.txt"
+groupingfile="$basefolder/groupings_nozoo_campbell.txt"
 
 all_local=($(cut -f 2 $groupingfile | sort | uniq))
 all_samples=($(cut -f 1 $groupingfile))

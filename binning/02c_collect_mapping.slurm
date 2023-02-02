@@ -9,8 +9,10 @@
 ####    SETUP     #######
 ###########################
 echo $SLURMD_NODENAME
-scriptdir="/work_ifs/sukmb276/Metagenomes/projects/ApesComplete/greatapes_mgx_scripts"
+
+scriptdir="/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/greatapes_mgx_scripts"
 source $scriptdir/00_sources.txt
+
 
 ####################################
 ####    SAMPLE SELECTION     ########
