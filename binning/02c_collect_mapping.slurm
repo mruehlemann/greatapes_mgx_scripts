@@ -2,7 +2,7 @@
 #SBATCH -c 1
 #SBATCH --mem=10Gb
 #SBATCH --time=10-00:00
-#SBATCH --output=/work_ifs/sukmb276/Metagenomes/projects/ApesComplete/output/log/%A_%a.out
+#SBATCH --output=/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/output/log/%A_%a.out
 #SBATCH --job-name="mb_02c"
 
 ###########################

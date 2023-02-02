@@ -2,7 +2,7 @@
 #SBATCH -c 1
 #SBATCH --mem=10gb
 #SBATCH --time=10-00:00
-#SBATCH --output=/work_ifs/ikmb_repository/shared/microbiome/GMbC_binning/log/%A_%a.out
+#SBATCH --output=/work_beegfs/ikmb_repository/shared/microbiome/GMbC_binning/log/%A_%a.out
 #SBATCH --job-name="mb_05b_refine"
 
 ###########################
