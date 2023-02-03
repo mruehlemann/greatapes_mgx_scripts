@@ -40,10 +40,10 @@ awk '{print $1"\t"$2"\tconcoct"}'  ${s}.concoct.contigs_to_bin.tsv >> ${s}.conti
 awk '{print $1"\t"$2"\tmetabat2"}'  ${s}.metabat2.contigs_to_bin.tsv >> ${s}.contigs_to_bin.tsv
 awk '{print $1"\t"$2"\tmaxbin2"}'  ${s}.maxbin2.contigs_to_bin.tsv >> ${s}.contigs_to_bin.tsv
 
-source activate biscoreto_env
+source activate MAGScoT_env
 
 Rscript $MAGSCOT_EXEC -i ${s}.contigs_to_bin.tsv --hmm ${s}.hmm -o ${s}
 
-source activate binning_env
+source activate concoct_env
 mkdir -p cleanbins
 cat ${s}.refined.contig_to_bin.out | awk '{if(NR==1){print "contig_id,cluster_id"; next}; print $2","$1}' | sed 's/[.]fasta//' | extract_fasta_bins.py $datafolder/${s}/$s.spades_contigs.fasta /dev/stdin --output_path cleanbins
