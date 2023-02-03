@@ -18,6 +18,7 @@ source $scriptdir/00_sources.txt
 ###########################
 ####    VAMB        #######
 ###########################
+module load miniconda3
 
 source activate mgx_tools_env
 cd $TMPDIR

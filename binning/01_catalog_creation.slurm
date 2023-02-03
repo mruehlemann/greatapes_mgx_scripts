@@ -14,7 +14,7 @@ scriptdir="/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/greatapes_mgx
 source $scriptdir/00_sources.txt
 
 cd $workfolder
-
+module load miniconda3
 source activate metagenome_env
 
 #ls $workfolder/assemblies > $workfolder/samples_available.txt

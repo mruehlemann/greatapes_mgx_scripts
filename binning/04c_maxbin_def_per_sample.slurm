@@ -25,6 +25,8 @@ this_local=$(grep -w $s $groupingfile | cut -f 2 )
 ###########################
 ####    MAXBIN2    #######
 ###########################
+module load miniconda3
+
 source activate metagenome_env
 module load gcc
 

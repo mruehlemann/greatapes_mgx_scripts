@@ -25,6 +25,8 @@ this_local=$(grep -w $s $groupingfile | cut -f 2 )
 ###########################
 ####    METABAT     #######
 ###########################
+module load miniconda3
+
 source activate metagenome_env
 
 #for s in ${local_samples}; do

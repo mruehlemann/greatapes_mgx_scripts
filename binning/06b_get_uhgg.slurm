@@ -16,6 +16,7 @@ source $scriptdir/00_sources.txt
 ###########################
 ####    VAMB        #######
 ###########################
+module load miniconda3
 
 source activate metagenome_env
 s="UHGG"

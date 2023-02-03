@@ -27,6 +27,7 @@ local_samples=$(awk -veth=${this_local} '{if($2==eth) print $1}' $groupingfile)
 ##################################
 ####    start collection   ########
 ##################################
+module load miniconda3
 
 source activate metagenome_env
 

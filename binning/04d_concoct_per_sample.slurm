@@ -25,6 +25,7 @@ this_local=$(grep -w $s $groupingfile | cut -f 2 )
 #############################
 ####    concoct       #######
 #############################
+module load miniconda3
 
 source activate binning_env
 module load samtools/1.9
