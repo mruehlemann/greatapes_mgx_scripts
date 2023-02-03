@@ -27,7 +27,7 @@ this_local=$(grep -w $s $groupingfile | cut -f 2 )
 ###########################
 module load miniconda3
 
-source activate metagenome_env
+source activate binning_env
 module load gcc
 
 if [ -e "$workfolder/samples/${s}/${s}.maxbin2.contigs_to_bin.tsv" ]; then exit; fi

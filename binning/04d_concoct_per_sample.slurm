@@ -27,14 +27,15 @@ this_local=$(grep -w $s $groupingfile | cut -f 2 )
 #############################
 module load miniconda3
 
-source activate binning_env
+source activate concoct_env
 module load samtools/1.9
 
 
 if [ -e "$workfolder/samples/${s}/${s}.concoct.contigs_to_bin.tsv" ]; then exit; fi
 echo $s
 mkdir -p $workfolder/samples/${s}
-cut_up_fasta.py $datafolder/${s}/$s.spades_contigs.fasta -c 10000 -o 0 --merge_last -b $s.minimap.bed > ${s}.filtered.10k.fna
+cat $datafolder/${s}/$s.spades_contigs.fasta  | awk '/^>/ {printf("\n%s\n",$0);next; } { printf("%s",$0);}  END {printf("\n");}'  | awk 'BEGIN {RS = ">" ; ORS = ""} length($2) >= 2000 {print ">"$0}' > ${s}.sample.fasta
+cut_up_fasta.py ${s}.sample.fasta -c 10000 -o 0 --merge_last -b $s.minimap.bed > ${s}.filtered.10k.fna
 cp $datafolder/${s}/${s}_final.bam $s.sorted.bam
 samtools index ${s}.sorted.bam
 concoct_coverage_table.py $s.minimap.bed $s.sorted.bam > ${s}.coverage_table.tsv
