@@ -25,7 +25,7 @@ this_local=$(grep -w $s $groupingfile | cut -f 2 )
 ###########################
 ####    MAPPING     #######
 ###########################
-
+module load miniconda3
 source activate metagenome_env
 module load samtools
 
