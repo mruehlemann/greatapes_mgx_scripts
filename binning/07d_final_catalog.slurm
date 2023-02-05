@@ -31,45 +31,61 @@ done < $workfolder/allgroups/${PROJECTID}.representatives_list
 
 cat ${PROJECTID}_cluster95_*.fna >  ${PROJECTID}.catalogue.fna
 
-minimap2 -I100G -d ${PROJECTID}.catalogue.mmi ${PROJECTID}.catalogue.fna # make index
+#minimap2 -I100G -d ${PROJECTID}.catalogue.mmi ${PROJECTID}.catalogue.fna # make index
 
-conda deactivate
-conda activate binning_env
-
-salmon index -t ${PROJECTID}.catalogue.fna -i ${PROJECTID}_salmon_index
+salmon index -t ${PROJECTID}.catalogue.fna -i ${PROJECTID}_salmon_index -p 20
 
 cp -r ${PROJECTID}_salmon_index $workfolder/allgroups/salmon_index
 
-gzip ${PROJECTID}.catalogue.fna
+#gzip ${PROJECTID}.catalogue.fna
 cp ${PROJECTID}.catalogue.fna.gz  $workfolder/allgroups
 
-mash dist -d 0.2 -p 24 /work_ifs/sukmb276/Metagenomes/reference_data/manara_sgb.msh $(cut -f 1 GreatApes.representatives_list | sed 's/\/home\/sukmb276\/Isilon/\/work_ifs\/sukmb276/') | tee GreatApes.representatives.manara_mash.tsv
+gzip ${PROJECTID}_cluster95_00*.fna
+mkdir $workfolder/allgroups/reference_collection
+mv ${PROJECTID}_cluster95_00*.fna.gz $workfolder/allgroups/reference_collection
+#mash dist -d 0.2 -p 24 /work_beegfs/sukmb276/Metagenomes/reference_data/manara_sgb.msh $(cut -f 1 GreatApes.representatives_list | sed 's/\/home\/sukmb276\/Isilon/\/work_beegfs\/sukmb276/') | tee GreatApes.representatives.manara_mash.tsv
 
 
 conda activate ccmetagen_env
 cp $workfolder/allgroups/${PROJECTID}.catalogue.fna.gz .
 
 mkdir -p cleanbins_faa
-/work_ifs/sukmb276/software/bin/parallel -j 24 --colsep '\t' prodigal -i {1} -a cleanbins_faa/{2}.faa :::: $workfolder/allgroups/${PROJECTID}.cleanbins_list
-/work_ifs/sukmb276/software/bin/parallel -j 24 --colsep '\t' prodigal -i {1} -a cleanbins_faa/{2}.faa :::: /work_beegfs/sukmb276/Metagenomes/reference_data/UHGG_v2/UHGG.cleanbins_list
+cat $workfolder/subgroups/*/*.cleanbins_list | sed 's/work_ifs/work_beegfs/' > $workfolder/allgroups/${PROJECTID}.cleanbins_list
+/work_beegfs/sukmb276/software/bin/parallel -j 24 --colsep '\t' prodigal -i {1} -a cleanbins_faa/{2}.faa :::: $workfolder/allgroups/${PROJECTID}.cleanbins_list
+#/work_beegfs/sukmb276/software/bin/parallel -j 24 --colsep '\t' prodigal -i {1} -a cleanbins_faa/{2}.faa :::: /work_beegfs/sukmb276/Metagenomes/reference_data/UHGG_v2/UHGG.cleanbins_list
 cp -r cleanbins_faa $workfolder/allgroups
 
-cat cleanbins_faa/*.faa > protein_catalogs/GreatApes.allprot.faa
-cat cleanbins_faa/*.faa > $TMPDIR/allprot.faa
+cat cleanbins_faa/*.faa | gzip -c > protein_catalogs/${PROJECTID}.allprot.faa.gz
+cat cleanbins_faa/*.faa > $TMPDIR/${PROJECTID}.allprot.faa
+gzip $TMPDIR/${PROJECTID}.allprot.faa
 cd cleanbins_faa 
-grep '>' * | awk '{print $1}' | sed -r 's/[.]faa[:][>]/\t/' > $workfolder/allgroups/prot_to_genome.tsv
+grep '>' * | awk '{print $1}' | sed -r 's/[.]faa[:][>]/\t/' > $workfolder/allgroups/${PROJECTID}.prot_to_genome.tsv
 
 cd $TMPDIR
-mmseqs easy-linclust --min-seq-id 0.95 --threads 24 --cov-mode 1 -c 0.8 --kmer-per-seq 80 GreatApes.allprot.faa GreatApes.prot95 $TMPDIR
+mmseqs easy-linclust --min-seq-id 0.95 --threads 24 --cov-mode 1 -c 0.8 --kmer-per-seq 80 ${PROJECTID}.allprot.faa ${PROJECTID}.prot95 $TMPDIR
 #mmseqs easy-linclust --min-seq-id 0.80 --threads 24 --cov-mode 1 -c 0.8 --kmer-per-seq 80 allprot.faa GreatApes.prot80 $TMPDIR
 #mmseqs easy-linclust --min-seq-id 0.50 --threads 24 --cov-mode 1 -c 0.8 --kmer-per-seq 80 allprot.faa GreatApes.prot50 $TMPDIR
 mkdir $workfolder/allgroups/protein_catalogs/
-cp GreatApes.prot*_cluster.tsv $workfolder/allgroups/protein_catalogs/
-cp GreatApes.prot*_rep_seq.fasta $workfolder/allgroups/protein_catalogs/
+cp ${PROJECTID}.prot*_cluster.tsv $workfolder/allgroups/protein_catalogs/
+cp ${PROJECTID}.prot*_rep_seq.fasta $workfolder/allgroups/protein_catalogs/
 
 
 mkdir $TMPDIR/emapper_tmp
-emapper.py --cpu  24 -i GreatApes.prot95_rep_seq.fasta --tax_scope 1,2,2157,10239 --itype proteins --data_dir /work_beegfs/ikmb_repository/databases/eggnog_mapper/220425/ --output GreatApes.prot95_rep_seq --temp_dir $TMPDIR/emapper_tmp --dbmem
+cp -r /work_beegfs/ikmb_repository/databases/eggnog_mapper/220425/ eggnog_db
+emapper.py --cpu  24 -i ${PROJECTID}.prot95_rep_seq.fasta --tax_scope 1,2,2157,10239 --itype proteins --data_dir /work_beegfs/ikmb_repository/databases/eggnog_mapper/220425/ --output ${PROJECTID}.prot95_rep_seq --temp_dir $TMPDIR/emapper_tmp --dbmem -m mmseqs
+
+# mkdir $workfolder/allgroups/protein_catalogs/emapper_batches
+# cut -f 1 ${PROJECTID}.prot95_cluster.tsv | uniq > ${PROJECTID}.prot95_cluster_repseq.list
+# split ${PROJECTID}.prot95_cluster_repseq.list -l 100000 -a 3 -d $workfolder/allgroups/protein_catalogs/emapper_batches/batch_
+
+####
+module load miniconda3
+conda activate mgx_tools_env
+btchs=$(ls $workfolder/allgroups/protein_catalogs/emapper_batches/ | head -n 1 | tail -n 1)
+cp $workfolder/allgroups/protein_catalogs/emapper_batches/$btchs $btchs.emapper.hits
+mkdir $TMPDIR/${btchs}_tmp
+emapper.py --cpu  ${SLURM_CPUS_PER_TASK} -i ${PROJECTID}.prot95_rep_seq.fasta --tax_scope 1,2,2157,10239 --itype proteins --data_dir /work_beegfs/ikmb_repository/databases/eggnog_mapper/220425/ --output $btchs --temp_dir $TMPDIR/${btchs}_tmp --dbmem -m mmseqs --resume
+
 
 conda activate r_microbiome_env
 
@@ -88,7 +104,7 @@ colnames(cluster_annot)[1] = 'cluster_id'
 
 cluster_annot = cluster_annot %>% filter(!duplicated(cluster_id))
 
-prot_to_genome = read_delim('../prot_to_genome.tsv', delim='\t', quote='', num_threads=10,col_names=c('mag_id','prot_id'))
+prot_to_genome = read_delim('../GreatApes.prot_to_genome.tsv', delim='\t', quote='', num_threads=10,col_names=c('mag_id','prot_id'))
 genome_to_sgb = read_delim('../GreatApes.all_genomes.tsv', delim='\t',col_names=T) %>% select(mag_id=genome, GreatApes_95_final) %>% filter(!is.na(GreatApes_95_final)) %>% mutate(sample=substr(mag_id,1,9))
 host = read_delim('../../../../groupings_nozoo.txt', delim='\t', col_names=c('sample', 'host')) %>% mutate(host_group=substr(host,1,1)) %>% bind_rows(., data.frame(sample='MGYG00000', host='HsUHGG',host_group='H')) %>% select(-host)
 

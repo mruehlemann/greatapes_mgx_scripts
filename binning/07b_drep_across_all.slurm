@@ -31,7 +31,7 @@ source activate binning_env
 head -n 1 $workfolder/samples/$(ls $workfolder/samples | head -n 1)/*.refined.out > $workfolder/allgroups/${PROJECTID}.rep97.refined.out
 head -n 1 $workfolder/samples/$(ls $workfolder/samples | head -n 1)/*.refined.out > $workfolder/allgroups/${PROJECTID}.rep97_mq.refined.out
 
-for this_local in Gberingei Ggorilla HsA1 HsA2 HsG Ppan Ptschw Pttrog Ptver;do
+for this_local in Gberingei Ggorilla HsA1 HsA2 HsG Ppan Ptschw Pttrog Ptver ZcambellGorilla ZcambellPan;do
 cd $workfolder/subgroups/$this_local/
 tail -n+2 ${this_local}.dRep_cluster97_representatives.tsv | awk '{if($4>=.7) print $1}'  | xargs -I {} grep {} ${this_local}.cleanbins_list >>  $workfolder/allgroups/${PROJECTID}.rep97.cleanbins_list
 tail -n+2 ${this_local}.dRep_cluster97_representatives.tsv | awk '{if($4>=.7) print $1}'  | xargs -I {} grep {} ${this_local}.refined.out  >>  $workfolder/allgroups/${PROJECTID}.rep97.refined.out
@@ -39,24 +39,38 @@ tail -n+2 ${this_local}.dRep_cluster97_representatives.tsv | awk '{if($4>=.5 && 
 tail -n+2 ${this_local}.dRep_cluster97_representatives.tsv | awk '{if($4>=.5 && $4<.7) print $1}'  | xargs -I {} grep {} ${this_local}.refined.out  >>  $workfolder/allgroups/${PROJECTID}.rep97_mq.refined.out
 done
 
-cd $workfolder/subgroups
-tail -n+2 $workfolder/subgroups/UHGG_v2/UHGG.scores.out | awk '{print $1"\t"$0}' | tr -d '\"' >> $workfolder/allgroups/${PROJECTID}.rep97.refined.out
-cat $workfolder/subgroups/UHGG_v2/UHGG.cleanbins_list >> $workfolder/allgroups/${PROJECTID}.rep97.cleanbins_list
+this_local="UHGG"
+cd $workfolder/subgroups/UHGG_v2/
+tail -n+2 ${this_local}.dRep_cluster97_representatives.tsv | awk '{if($4>=.7) print $1}'  | xargs -I {} grep {} ${this_local}.cleanbins_list >>  $workfolder/allgroups/${PROJECTID}.rep97.cleanbins_list
+tail -n+2 ${this_local}.dRep_cluster97_representatives.tsv | awk '{if($4>=.7) print $1}'  | xargs -I {} grep {} ${this_local}.scores.out | awk '{printf $1"\tUHGGv2"; for(i=2;i<=NF;++i) printf "\t"$i; printf "\n"}' >>  $workfolder/allgroups/${PROJECTID}.rep97.refined.out
+tail -n+2 ${this_local}.dRep_cluster97_representatives.tsv | awk '{if($4>=.5 && $4<.7) print $1}'  | xargs -I {} grep {} ${this_local}.cleanbins_list >>  $workfolder/allgroups/${PROJECTID}.rep97_mq.cleanbins_list
+tail -n+2 ${this_local}.dRep_cluster97_representatives.tsv | awk '{if($4>=.5 && $4<.7) print $1}'  | xargs -I {} grep {} ${this_local}.scores.out | awk '{printf $1"\tUHGGv2"; for(i=2;i<=NF;++i) printf "\t"$i; printf "\n"}' >>  $workfolder/allgroups/${PROJECTID}.rep97_mq.refined.out
+
+this_local="ManaraNHP"
+cd $workfolder/subgroups/$this_local/
+tail -n+2 ${this_local}.dRep_cluster97_representatives.tsv | awk '{if($4>=.7) print $1}'  | xargs -I {} grep {} ${this_local}.cleanbins_list >>  $workfolder/allgroups/${PROJECTID}.rep97.cleanbins_list
+tail -n+2 ${this_local}.dRep_cluster97_representatives.tsv | awk '{if($4>=.7) print $1}'  | xargs -I {} grep {} ${this_local}.scores.out | awk '{printf $1"\tManaraNHP"; for(i=2;i<=NF;++i) printf "\t"$i; printf "\n"}'  >>  $workfolder/allgroups/${PROJECTID}.rep97.refined.out
+tail -n+2 ${this_local}.dRep_cluster97_representatives.tsv | awk '{if($4>=.5 && $4<.7) print $1}'  | xargs -I {} grep {} ${this_local}.cleanbins_list >>  $workfolder/allgroups/${PROJECTID}.rep97_mq.cleanbins_list
+tail -n+2 ${this_local}.dRep_cluster97_representatives.tsv | awk '{if($4>=.5 && $4<.7) print $1}'  | xargs -I {} grep {} ${this_local}.scores.out | awk '{printf $1"\tManaraNHP"; for(i=2;i<=NF;++i) printf "\t"$i; printf "\n"}'  >>  $workfolder/allgroups/${PROJECTID}.rep97_mq.refined.out
 
 cd $TMPDIR
-cut -f 1 $workfolder/allgroups/${PROJECTID}.rep97.cleanbins_list | sed '/^$/d' > genomes_list
+cut -f 1 $workfolder/allgroups/${PROJECTID}.rep97.cleanbins_list | sed "s/work_ifs/work_beegfs/" | sed '/^$/d' > genomes_list
 dRep compare -g genomes_list -p $SLURM_CPUS_PER_TASK --S_algorithm fastANI -sa 0.95 -d .
 #cp data_tables/Cdb.csv $workfolder/allgroups/${PROJECTID}.rep97.dRep_95.csv
 $PYTHON $scriptdir/binning/07a_drep_fastANI99.py
 #cp data_tables/Cdb_97.csv $workfolder/allgroups/${PROJECTID}.rep97.dRep_97.csv
 #cp data_tables/Cdb_99.csv $workfolder/allgroups/${PROJECTID}.rep97.dRep_99.csv
-module load R
+
+### create list of representative genomes for ANI calculations of medium quality MAGs
+conda deactivate
+conda activate r_microbiome_env
 
 R --vanilla <<< '
 library(tidyverse)
 clusters = read.table("data_tables/Cdb.csv", stringsAsFactors=F, head=T, sep=",") %>% mutate(cluster_95=paste0(secondary_cluster)) %>% select(genome, cluster_95) %>% mutate(genome=gsub(".fa$|.fna$","",genome))
 
-scores = read.table("/work_ifs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final/allgroups/GreatApes.rep97.refined.out", head=T, stringsAsFactors=F) %>% tibble::rownames_to_column("genome")  %>% mutate(score.gtdb_rel207_ar53 = ifelse(is.na(score.gtdb_rel207_ar53), 0, score.gtdb_rel207_ar53), score.gtdb_rel207_bac120 = ifelse(is.na(score.gtdb_rel207_bac120), 0, score.gtdb_rel207_ar53)) %>%
+scores = read.table("/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final/allgroups/GreatApes.rep97.refined.out", head=T, stringsAsFactors=F, sep="\t", row.names=NULL) %>% filter(!duplicated(row.names)) %>%
+	mutate(genome=row.names) %>% select(-row.names)  %>% mutate(score.gtdb_rel207_ar53 = ifelse(is.na(score.gtdb_rel207_ar53), 0, score.gtdb_rel207_ar53), score.gtdb_rel207_bac120 = ifelse(is.na(score.gtdb_rel207_bac120), 0, score.gtdb_rel207_ar53)) %>%
 	mutate(domain=ifelse(max==score.gtdb_rel207_ar53,"Archaea","Bacteria"), genome=gsub(".fasta","",genome)) %>% select(genome, domain, score=max)
 
 genome_paths=read.table("genomes_list", head=F, stringsAsFactors=F)
@@ -67,8 +81,16 @@ clusters = left_join(clusters, scores) %>% arrange(-score) %>% distinct_at(.vars
 write.table(clusters$V1, "fastani_ref_list", col.names=F, row.names=F, quote=F)
 '
 
-cut -f 1 $workfolder/allgroups/${PROJECTID}.rep97_mq.cleanbins_list > fastani_query_list
+conda deactivate
+source activate binning_env
+
+### ANI calculations of medium quality MAGs to HQ representatives
+cut -f 1 $workfolder/allgroups/${PROJECTID}.rep97_mq.cleanbins_list | sed "s/work_ifs/work_beegfs/" > fastani_query_list
 fastANI --refList fastani_ref_list --ql fastani_query_list -t $SLURM_CPUS_PER_TASK --fragLen 10000 --minFraction 0.8 -o fastani_mq.out
+
+### select medium quality MAGs not matching to rep seqs
+conda deactivate
+conda activate r_microbiome_env
 
 R --vanilla <<< 'library(tidyverse); fa=read.table("fastani_mq.out",head=F, stringsAsFactors=F);
 fa$V1=sapply(fa$V1, function(x) rev(strsplit(x,split="/")[[1]])[1]);
@@ -80,18 +102,35 @@ mq_nohit = mq %>% filter(!genome %in% fa_filt$V1);
 write.table(mq_nohit$V1, "drep_l2_input", col.names=F, row.names=F, quote=F)
 '
 
+### cluster medium quality MAGs not matching to rep seqs
+conda deactivate
+source activate binning_env
 dRep compare -g drep_l2_input -p $SLURM_CPUS_PER_TASK --S_algorithm fastANI -sa 0.95 -d drep_l2_out
+
+### combine clustering results
+conda deactivate
+conda activate r_microbiome_env
 
 R --vanilla <<< '
 library(tidyverse);
 clusters = read.table("data_tables/Cdb.csv", stringsAsFactors=F, head=T, sep=",") %>% mutate(cluster_95=paste0(secondary_cluster)) %>% select(genome, cluster_95) %>% mutate(genome=gsub(".fa$|.fna$","",genome))
 
-scores = read.table("/work_ifs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final/allgroups/GreatApes.rep97.refined.out", head=T, stringsAsFactors=F) %>% tibble::rownames_to_column("genome") %>% mutate(score.gtdb_rel207_ar53 = ifelse(is.na(score.gtdb_rel207_ar53), 0, score.gtdb_rel207_ar53), score.gtdb_rel207_bac120 = ifelse(is.na(score.gtdb_rel207_bac120), 0, score.gtdb_rel207_ar53)) %>%
+all_sub = c("Gberingei","Ggorilla","Ppan","Ptver","Ptschw","Pttrog","HsG","HsA1","HsA2","ZcambellGorilla","ZcambellPan")
+all_clusters = sapply(all_sub, function(x) read.table(paste0("/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final//subgroups/",x,"/",x,".dRep_cluster.tsv"), head=T, stringsAsFactors=F), simplify=F) %>% do.call("rbind",.)
+all_clusters = all_clusters %>% rbind(read.table("/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final//subgroups/UHGG_v2/UHGG.dRep_cluster.tsv", head=T, stringsAsFactors=F))
+
+all_reps97 = sapply(all_sub, function(x) read.table(paste0("/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final///subgroups/",x,"/",x,".dRep_cluster97_representatives.tsv"), head=T, stringsAsFactors=F), simplify=F) %>% do.call("rbind",.)
+all_reps97 = all_reps97 %>% rbind(read.table("/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final//subgroups/UHGG_v2/UHGG.dRep_cluster97_representatives.tsv", head=T, stringsAsFactors=F))
+
+
+scores = read.table("/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final/allgroups/GreatApes.rep97.refined.out", head=T, stringsAsFactors=F, sep="\t", row.names=NULL) %>% filter(!duplicated(row.names)) %>%
+	mutate(genome=row.names) %>% select(-row.names) %>% mutate(score.gtdb_rel207_ar53 = ifelse(is.na(score.gtdb_rel207_ar53), 0, score.gtdb_rel207_ar53), score.gtdb_rel207_bac120 = ifelse(is.na(score.gtdb_rel207_bac120), 0, score.gtdb_rel207_ar53)) %>%
 	mutate(domain=ifelse(max==score.gtdb_rel207_ar53,"Archaea","Bacteria"), genome=gsub("fasta","fa",genome)) %>% select(genome, domain, score=max)
 
 clusters = left_join(clusters, scores)
 
-scores2 = read.table("/work_ifs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final/allgroups/GreatApes.rep97_mq.refined.out", head=T, stringsAsFactors=F) %>% tibble::rownames_to_column("genome") %>% mutate(score.gtdb_rel207_ar53 = ifelse(is.na(score.gtdb_rel207_ar53), 0, score.gtdb_rel207_ar53), score.gtdb_rel207_bac120 = ifelse(is.na(score.gtdb_rel207_bac120), 0, score.gtdb_rel207_ar53)) %>%
+scores2 = read.table("/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final/allgroups/GreatApes.rep97_mq.refined.out", head=T, stringsAsFactors=F, sep="\t", row.names=NULL) %>% filter(!duplicated(row.names)) %>%
+	mutate(genome=row.names) %>% select(-row.names) %>% mutate(score.gtdb_rel207_ar53 = ifelse(is.na(score.gtdb_rel207_ar53), 0, score.gtdb_rel207_ar53), score.gtdb_rel207_bac120 = ifelse(is.na(score.gtdb_rel207_bac120), 0, score.gtdb_rel207_ar53)) %>%
 	mutate(domain=ifelse(max==score.gtdb_rel207_ar53,"Archaea","Bacteria"), genome=gsub("fasta","fa",genome)) %>% select(genome, domain, score=max)
 
 fa=read.table("fastani_mq.out",head=F, stringsAsFactors=F);
@@ -101,9 +140,9 @@ fa_filt = fa %>% filter(fa$V3 >= 95) %>% left_join(scores2, by=c("V1"="genome"))
 
 clusters = bind_rows(clusters, fa_filt) %>% arrange(-score)
 
-clusters2 = read.table("drep_l2_out/data_tables/Cdb.csv", stringsAsFactors=F, head=T, sep=",") %>% mutate(cluster_95=paste0(secondary_cluster)) %>% select(genome, cluster_95) %>% mutate(genome=gsub(".fa$","",genome))
+clusters2 = read.table("drep_l2_out/data_tables/Cdb.csv", stringsAsFactors=F, head=T, sep=",") %>% mutate(cluster_95=paste0(secondary_cluster)) %>% select(genome, cluster_95) %>% mutate(genome=gsub(".fa$|.fna$","",genome))
 
-clusters2 = left_join(clusters2, scores2) %>% left_join(clusters2 %>% group_by(cluster_95) %>% summarize(n=n())) %>% filter(n>1) %>% mutate(cluster_95=paste0(cluster_95,"_MQ")) %>% arrange(-score)
+clusters2 = left_join(clusters2, scores2) %>% left_join(clusters2 %>% group_by(cluster_95) %>% summarize(n=n())) %>% filter(n>=2) %>% mutate(cluster_95=paste0(cluster_95,"_MQ")) %>% arrange(-score)
 
 clusters = bind_rows(clusters, clusters2 %>% select(-n))
 
@@ -113,13 +152,6 @@ clusters = clusters %>% left_join(cl95_reps %>% select(cluster_95, cluster_95_fi
 
 write.table(clusters, paste0("GreatApes", ".dRep_cluster.tsv"), sep="\t", row.names=F,quote=F)
 write.table(cl95_reps, paste0("GreatApes", ".dRep_cluster95_representatives.tsv"), sep="\t", row.names=F,quote=F)
-
-all_sub = c("Gberingei","Ggorilla","Ppan","Ptver","Ptschw","Pttrog","HsG","HsA1","HsA2")
-all_clusters = sapply(all_sub, function(x) read.table(paste0("/work_ifs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final//subgroups/",x,"/",x,".dRep_cluster.tsv"), head=T, stringsAsFactors=F), simplify=F) %>% do.call("rbind",.)
-all_clusters = all_clusters %>% rbind(read.table("/work_ifs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final//subgroups/UHGG_v2/UHGG.dRep_cluster.tsv", head=T, stringsAsFactors=F))
-
-all_reps97 = sapply(all_sub, function(x) read.table(paste0("/work_ifs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final///subgroups/",x,"/",x,".dRep_cluster97_representatives.tsv"), head=T, stringsAsFactors=F), simplify=F) %>% do.call("rbind",.)
-all_reps97 = all_reps97 %>% rbind(read.table("/work_ifs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final//subgroups/UHGG_v2/UHGG.dRep_cluster97_representatives.tsv", head=T, stringsAsFactors=F))
 
 all_clusters_w_rep = all_clusters %>% left_join(all_reps97 %>% select(cluster_97_final, genome_rep97=genome)) %>% left_join(clusters %>% select(genome_rep97=genome, GreatApes_95_final = cluster_95_final))
 
@@ -135,4 +167,4 @@ cd $workfolder/allgroups
 while read line; do
 read genome cluster_95 domain score cluster_95_final <<< $(echo $line)
 grep -w $genome ${PROJECTID}.rep97.cleanbins_list | awk -v cl=$cluster_95_final '{print $1"\t"cl}'
-done < ${PROJECTID}.dRep_cluster95_representatives.tsv | tee ${PROJECTID}.representatives_list
+done < ${PROJECTID}.dRep_cluster95_representatives.tsv | sed "s/work_ifs/work_beegfs/" | tee ${PROJECTID}.representatives_list
