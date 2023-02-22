@@ -100,7 +100,10 @@ sgb_with_cophy = all_genomes %>% filter(genome %in% genomes_with_cophy_gen) %>% 
 all_genomes %>% filter(!grepl("Manara", genome)) %>% mutate(in_analysis = (genome %in% genomes_in_cospec_gen), cophy = (genome %in% genomes_with_cophy_gen)) %>% filter(in_analysis) %>% mutate(human = grepl("Hs|MG",cluster_97_final)) %>% distinct_at(.var=c("GreatApes_95_final", "human", "cophy")) %>% select(cophy, human) %>% table 
 
 all_cospec_results = results_cospec %>% left_join(gen_level_cutoff, by=c("clade"="group"))
+write.table(all_cospec_results, "figures_and_tables/Suppl_Table_S11_Results_Cophylo.tsv", row.names = F, sep="\t")
 
+saveRDS(all_cospec_results, "../../../great_apes_shiny_app/data/all_cospec_results.Rds")
+saveRDS(cospec_results, "../../../great_apes_shiny_app/data/cospec_results.Rds")
 
 
 ```
@@ -196,6 +199,11 @@ cophy_mean = cophy_stats2 %>% filter(tot>=10) %>% pull(cosp_rat) %>% mean
 
 cophy_enrich_plot = cophy_stats2 %>% filter(tot>=10, qval<0.05) %>% ggplot(aes(y=cosp_rat*100, x=fam, fill=phylum2)) + geom_col() + geom_hline(yintercept = cophy_mean*100, lty=2) + scale_fill_manual(values=phylumcols_df$col, breaks=phylumcols_df$phylum) + ylab("Cophylo-Ratio (%)") + xlab("")+ theme(axis.text.x = element_text(angle=45, hjust=1), legend.position = "none") + scale_y_continuous(expand=c(.01,0))
 
+cophy_stats2
+write.table(cophy_stats2, "figures_and_tables/Suppl_Table_S12_Cophylo_Families.tsv", row.names = F, sep="\t")
+
+
+saveRDS(cophy_stats2, "../../../great_apes_shiny_app/data/family_cophy_ratios.Rds")
 ```
 
 ### per-sample sgb co-phylo ratio
@@ -217,9 +225,11 @@ coph_plot =  sgb_long %>% filter(variable %in% sgb_in_cospec) %>% mutate(pres = 
 sgb_long %>% filter(variable %in% sgb_in_cospec) %>% mutate(pres = value > 0)  %>% filter(pres) %>% group_by(sample, host_long) %>% summarise(in_cophy = n())  %>%  ggplot(aes(x=host_long,y=in_cophy, fill=host_long)) + geom_boxplot(outlier.shape = NA) + geom_jitter(height=0, width=.2) + scale_fill_manual(values=colset$col, breaks = colset$host_long) + theme(legend.position = "none", axis.text.x = element_text(angle=45, hjust=1)) + ylab("Prop. of Co-Phylo SGBs (%)") + xlab("") + scale_y_continuous(expand=c(.01,0))
 
 
-coph_df_b = coph_plot$data %>% left_join(coph_df_a %>% mutate(ta2=totabu) %>% select(-totabu)) %>% mutate(rat=totabu/ta2)
-
 ggpubr::compare_means(data=coph_plot$data, cophy_rat ~ host_long)
+
+
+saveRDS(coph_plot$data, "../../../great_apes_shiny_app/data/sample_coph_plot.Rds")
+
 
 ```
 
@@ -232,6 +242,11 @@ this_to_sgb %>% filter(ogs %in% gsub("ko:","",spore_kos), GreatApes_95_final %in
 
 spore_plot = this_to_sgb %>% filter(ogs %in% gsub("ko:","",spore_kos), GreatApes_95_final %in% sgb_in_cospec) %>% select(-host_group) %>% distinct() %>% group_by(GreatApes_95_final) %>% summarise(spore_count = n()) %>% left_join(tax2)  %>% group_by(phylum, family, genus) %>% summarise(mean_spore_count = mean(spore_count)) %>% ungroup() %>% left_join(cophy_stats2, by=c("family"="fam")) %>% filter(tot>=10) %>% mutate(fam=as.factor(family)) %>% ggplot(aes(x=mean_spore_count, y=cosp_rat*100)) + geom_hline(yintercept = cophy_mean*100, lty=2) + geom_point(aes(col=phylum2)) + stat_smooth(method = "lm", col="red", se = F) + scale_color_manual(values=phylumcols_df$col, breaks=phylumcols_df$phylum) + scale_y_continuous(expand=c(.01,0), name = "Cophylo-Ratio (%)") + scale_x_continuous(name="# of Sporulation Genes")
 
+sgb_spore_kos_prev = this_to_sgb %>% filter(ogs %in% gsub("ko:","",spore_kos), GreatApes_95_final %in% sgb_in_cospec) %>% select(-host_group) %>% distinct() %>% mutate(count=1) %>% dcast(GreatApes_95_final ~ ogs, value.var="count", fill=0)
+
+write.table(sgb_spore_kos_prev, "figures_and_tables/Suppl_Table_S13_SGB_Sporulation_Genes.tsv", row.names = F, sep="\t")
+
+saveRDS(spore_plot$data, "../../../great_apes_shiny_app/data/sgb_spore_plot.Rds")
 
 
 ```

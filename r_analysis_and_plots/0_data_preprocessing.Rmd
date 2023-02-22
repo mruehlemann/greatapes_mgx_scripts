@@ -252,6 +252,7 @@ bifido_moeller = read.tree("../../../220303_Analysis_New/data_w_manara//analyses
 
 
 save(list = ls(), file = "0_all_preprocessed.Robj")
+save(list = c("cospec_results","colset","sample_meta","all_genomes_final","host_tree","salmon_stats","sample_stats","sample_exclude"), file = "../../../great_apes_shiny_app/data/0_all_preprocessed_app.Robj")
 
 
 ```

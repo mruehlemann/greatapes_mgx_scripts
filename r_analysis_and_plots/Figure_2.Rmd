@@ -117,6 +117,9 @@ panel_a = meta_plot_data %>%  ggplot(aes(x=plot_name2, y=-log10(pval), col=phylu
 
 panel_a
 
+saveRDS(coph_plot$data, "../../../great_apes_shiny_app/data/sample_coph_plot.Rds")
+
+
 ```
 
 ## Prevotella analysis
