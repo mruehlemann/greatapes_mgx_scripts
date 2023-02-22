@@ -2,7 +2,7 @@
 
 This repository holds all scripts used in the data processing and analysis of the Article "Comparative metagenomics reveals host-specific functional adaptation of intestinal microbiota across hominids" [BioRxiv](link_goes_here). 
 
-It also holds the complete data as an R object that can be used to repeat all analyses and create all figures in the [BioRxiv](/r_analysis_and_plots) folder.
+It also holds the complete data as an R object that can be used to repeat all analyses and create all figures in the [Analysis and Plots](/r_analysis_and_plots) folder.
 
 Additionaly, all cophylogeny results can be browsed here: [Co-phylogeny browser](https://mruehlemann.shinyapps.io/great_apes_shiny_app/).
 
