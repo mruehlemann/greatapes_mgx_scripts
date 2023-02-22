@@ -29,7 +29,7 @@ this_local=$(grep -w $s $basefolder/groupings.txt | cut -f 2 )
 if [ -e "$workfolder/samples/${s}/${s}.salmon.out" ]; then exit; fi
 
 cd $TMPDIR
-
+module load miniconda3
 source activate mgx_tools_env
 
 salmon quant -i $workfolder/allgroups/salmon_index -l IU -1 $datafolder/$s/${s}.clean.R1.fastq.gz -2 $datafolder/$s/${s}.clean.R2.fastq.gz --validateMappings -o ${s}_out -p ${SLURM_CPUS_PER_TASK} --meta

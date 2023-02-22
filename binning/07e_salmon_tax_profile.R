@@ -1,6 +1,6 @@
 library(dplyr)
 
-tax=read.table("/work_ifs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final/allgroups/GreatApes.cluster_final_tax.tsv", head=T, stringsAsFactors=F, sep="\t") # nolint
+tax=read.table("/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final/allgroups/GreatApes.cluster_final_tax.tsv", head=T, stringsAsFactors=F, sep="\t") # nolint
 colnames(tax) = c("bin","classification")
 
 tax2 = sapply(paste0(tax$bin,";",tax$classification), function(x){

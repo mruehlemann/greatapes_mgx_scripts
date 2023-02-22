@@ -1,0 +1,407 @@
+---
+title: "Figure 1 Panels a,b,c; Figure S2"
+author: "Malte Ruehlemann"
+date: "`r Sys.Date()`"
+output:
+   BiocStyle::html_document:
+      toc: true
+      df_print: paged
+      self_contained: true
+      code_download: true
+      highlight: tango
+#bibliography: mylib.bib
+editor_options:
+  chunk_output_type: console
+params:
+  FIGPATH: "figures/"
+---
+
+<style type="text/css">
+.main-container {
+  max-width: 1800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+
+```{r style}
+# Set knit global options
+library("knitr")
+options(digits = 3, width = 80)
+golden_ratio <- (1 + sqrt(5)) / 2
+opts_chunk$set(echo = FALSE,
+               tidy = FALSE,
+               include = TRUE,
+               fig.path = params$FIGPATH,
+               dev='png',
+               fig.height = 7.5,
+               fig.width = 6 * golden_ratio,
+               warning = F,
+               message =F, 
+               comment = '  ',
+               dpi = 300,
+               cache = FALSE)
+library("rmarkdown")
+
+# Pretty outputs
+library("BiocStyle")
+library("ggthemes") # add ggplot2 themes
+library("ggplot2")
+theme_set(theme_few(base_size = 18))
+
+# Set seed for reproducibility
+set.seed(222)
+```
+
+```{r}
+#setwd("r_analysis_and_plots")
+library(ggplot2)
+library(tidyverse)
+library(ape)
+library(ggtree)
+library(compositions)
+library(phyloseq)
+library(picante)
+library(ggrepel)
+library(reshape2)
+library(cowplot)
+library(plotly)
+library(TreeDist)
+library(phytools)
+library(parallel)
+library(ggpubr)
+
+interactive=F
+
+load("0_all_preprocessed.Robj")
+```
+
+
+
+## sharing analysis
+
+```{r}
+
+### reconstructed from host genus
+all_genomes %>% filter(!is.na(GreatApes_95_final), grepl("Manara|MGYG", genome)==F) %>% mutate(sample = gsub("_cleanbin_","",gsub("[0-9]+$","", genome))) %>% left_join(sample_meta)  %>%  select(host_genus, GreatApes_95_final) %>% distinct() %>% mutate(pres=1) %>% dcast(GreatApes_95_final ~ host_genus, value.var="pres", fill=0) %>% column_to_rownames("GreatApes_95_final") %>% mutate(n_host_gen = Pan + Gorilla + Homo) %>% pull(n_host_gen) %>% table
+
+sgb_long_red = salmon_rare %>% filter(depth==1000000) %>% group_by(sample, bin) %>% summarise(value=mean(tpm)) %>% left_join(sample_meta) %>% filter(value>0) %>% mutate(host2 = case_when(host == "Ggorilla2" ~ "Ggorilla", host=="Pttrog2" ~ "Pttrog", T ~ host)) %>% ungroup
+
+
+if(file.exists("../../../220303_Analysis_New/intermediate_data/sgb_share.Rds")){
+  sgb_share=readRDS("../../../220303_Analysis_New/intermediate_data/sgb_share.Rds")
+}else{
+sgb_share = lapply(unique(sgb_long_red$host2), function(this_host) {
+  lapply(1:100, function(i) {
+  sample_subset = sgb_long_red %>% select(host2, sample) %>% distinct() %>% group_by(host2) %>% sample_n(5) %>% pull(sample)
+  sgb_this_host = sgb_long_red %>% filter(host2 == this_host, sample %in% sample_subset) %>% pull(bin) %>% unique
+  sgb_long_red %>% filter(bin %in% (sgb_this_host), sample %in% sample_subset) %>% select(host2, bin) %>% distinct() %>% group_by(host2) %>% summarise(n=n())  %>%
+    left_join(sgb_long_red %>% select(host2) %>% distinct, .) %>% mutate(n_ref = length(sgb_this_host), n = ifelse(is.na(n),0,n), n_rel = n/n_ref) }) %>% do.call("bind_rows",.) %>% group_by(host2) %>% summarise(mean_n = mean(n_rel)) %>% mutate(ref_host = this_host)
+}) %>% do.call("bind_rows",.)
+saveRDS(sgb_share, "../../../220303_Analysis_New/intermediate_data/sgb_share.Rds")
+}
+
+if(file.exists("../../../220303_Analysis_New/intermediate_data/sgb_share_rand.Rds")){
+  random_trees_100k_rf=readRDS("../../../220303_Analysis_New/intermediate_data/sgb_share_rand.Rds")
+}else{
+sgb_share_rand = lapply(unique(sgb_long_red$host2), function(this_host) {
+  mclapply(1:1000, function(i) {
+  sample_rand = sgb_long_red %>% select(host2, sample) %>% distinct() %>% group_by(host2) %>% sample_n(5) %>% pull(sample) %>% sample(5)
+  sample_subset = sgb_long_red %>% select(host2, sample) %>% distinct() %>% group_by(host2) %>% sample_n(5) %>% pull(sample)
+  sgb_this_host = sgb_long_red %>% filter(sample %in% sample_rand) %>% pull(bin) %>% unique
+  sgb_long_red %>% filter(bin %in% (sgb_this_host), sample %in% sample_subset) %>% select(host2, bin) %>% distinct() %>% group_by(host2) %>% summarise(n=n())  %>%
+    left_join(sgb_long_red %>% select(host2) %>% distinct, .)  %>% mutate(n_ref = length(sgb_this_host), n_rel = n/n_ref, i = i) 
+  }, mc.cores=10) %>% do.call("bind_rows",.)%>% mutate(ref_host = this_host)
+}) %>% do.call("bind_rows",.)
+saveRDS(sgb_share_rand, "../../../220303_Analysis_New/intermediate_data/sgb_share_rand.Rds")
+}
+
+panel_a_heatmap=sgb_share_rand %>% filter(!is.na(n_rel)) %>% left_join(sgb_share) %>% mutate(gt = n_rel <= mean_n, lt = n_rel >= mean_n) %>% group_by(ref_host, host2) %>% summarise(p_lt=1 - ((sum(lt)))/(n()+1), p_gt=1 -((sum(gt)))/(n()+1)) %>% left_join(sgb_share) %>% 
+  ggplot(aes(x=host2, y=ref_host, alpha=mean_n, fill=ref_host)) + geom_tile() + scale_fill_manual(values=colset$col, breaks=colset$host) + scale_alpha(range=c(0,1)) + 
+  geom_text(aes(label = ifelse(p_gt < 0.05, paste0(signif(p_gt,1),sprintf('\u2191')), "")), alpha=1, size=3) + 
+  geom_text(aes(label = ifelse(p_lt < 0.05, paste0(signif(p_lt,1),sprintf('\u2193')), "")), alpha=1, size=3) + 
+  theme_nothing() + theme(legend.position="none")
+
+panel_a_bottom = colset %>% filter(!host %in% c("Ggorilla2","Pttrog2")) %>% ggplot(aes(x=host, y=1, col=host, shape=host)) + geom_point(size=5) + 
+  scale_color_manual(values=colset$col, breaks=colset$host) +
+  scale_shape_manual(values=c(15:19)[colset$shape], breaks=colset$host) +
+  theme_nothing() + theme(legend.position="none")
+
+
+host_tree2 = host_tree %>% bind.tip(tree=., tip.label="Homo_sapiensA", where=which(host_tree$tip.label=="Homo_sapiens")) %>% bind.tip(tree=., tip.label="Homo_sapiensB", where=which(.$tip.label=="Homo_sapiensA"))
+panel_a_tree = ggtree(host_tree2, size=1) %>% ggtree::rotate(13) %>% ggtree::rotate(15) 
+panel_a_tree$data = panel_a_tree$data %>% left_join(colset %>% mutate(label = case_when(host=="HsA1" ~ "Homo_sapiensA", host=="HsA2" ~ "Homo_sapiensB", T ~ host_tree)))
+panel_a_tree = panel_a_tree + geom_tippoint(aes(col=host, shape=host), size=5) + scale_color_manual(values=colset$col, breaks=colset$host) +
+     scale_shape_manual(values=c(15:19)[colset$shape], breaks=colset$host) + theme_nothing() + theme(legend.position = "none") + scale_x_continuous(expand=c(0.5,.5))
+
+fig1_panel_a=plot_grid(plot_grid(panel_a_tree) + theme(plot.margin = unit(c(0,0,0,.5),"cm")), panel_a_heatmap+ theme(plot.margin = unit(c(0,0,0,0),"cm")), NULL, panel_a_bottom + theme(plot.margin = unit(c(0,0,0,0),"cm") ), rel_widths=c(.2,.8), rel_heights = c(.95,.1)) 
+
+```
+
+
+# Beta diversity plots
+
+```{r, fig.height=3}
+
+write.table(sgb_abundance %>% rownames_to_column("sample"), "figures_and_tables/Suppl_Table_S2_SGB_Abundances.tsv", sep="\t", row.names = F, quote=F)
+
+colset=colset %>% arrange(host_long)
+## clr transformation of genus level abundances
+gen = gen[!rownames(gen) %in% sample_exclude,]
+sgb_abundance = sgb_abundance[!rownames(sgb_abundance) %in% sample_exclude,]
+sgb_long = sgb_long %>% filter(!sample %in% sample_exclude)
+
+gen_clr=compositions::clr(gen+1)
+gen_clr[gen_clr<0] = 0
+
+## unifrac weighted 
+uf=UniFrac(phyloseq(otu_table(sgb_abundance, taxa_are_rows = F), tree=tree2),weighted = T, normalized = T)
+ufplot1=cmdscale(uf) %>% data.frame() %>% rownames_to_column("sample") %>% left_join(sample_meta) %>% ggplot(aes(x=X1, y=X2, col=host_long, shape=host_long)) + geom_point(size=3) + scale_color_manual(values=colset$col, breaks=colset$host_long) + scale_shape_manual(values=c(15:19)[colset$shape], breaks=colset$host_long) + theme_bw() + theme(panel.grid = element_blank()) + xlab("UniFrac PCoA1")  + ylab("UniFrac PCoA2") 
+
+## unifrac unweighted
+uf_uw=UniFrac(phyloseq(otu_table(sgb_abundance, taxa_are_rows = F), tree=tree2),weighted = F, normalized = T)
+ufplot2=cmdscale(uf_uw) %>% data.frame() %>% rownames_to_column("sample") %>% left_join(sample_meta) %>% ggplot(aes(x=X1, y=X2, col=host_long, shape=host_long)) + geom_point(size=3) + scale_color_manual(values=colset$col, breaks=colset$host_long) + scale_shape_manual(values=c(15:19)[colset$shape], breaks=colset$host_long) + theme_bw() + theme(panel.grid = element_blank()) + xlab("UniFrac PCoA1")  + ylab("UniFrac PCoA2") 
+fig1_panel_b = ufplot2
+
+
+## clr
+clr_dist = gen_clr %>% dist
+clrplot=cmdscale(clr_dist) %>% data.frame() %>% rownames_to_column("sample") %>% left_join(sample_meta) %>% ggplot(aes(x=X1, y=X2, col=host_long, shape=host_long)) + geom_point(size=3) + scale_color_manual(values=colset$col, breaks=colset$host_long) + scale_shape_manual(values=c(15:19)[colset$shape], breaks=colset$host_long) + theme_bw() + theme(panel.grid = element_blank()) + xlab("CLR PCoA1")  + ylab("CLR PCoA2") 
+
+## jaccard
+jac_dist = gen %>% vegdist(binary = T)
+jacplot=cmdscale(jac_dist) %>% data.frame() %>% rownames_to_column("sample") %>% left_join(sample_meta) %>% ggplot(aes(x=X1, y=X2, col=host_long, shape=host_long)) + geom_point(size=3) + scale_color_manual(values=colset$col, breaks=colset$host_long) + scale_shape_manual(values=c(15:19)[colset$shape], breaks=colset$host_long) + theme_bw() + theme(panel.grid = element_blank()) + xlab("Jaccard PCoA1")  + ylab("Jaccard PCoA2") 
+
+## gene abundance
+func_abu_long = sgb_long %>% filter(value>0) %>% mutate(host_group=substr(host,1,1)) %>% select(sample, GreatApes_95_final=variable, host_group, value) %>% left_join(pangenome_all) %>% group_by(sample, ogs) %>% summarize(abundance=sum(value)) %>% filter(!is.na(ogs))
+func_abu = reshape2::dcast(sample ~ ogs, value.var="abundance", fill=0, data=func_abu_long) %>% data.frame %>% column_to_rownames("sample")
+func_clr=compositions::clr(func_abu+1)
+func_clr[func_clr<0] = 0
+funcplot1 = func_clr %>% dist %>% cmdscale() %>% data.frame() %>% rownames_to_column("sample") %>% left_join(sample_meta) %>% ggplot(aes(x=X1, y=X2, col=host_long, shape=host_long)) + geom_point(size=3) + scale_color_manual(values=colset$col, breaks=colset$host_long) + scale_shape_manual(values=c(15:19)[colset$shape], breaks=colset$host_long) + theme_bw() + theme(panel.grid = element_blank()) + xlab("Function PCoA1")  + ylab("Function PCoA2") 
+#fig1_panel_c = funcplot1
+
+
+func_pa = reshape2::dcast(sample ~ ogs, value.var="abundance", fill=0, data=func_abu_long %>% mutate(abundance=ifelse(abundance>0,1,0))) %>% data.frame %>% column_to_rownames("sample")
+funcplot2 = func_pa %>% vegdist(binary = T) %>% cmdscale() %>% data.frame() %>% rownames_to_column("sample") %>% left_join(sample_meta) %>% ggplot(aes(x=X1, y=X2, col=host_long, shape=host_long)) + geom_point(size=3) + scale_color_manual(values=colset$col, breaks=colset$host_long) + scale_shape_manual(values=c(15:19)[colset$shape], breaks=colset$host_long) + theme_bw() + theme(panel.grid = element_blank()) + xlab("Function PCoA1")  + ylab("Function PCoA2") 
+
+```
+
+# Phylosymbiosis analysis
+
+## Random trees for phylosymbiosis p-value calculation
+
+```{r}
+### Random tree generation for RF calculations
+
+if(file.exists("../../../220303_Analysis_New/intermediate_data/random_trees_100k_rf.Rds")){
+  random_trees_100k_rf=readRDS("../../../220303_Analysis_New/intermediate_data/random_trees_100k_rf.Rds")
+}else{
+random_trees_100k_rf=list()
+random_trees_100k_rf[["ufuw"]] = lapply(1:100000, function(x) phangorn::RF.dist(host_tree, rtree(7, rooted=F, tip.label = host_tree$tip.label)))
+random_trees_100k_rf[["ufw"]] = lapply(1:100000, function(x) phangorn::RF.dist(host_tree, rtree(7, rooted=F, tip.label = host_tree$tip.label)))
+random_trees_100k_rf[["clr"]] = lapply(1:100000, function(x) phangorn::RF.dist(host_tree, rtree(7, rooted=F, tip.label = host_tree$tip.label)))
+random_trees_100k_rf[["jac"]] = lapply(1:100000, function(x) phangorn::RF.dist(host_tree, rtree(7, rooted=F, tip.label = host_tree$tip.label)))
+random_trees_100k_rf[["func"]] = lapply(1:100000, function(x) phangorn::RF.dist(host_tree, rtree(7, rooted=F, tip.label = host_tree$tip.label)))
+random_trees_100k_rf[["funcpa"]] = lapply(1:100000, function(x) phangorn::RF.dist(host_tree, rtree(7, rooted=F, tip.label = host_tree$tip.label)))
+saveRDS(random_trees_100k_rf, "../../../220303_Analysis_New/intermediate_data/random_trees_100k_rf.Rds")
+}
+
+```
+
+## Full dataset
+
+```{r, fig.height=3}
+###### calculate cumulative per-host abundances and generate jacknifed trees
+
+sgb_abu_host = sgb_long %>% filter(!is.na(host)) %>% mutate(host2 = ifelse(grepl("Hs",host),"Hs",gsub("[0-9]+","",host))) %>% group_by(host2, variable) %>% summarize(value=sum(as.integer(value))) %>% reshape2::dcast(host2 ~ variable, value.var="value", fill=0) %>% data.frame %>% column_to_rownames("host2")
+
+gen_abu_host = gen %>% data.frame %>% rownames_to_column("sample") %>% reshape2::melt(.) %>% left_join(sample_meta) %>% mutate(value=ifelse(value<0,0,value)) %>% filter(!is.na(host)) %>% mutate(host2 = ifelse(grepl("Hs",host),"Hs",gsub("[0-9]+","",host))) %>% group_by(host2, variable) %>% summarize(value=sum(as.integer(value))) %>% reshape2::dcast(host2 ~ variable, value.var="value", fill=0) %>% data.frame %>% column_to_rownames("host2")
+
+func_abu_host = func_abu %>% data.frame %>% rownames_to_column("sample") %>% reshape2::melt(.) %>% left_join(sample_meta) %>% mutate(value=ifelse(value<0,0,value)) %>% filter(!is.na(host)) %>% mutate(host2 = ifelse(grepl("Hs",host),"Hs",gsub("[0-9]+","",host))) %>% group_by(host2, variable) %>% summarize(value=sum(as.integer(value))) %>% reshape2::dcast(host2 ~ variable, value.var="value", fill=0) %>% data.frame %>% column_to_rownames("host2")
+func_abu_host_clr = clr(func_abu_host+1)
+func_abu_host_clr[func_abu_host_clr<0] = 0
+
+func_abu_host_pa = func_abu_host
+func_abu_host_pa[func_abu_host_pa>0] = 1
+
+gen_abu_host_clr = clr(gen_abu_host+1)
+gen_abu_host_clr[gen_abu_host_clr<0]=0
+
+### Jacknife trees
+
+if(file.exists("../../../220303_Analysis_New/intermediate_data/jackknife_trees.Rds")){
+  jackknife_trees=readRDS("../../../220303_Analysis_New/intermediate_data/jackknife_trees.Rds")
+}else{
+jackknife_trees = mclapply(1:1000, function(x){
+  set.seed(x)
+  trr = vegan::rrarefy(sgb_abu_host, sample=1000000)
+  trr_gen = (vegan::rrarefy(gen_abu_host, sample=1000000))
+  trr_gen_clr = clr(trr_gen+1)
+  trr_gen_clr[trr_gen_clr<0] = 0
+  trr_func = trr %>% data.frame() %>% rownames_to_column("host") %>% reshape2::melt(.) %>% mutate(host_group = substr(host,1,1)) %>% filter(value>0) %>% left_join(pangenome_all, by=c("variable"="GreatApes_95_final")) %>% group_by(host, ogs) %>% summarize(abundance=sum(value)) %>% filter(!is.na(ogs)) %>% dcast(host ~ ogs, value.var="abundance", fill=0) %>% column_to_rownames("host")
+  trr_func_clr =  clr(trr_func+1)
+  trr_func_clr[trr_func_clr<0] = 0
+  trr_func_pa = trr_func
+  trr_func_pa[trr_func_pa>0] = 1
+  ps_trr = phyloseq(otu_table=otu_table(trr, taxa_are_rows = F), tree=tree2)
+  return(list(clr_tree = trr_gen_clr %>% dist %>% hclust(method="average") %>% as.phylo,
+              jac_tree = trr_gen %>% vegdist(binary = T) %>% hclust(method="average") %>% as.phylo,
+              ufuw_tree =ps_trr %>% UniFrac(weighted = F, normalized = F) %>% hclust(method="average") %>% as.phylo,
+              ufw_tree = ps_trr %>% UniFrac(weighted = T, normalized = F) %>% hclust(method="average") %>% as.phylo,
+              func_tree = trr_func_clr %>% dist %>% hclust(method="average") %>% as.phylo,
+              funcpa_tree = trr_func_pa %>% vegdist(binary = T) %>% hclust(method="average") %>% as.phylo))
+}, mc.cores = 10)
+saveRDS(jackknife_trees, "../../../220303_Analysis_New/intermediate_data/jackknife_trees.Rds")
+}
+
+### Jackknife consensus trees
+subset = sample_meta %>% filter(sample %in% rownames(sgb_abundance)) %>% group_by(host_tree) %>% slice_sample(n=1) %>% mutate(host3 =ifelse(grepl("Hs",host),"Hs", gsub("[0-9]+","",host))) %>% select(host_tree, host3)
+
+tree_clr_host_full = gen_abu_host_clr  %>% dist %>% hclust(method="average") %>% as.phylo %>% unroot
+tree_clr_host_full$node.label = prop.clades(tree_clr_host_full, lapply(jackknife_trees, function(x) x$clr_tree %>% unroot )  %>% data.table::setattr("class", "multiPhylo"))
+tree_clr_host_full$tip.label = subset[match(tree_clr_host_full$tip.label, subset$host3),1] %>% unlist %>% as.vector
+
+tree_ufuw_host_full = (sgb_abu_host/rowSums(sgb_abu_host)) %>% otu_table(., taxa_are_rows = F) %>% phyloseq(otu_table=., tree=tree2) %>% UniFrac(weighted = F, normalized = T) %>% hclust(method="average") %>% as.phylo %>% unroot
+tree_ufuw_host_full$node.label = prop.clades(tree_ufuw_host_full, lapply(jackknife_trees, function(x) x$ufuw_tree %>% unroot )  %>% data.table::setattr("class", "multiPhylo"))
+tree_ufuw_host_full$tip.label = subset[match(tree_ufuw_host_full$tip.label, subset$host3),1] %>% unlist%>% as.vector
+
+tree_ufw_host_full = (sgb_abu_host/rowSums(sgb_abu_host)) %>% otu_table(., taxa_are_rows = F) %>% phyloseq(otu_table=., tree=tree2) %>% UniFrac(weighted = T, normalized = T) %>% hclust(method="average") %>% as.phylo %>% unroot
+tree_ufw_host_full$node.label = prop.clades(tree_ufw_host_full, lapply(jackknife_trees, function(x) x$ufw_tree %>% unroot )  %>% data.table::setattr("class", "multiPhylo"))
+tree_ufw_host_full$tip.label = subset[match(tree_ufw_host_full$tip.label, subset$host3),1] %>% unlist%>% as.vector
+
+tree_jac_host_full = gen_abu_host %>% vegdist(binary=T) %>% hclust(method="average") %>% as.phylo %>% unroot
+tree_jac_host_full$node.label = prop.clades(tree_jac_host_full, lapply(jackknife_trees, function(x) x$jac_tree  %>% unroot) %>% unclass %>% data.table::setattr("class", "multiPhylo"))
+tree_jac_host_full$tip.label = subset[match(tree_jac_host_full$tip.label, subset$host3),1] %>% unlist%>% as.vector
+
+tree_func_host_full = func_abu_host_clr %>% dist %>% hclust(method="average") %>% as.phylo %>% unroot
+tree_func_host_full$node.label = prop.clades(tree_func_host_full, lapply(jackknife_trees, function(x) x$func_tree  %>% unroot) %>% unclass %>% data.table::setattr("class", "multiPhylo"))
+tree_func_host_full$tip.label = subset[match(tree_func_host_full$tip.label, subset$host3),1] %>% unlist%>% as.vector
+
+tree_funcpa_host_full = func_abu_host_pa %>% vegdist(binary=T) %>% hclust(method="average") %>% as.phylo %>% unroot
+tree_funcpa_host_full$node.label = prop.clades(tree_funcpa_host_full, lapply(jackknife_trees, function(x) x$func_tree  %>% unroot) %>% unclass %>% data.table::setattr("class", "multiPhylo"))
+tree_funcpa_host_full$tip.label = subset[match(tree_funcpa_host_full$tip.label, subset$host3),1] %>% unlist%>% as.vector
+
+
+p_phylosym=data.frame(
+clr_full=(unlist(random_trees_100k_rf["clr"]) <= phangorn::RF.dist(host_tree,tree_clr_host_full)) %>% mean,
+ufw_full=(unlist(random_trees_100k_rf["ufw"]) <= phangorn::RF.dist(host_tree,tree_ufw_host_full)) %>% mean,
+ufuw_full=(unlist(random_trees_100k_rf["ufuw"]) <= phangorn::RF.dist(host_tree,tree_ufuw_host_full)) %>% mean,
+jac_full=(unlist(random_trees_100k_rf["jac"]) <= phangorn::RF.dist(host_tree,tree_jac_host_full)) %>% mean,
+func_full=(unlist(random_trees_100k_rf["func"]) <= phangorn::RF.dist(host_tree,tree_func_host_full)) %>% mean,
+funcpa_full=(unlist(random_trees_100k_rf["funcpa"]) <= phangorn::RF.dist(host_tree,tree_func_host_full)) %>% mean
+)
+
+```
+
+# Analysis of abundance and function differences
+
+# Combined for Figure 1 a, b, c
+
+```{r, fig.height=11.5, fig.width=6.5}
+### Suppl. Table S2
+#phylosym_pvals = data.frame(all=t(p_phylosym), no_ger=t(p_phylosym_noger),no_ptt=t(p_phylosym_noptt), row.names=c("CLR","UniFrac w.", "UniFrac unw.","Jaccard","Func. (CLR)"))
+phylosym_pvals = data.frame(all=t(p_phylosym), row.names=c("CLR","UniFrac w.", "UniFrac unw.","Jaccard","Func. (CLR)", "Func. (P/A)"))
+
+write.table(phylosym_pvals %>% rownames_to_column("distance"), "figures_and_tables/Suppl_Table_S3_Phylsymbiosis_pvals.tsv", sep="\t", row.names = F)
+
+panel_b_host = host_tree %>% ggtree(branch.length = "none", size=.8)   + theme_nothing() + scale_y_continuous(limits=c(0.5, 7.5)) + geom_tippoint(data = . %>% left_join(sample_meta, by=c("label"="host_tree")), aes(col=host_long, shape=host_long), size=3) + scale_color_manual(values=colset$col, breaks=colset$host_long) + scale_shape_manual(values=c(15:18)[colset$shape], breaks=colset$host_long)
+
+panel_b_micro = tree_ufuw_host_full %>% root(node=10, resolve.root=T) %>% ape::rotate(8) %>% as.phylo() %>% ggtree(branch.length = "none", size=.8)  + scale_x_reverse() + theme_nothing() + scale_y_continuous(limits=c(0.5, 7.5)) + geom_tippoint(data = . %>% left_join(sample_meta, by=c("label"="host_tree")), aes(col=host_long, shape=host_long), size=3) + scale_color_manual(values=colset$col, breaks=colset$host_long) + scale_shape_manual(values=c(15:18)[colset$shape], breaks=colset$host_long)
+
+panel_b_conn = panel_b_host$data %>% filter(isTip) %>% select(label,y_host=y) %>% left_join(panel_b_micro$data %>% filter(isTip) %>% select(label,y_micro=y)) %>% left_join(colset, by=c("label"="host_tree")) %>% ggplot(aes(x=1, xend=2, y=y_host, yend=y_micro)) + geom_segment(size=.8, lty=2) + theme_nothing() + scale_y_continuous(limits=c(0.5, 7.5))
+
+###
+
+fig1_panel_c = plot_grid(panel_b_host, panel_b_conn, panel_b_micro, align = "h", ncol=3 )
+
+fig1_left = cowplot::plot_grid(fig1_panel_b+theme(legend.position = "none") + theme(plot.margin = unit(c(1, 0.4, 0, 0), "cm")), 
+                               cowplot::plot_grid(
+                                  get_legend(fig1_panel_b + guides(colour = guide_legend(ncol = 1, title="",byrow = TRUE), shape=guide_legend(ncol = 1, title="",byrow = TRUE)) + 
+                                               theme(legend.spacing.y = unit(0.1, 'cm') ,legend.position = "bottom", legend.justification = "top", legend.text = element_text(size=10), legend.key.size = unit(0.2, "cm"))), 
+                                  fig1_panel_c, rel_widths=c(.5,.5), labels=c("","b")),
+                               fig1_panel_a+theme(legend.position = "none") + theme(plot.margin = unit(c(1, 0.4, 0, 0), "cm")),
+                               ncol=1, rel_heights = c(.4,.2,.4), labels=c("a","","c"))
+
+plot(fig1_left)
+
+ggsave(filename = "figures_and_tables/fig1_left.png",fig1_left, width = 6.5, height=11.5, bg="white")
+saveRDS(fig1_left, "figures_and_tables/fig1_left.Rds")
+
+```
+
+# Combined Figure S2
+
+```{r, fig.height=20, fig.width=25}
+
+### weighted unifrac
+
+panel_uf_micro = tree_ufw_host_full %>% root(node=9, resolve.root=T) %>% ggtree(branch.length = "none", size=.8) + scale_x_reverse() + theme_nothing() + scale_y_continuous(limits=c(0.5, 7.5)) + geom_tippoint(data = . %>% left_join(sample_meta, by=c("label"="host_tree")), aes(col=host_long, shape=host_long), size=3) + scale_color_manual(values=colset$col, breaks=colset$host_long) + scale_shape_manual(values=c(15:18)[colset$shape], breaks=colset$host_long)
+
+panel_uf_conn = panel_b_host$data %>% filter(isTip) %>% select(label,y_host=y) %>% left_join(panel_uf_micro$data %>% filter(isTip) %>% select(label,y_micro=y)) %>% left_join(colset, by=c("label"="host_tree")) %>% ggplot(aes(x=1, xend=2, y=y_host, yend=y_micro)) + geom_segment(size=.8, lty=2) + theme_nothing() + scale_y_continuous(limits=c(0.5, 7.5))
+
+figs2_uf_tree = plot_grid(panel_b_host, panel_uf_conn, panel_uf_micro, align = "h", ncol=3 )
+
+                   
+                   
+### unweighted unifrac
+
+panel_ufuw_micro = tree_ufuw_host_full %>% root(node=10, resolve.root=T) %>% ggtree(branch.length = "none", size=.8) + scale_x_reverse() + theme_nothing() + scale_y_continuous(limits=c(0.5, 7.5)) + geom_tippoint(data = . %>% left_join(sample_meta, by=c("label"="host_tree")), aes(col=host_long, shape=host_long), size=3) + scale_color_manual(values=colset$col, breaks=colset$host_long) + scale_shape_manual(values=c(15:18)[colset$shape], breaks=colset$host_long)
+
+panel_ufuw_conn = panel_b_host$data %>% filter(isTip) %>% select(label,y_host=y) %>% left_join(panel_ufuw_micro$data %>% filter(isTip) %>% select(label,y_micro=y)) %>% left_join(colset, by=c("label"="host_tree")) %>% ggplot(aes(x=1, xend=2, y=y_host, yend=y_micro)) + geom_segment(size=.8, lty=2) + theme_nothing() + scale_y_continuous(limits=c(0.5, 7.5))
+
+figs2_ufuw_tree = plot_grid(panel_b_host, panel_ufuw_conn, panel_ufuw_micro, align = "h", ncol=3 )
+
+   
+### Gen CLR
+
+panel_clr_micro = tree_clr_host_full %>% root(node=9, resolve.root=T) %>% ggtree(branch.length = "none", size=.8) + scale_x_reverse() + theme_nothing() + scale_y_continuous(limits=c(0.5, 7.5)) + geom_tippoint(data = . %>% left_join(sample_meta, by=c("label"="host_tree")), aes(col=host_long, shape=host_long), size=3) + scale_color_manual(values=colset$col, breaks=colset$host_long) + scale_shape_manual(values=c(15:18)[colset$shape], breaks=colset$host_long)
+
+panel_clr_conn = panel_b_host$data %>% filter(isTip) %>% select(label,y_host=y) %>% left_join(panel_clr_micro$data %>% filter(isTip) %>% select(label,y_micro=y)) %>% left_join(colset, by=c("label"="host_tree")) %>% ggplot(aes(x=1, xend=2, y=y_host, yend=y_micro)) + geom_segment(size=.8, lty=2) + theme_nothing() + scale_y_continuous(limits=c(0.5, 7.5))
+
+figs2_clr_tree = plot_grid(panel_b_host, panel_clr_conn, panel_clr_micro, align = "h", ncol=3 )
+
+
+### Gen Jaccard
+
+panel_jac_micro = tree_jac_host_full %>% root(node=9, resolve.root=T) %>% ggtree(branch.length = "none", size=.8) + scale_x_reverse() + theme_nothing() + scale_y_continuous(limits=c(0.5, 7.5)) + geom_tippoint(data = . %>% left_join(sample_meta, by=c("label"="host_tree")), aes(col=host_long, shape=host_long), size=3) + scale_color_manual(values=colset$col, breaks=colset$host_long) + scale_shape_manual(values=c(15:18)[colset$shape], breaks=colset$host_long)
+
+panel_jac_conn = panel_b_host$data %>% filter(isTip) %>% select(label,y_host=y) %>% left_join(panel_jac_micro$data %>% filter(isTip) %>% select(label,y_micro=y)) %>% left_join(colset, by=c("label"="host_tree")) %>% ggplot(aes(x=1, xend=2, y=y_host, yend=y_micro)) + geom_segment(size=.8, lty=2) + theme_nothing() + scale_y_continuous(limits=c(0.5, 7.5))
+
+figs2_jac_tree = plot_grid(panel_b_host, panel_jac_conn, panel_jac_micro, align = "h", ncol=3 )
+
+
+### function 
+
+panel_func_micro = tree_func_host_full %>% root(node=10, resolve.root=T) %>% ggtree(branch.length = "none", size=.8) + scale_x_reverse() + theme_nothing() + scale_y_continuous(limits=c(0.5, 7.5)) + geom_tippoint(data = . %>% left_join(sample_meta, by=c("label"="host_tree")), aes(col=host_long, shape=host_long), size=3) + scale_color_manual(values=colset$col, breaks=colset$host_long) + scale_shape_manual(values=c(15:18)[colset$shape], breaks=colset$host_long)
+
+panel_func_conn = panel_b_host$data %>% filter(isTip) %>% select(label,y_host=y) %>% left_join(panel_func_micro$data %>% filter(isTip) %>% select(label,y_micro=y)) %>% left_join(colset, by=c("label"="host_tree")) %>% ggplot(aes(x=1, xend=2, y=y_host, yend=y_micro)) + geom_segment(size=.8, lty=2) + theme_nothing() + scale_y_continuous(limits=c(0.5, 7.5))
+
+figs2_func_tree = plot_grid(panel_b_host, panel_func_conn, panel_func_micro, align = "h", ncol=3 )
+
+### function pa
+
+panel_funcpa_micro = tree_funcpa_host_full %>% root(node=9, resolve.root=T) %>% ggtree(branch.length = "none", size=.8) + scale_x_reverse() + theme_nothing() + scale_y_continuous(limits=c(0.5, 7.5)) + geom_tippoint(data = . %>% left_join(sample_meta, by=c("label"="host_tree")), aes(col=host_long, shape=host_long), size=3) + scale_color_manual(values=colset$col, breaks=colset$host_long) + scale_shape_manual(values=c(15:18)[colset$shape], breaks=colset$host_long)
+
+panel_funcpa_conn = panel_b_host$data %>% filter(isTip) %>% select(label,y_host=y) %>% left_join(panel_funcpa_micro$data %>% filter(isTip) %>% select(label,y_micro=y)) %>% left_join(colset, by=c("label"="host_tree")) %>% ggplot(aes(x=1, xend=2, y=y_host, yend=y_micro)) + geom_segment(size=.8, lty=2) + theme_nothing() + scale_y_continuous(limits=c(0.5, 7.5))
+
+figs2_funcpa_tree = plot_grid(panel_b_host, panel_funcpa_conn, panel_funcpa_micro, align = "h", ncol=3 )
+
+header_plot = plot_grid(ggplot(data=data.frame(label="Ordination")) + geom_text(x=0,y=0,aes(label=label), size=10) + scale_y_continuous(expand=c(0,0), limit=c(-1,1)) + scale_x_continuous(expand=c(0,0), limit=c(-1,1)) + theme_nothing(),
+                        ggplot(data=data.frame(label="All Hosts")) + geom_text(x=0,y=0,aes(label=label), size=10) + scale_y_continuous(expand=c(0,0), limit=c(-1,1)) + scale_x_continuous(expand=c(0,0), limit=c(-1,1)) + theme_nothing(),
+                        ggplot(data=data.frame(label="P-values")) + geom_text(x=0,y=0,aes(label=label), size=10) + scale_y_continuous(expand=c(0,0), limit=c(-1,1)) + scale_x_continuous(expand=c(0,0), limit=c(-1,1)) + theme_nothing(), ncol=3, rel_widths=c(.4,.3,.2))
+
+fig_s2=plot_grid(header_plot,
+cowplot::plot_grid(ufplot1,figs2_uf_tree,phylosym_pvals[2,] %>% gridExtra::tableGrob(), ncol=3, rel_widths=c(.4,.3,.2)),
+cowplot::plot_grid(ufplot2,figs2_ufuw_tree,phylosym_pvals[3,] %>% gridExtra::tableGrob(), ncol=3, rel_widths=c(.4,.3,.2)),
+cowplot::plot_grid(clrplot,figs2_clr_tree,phylosym_pvals[1,] %>% gridExtra::tableGrob(), ncol=3, rel_widths=c(.4,.3,.2)),
+cowplot::plot_grid(jacplot,figs2_jac_tree,phylosym_pvals[4,] %>% gridExtra::tableGrob(), ncol=3, rel_widths=c(.4,.3,.2)),
+cowplot::plot_grid(funcplot1,figs2_func_tree,phylosym_pvals[5,] %>% gridExtra::tableGrob(), ncol=3, rel_widths=c(.4,.3,.2)),
+cowplot::plot_grid(funcplot2,figs2_funcpa_tree,phylosym_pvals[6,] %>% gridExtra::tableGrob(), ncol=3, rel_widths=c(.4,.3,.2)),
+ncol=1, rel_heights = c(.1,.2,.2,.2,.2,.2,.2))
+
+plot(fig_s2)
+
+ggsave(filename = "figures_and_tables/Figure_S2.png",fig_s2, width = 18, height=20, bg="white")
+
+```
+

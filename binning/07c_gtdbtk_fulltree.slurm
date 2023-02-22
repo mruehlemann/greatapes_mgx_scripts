@@ -23,7 +23,7 @@ source $scriptdir/00_sources.txt
 
 module load miniconda3
 source activate gtdbtk_2.1.0
-GTDBTK_DATA_PATH=/work_ifs/ikmb_repository/databases/GTDB-TK/release207_v2
+export GTDBTK_DATA_PATH=/work_beegfs/ikmb_repository/databases/GTDB-TK/release207_v2
 
 #cd $workfolder/allgroups
 cd $TMPDIR
@@ -53,10 +53,10 @@ echo "1:0);" >> ${PROJECTID}.bac120+ar53.rooted.tre
 # grep $this_local ${PROJECTID}.all_genomes.tsv | awk '{if($NF!="NA") print $1}' | xargs -I {} grep -w {} $workfolder/subgroups/$this_local/$this_local.cleanbins_list
 # done > ${PROJECTID}.cleanbins_list
 
-# gtdbtk identify --batchfile $workfolder/allgroups/${PROJECTID}.cleanbins_list --cpus $SLURM_CPUS_PER_TASK -x fa  --out_dir ${PROJECTID}_cleanbins --prefix ${PROJECTID}_cleanbins
-# gtdbtk align --identify_dir ${PROJECTID}_cleanbins --out_dir ${PROJECTID}_cleanbins --prefix ${PROJECTID}_cleanbins --skip_gtdb_refs --cpus $SLURM_CPUS_PER_TASK
-# gtdbtk align --identify_dir ${PROJECTID}_cleanbins --out_dir ${PROJECTID}_cleanbins --prefix ${PROJECTID}_cleanbins --cpus $SLURM_CPUS_PER_TASK
-# gtdbtk classify --align_dir ${PROJECTID}_cleanbins --batchfile $workfolder/allgroups/${PROJECTID}.cleanbins_list --out_dir ${PROJECTID}_cleanbins --prefix ${PROJECTID}_cleanbins --cpus $SLURM_CPUS_PER_TASK --pplacer_cpus $SLURM_CPUS_PER_TASK
+gtdbtk identify --batchfile $workfolder/allgroups/${PROJECTID}.cleanbins_list --cpus $SLURM_CPUS_PER_TASK -x fa  --out_dir ${PROJECTID}_cleanbins --prefix ${PROJECTID}_cleanbins
+gtdbtk align --identify_dir ${PROJECTID}_cleanbins --out_dir ${PROJECTID}_cleanbins --prefix ${PROJECTID}_cleanbins --skip_gtdb_refs --cpus $SLURM_CPUS_PER_TASK
+gtdbtk align --identify_dir ${PROJECTID}_cleanbins --out_dir ${PROJECTID}_cleanbins --prefix ${PROJECTID}_cleanbins --cpus $SLURM_CPUS_PER_TASK
+#gtdbtk classify --align_dir ${PROJECTID}_cleanbins --batchfile $workfolder/allgroups/${PROJECTID}.cleanbins_list --out_dir ${PROJECTID}_cleanbins --prefix ${PROJECTID}_cleanbins --cpus $SLURM_CPUS_PER_TASK --pplacer_cpus $SLURM_CPUS_PER_TASK
 
 # gunzip ${PROJECTID}_cleanbins/align/${PROJECTID}_cleanbins.ar53.user_msa.fasta.gz
 # gunzip ${PROJECTID}_cleanbins/align/${PROJECTID}_cleanbins.bac120.user_msa.fasta.gz

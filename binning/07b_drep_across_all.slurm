@@ -106,6 +106,7 @@ write.table(mq_nohit$V1, "drep_l2_input", col.names=F, row.names=F, quote=F)
 conda deactivate
 source activate binning_env
 dRep compare -g drep_l2_input -p $SLURM_CPUS_PER_TASK --S_algorithm fastANI -sa 0.95 -d drep_l2_out
+#fastANI --refList drep_l2_input --ql drep_l2_input -t $SLURM_CPUS_PER_TASK --fragLen 10000 --minFraction 0.8 -o drep_l2_fastani.out
 
 ### combine clustering results
 conda deactivate
@@ -113,14 +114,17 @@ conda activate r_microbiome_env
 
 R --vanilla <<< '
 library(tidyverse);
+
 clusters = read.table("data_tables/Cdb.csv", stringsAsFactors=F, head=T, sep=",") %>% mutate(cluster_95=paste0(secondary_cluster)) %>% select(genome, cluster_95) %>% mutate(genome=gsub(".fa$|.fna$","",genome))
 
 all_sub = c("Gberingei","Ggorilla","Ppan","Ptver","Ptschw","Pttrog","HsG","HsA1","HsA2","ZcambellGorilla","ZcambellPan")
 all_clusters = sapply(all_sub, function(x) read.table(paste0("/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final//subgroups/",x,"/",x,".dRep_cluster.tsv"), head=T, stringsAsFactors=F), simplify=F) %>% do.call("rbind",.)
 all_clusters = all_clusters %>% rbind(read.table("/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final//subgroups/UHGG_v2/UHGG.dRep_cluster.tsv", head=T, stringsAsFactors=F))
+all_clusters = all_clusters %>% rbind(read.table("/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final//subgroups/ManaraNHP/ManaraNHP.dRep_cluster.tsv", head=T, stringsAsFactors=F))
 
 all_reps97 = sapply(all_sub, function(x) read.table(paste0("/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final///subgroups/",x,"/",x,".dRep_cluster97_representatives.tsv"), head=T, stringsAsFactors=F), simplify=F) %>% do.call("rbind",.)
 all_reps97 = all_reps97 %>% rbind(read.table("/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final//subgroups/UHGG_v2/UHGG.dRep_cluster97_representatives.tsv", head=T, stringsAsFactors=F))
+all_reps97 = all_reps97 %>% rbind(read.table("/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final//subgroups/ManaraNHP/ManaraNHP.dRep_cluster97_representatives.tsv", head=T, stringsAsFactors=F))
 
 
 scores = read.table("/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final/allgroups/GreatApes.rep97.refined.out", head=T, stringsAsFactors=F, sep="\t", row.names=NULL) %>% filter(!duplicated(row.names)) %>%

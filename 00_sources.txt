@@ -1,14 +1,14 @@
-workfolder="/work_ifs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final"
-datafolder="/work_ifs/sukmb276/Metagenomes/projects/ApesComplete/output/Samples_new"
-basefolder="/work_ifs/sukmb276/Metagenomes/projects/ApesComplete/"
+workfolder="/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final"
+datafolder="/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/output/Samples_new"
+basefolder="/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/"
 
 groupingfile="$basefolder/groupings_nozoo_campbell.txt"
 
 all_local=($(cut -f 2 $groupingfile | sort | uniq))
 all_samples=($(cut -f 1 $groupingfile))
 
-PARALLEL="/work_ifs/sukmb276/software/bin/parallel"
-MAGSCOT_EXEC="/work_ifs/sukmb276/github/MAGScoT/MAGScoT.R"
+PARALLEL="/work_beegfs/sukmb276/software/bin/parallel"
+MAGSCOT_EXEC="/work_beegfs/sukmb276/github/MAGScoT/MAGScoT.R"
 PYTHON=" /home/sukmb276/.conda/envs/binning_env/bin/python"
 
 PROJECTID="GreatApes"

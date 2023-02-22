@@ -93,20 +93,17 @@ R --vanilla < """
 library(tidyverse)
 prot_to_cluster = read_delim('GreatApes.prot95_cluster.tsv', delim='\t', col_names=c('cluster_id','prot_id'))
 
-cluster_annot = read_delim('GreatApes.prot95_rep_seq.emapper.annotations',col_names=T, delim='\t', quote='', num_threads=10,comment='', skip=4)
-
-cluster_annot_parts = lapply(c('test/GreatApes.prot95_rep_seq_part_05.emapper.annotations', 'test/GreatApes.prot95_rep_seq_part_06.emapper.annotations', 
-    'test/GreatApes.prot95_rep_seq_part_07.emapper.annotations', 'test/GreatApes.prot95_rep_seq_part_08.emapper.annotations', 'test/GreatApes.prot95_rep_seq_part_09.emapper.annotations'), function(x)
- read_delim(x, delim='\t', quote='', num_threads=10,comment='', skip=4, col_names=colnames(cluster_annot))) %>% do.call('bind_rows', .)
-
-cluster_annot = bind_rows(cluster_annot, cluster_annot_parts)
-colnames(cluster_annot)[1] = 'cluster_id'
+cluster_annot = read_delim('GreatApes.prot95_rep_seq.emapper.annotations',col_names=c('cluster_id','seed_ortholog','evalue','score','eggNOG_OGs','max_annot_lvl','COG_category','Description','Preferred_name','GOs','EC','KEGG_ko','KEGG_Pathway','KEGG_Module','KEGG_Reaction','KEGG_rclass','BRITE','KEGG_TC','CAZy','BiGG_Reaction','PFAMs'), delim='\t', quote='', num_threads=10,comment='')
 
 cluster_annot = cluster_annot %>% filter(!duplicated(cluster_id))
 
 prot_to_genome = read_delim('../GreatApes.prot_to_genome.tsv', delim='\t', quote='', num_threads=10,col_names=c('mag_id','prot_id'))
 genome_to_sgb = read_delim('../GreatApes.all_genomes.tsv', delim='\t',col_names=T) %>% select(mag_id=genome, GreatApes_95_final) %>% filter(!is.na(GreatApes_95_final)) %>% mutate(sample=substr(mag_id,1,9))
-host = read_delim('../../../../groupings_nozoo.txt', delim='\t', col_names=c('sample', 'host')) %>% mutate(host_group=substr(host,1,1)) %>% bind_rows(., data.frame(sample='MGYG00000', host='HsUHGG',host_group='H')) %>% select(-host)
+host = read_delim('../../../../groupings_nozoo_campbell.txt', delim='\t', col_names=c('sample', 'host')) %>% 
+    mutate(host_group=substr(gsub('Zcambell',"",host),1,1)) %>% 
+    bind_rows(., data.frame(sample='MGYG00000', host='HsUHGG',host_group='H')) %>% 
+    bind_rows(., data.frame(sample='ManaraNHP', host='HsUHGG',host_group='O')) %>% 
+    select(-host) 
 
 sgb_host_to_cluster = genome_to_sgb %>% left_join(host) %>% left_join(prot_to_genome) %>% left_join(prot_to_cluster) %>% select(GreatApes_95_final, host_group, cluster_id) %>% distinct()
 sgb_host_w_annot = sgb_host_to_cluster  %>% left_join(cluster_annot)
