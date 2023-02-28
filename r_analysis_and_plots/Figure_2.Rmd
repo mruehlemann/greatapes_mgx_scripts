@@ -94,7 +94,7 @@ cands_res_ph = lapply(cands_ph %>% filter(H>=5, nonH>=5) %>% pull(genus), functi
 tax_res=lapply(colnames(tax_sub %>% select(-GreatApes_95_final, -status))[between(colMeans(tax_sub[,-1][,-1]),.1,.9)], function(x) return(list(ogs=x, H_prev=mean(tax_sub[tax_sub$status=="H",x]), N_prev=mean(tax_sub[tax_sub$status=="nonH",x]), pval=fisher.test(table(tax_sub$status, tax_sub[,x]))$p.value))) %>% do.call("bind_rows",.) %>% mutate(tax=tt)
 tax_res %>% arrange(pval) %>% return()}) %>% do.call("bind_rows",.)  %>% mutate(effect=log2((H_prev+0.01)/(N_prev+0.01))) %>% mutate(Zscore=-qnorm(pval/2)*sign(effect), ogs=paste0("ko:",ogs)) %>% left_join(KO_NAMES, by=c("ogs"="ko")) 
 
-write.table(cands_res_ph %>% select(tax, ogs, H_prev, N_prev, pval, effect, Zscore, annot), "figures_and_tables/Suppl_Table_S9_Results_Human.vs.NPH_KO_Tax.tsv", row.names = F, sep="\t")
+write.table(cands_res_ph %>% select(tax, ogs, H_prev, N_prev, pval, effect, Zscore, annot), "figures_and_tables/Suppl_Table_S10_Results_Human.vs.NHP_KO_Tax.tsv", row.names = F, sep="\t")
 
 ### meta analysis
 
@@ -105,7 +105,7 @@ cands_meta_ph = cands_res_ph %>%
   left_join(KO_NAMES, by=c("ogs"="ko"))
 cands_meta_ph$gene = cands_meta_ph$annot %>% sapply(., function(x) strsplit(x, split=";")[[1]][1] %>% unlist)
 
-write.table(cands_meta_ph %>% select(ogs, Z_sum, w_sum, Z_meta, p_meta, q_meta = qval, gene, annot), "figures_and_tables/Suppl_Table_S10_Results_Human.vs.NPH_KO_Meta.tsv", row.names = F, sep="\t")
+write.table(cands_meta_ph %>% select(ogs, Z_sum, w_sum, Z_meta, p_meta, q_meta = qval, gene, annot), "figures_and_tables/Suppl_Table_S11_Results_Human.vs.NPH_KO_Meta.tsv", row.names = F, sep="\t")
 
 meta_plot_data = cands_res_ph %>% filter(ogs %in% (cands_meta_ph %>% filter(qval<0.05) %>% pull(ogs))) %>% left_join(tax2 %>% select(phylum, tax=genus) %>% distinct()) %>% select(ogs, pval, Zscore, tax, phylum)  %>% bind_rows(., cands_meta_ph %>% filter(qval<0.05) %>% select(ogs, pval=qval, Zscore=Z_meta) %>% mutate(tax="META", phylum=ifelse(Zscore < 0, "NHP", "Human"))) %>% distinct() %>% left_join(KO_NAMES, by=c("ogs"="ko"))
 meta_plot_data$gene = meta_plot_data$annot %>% sapply(., function(x) strsplit(x, split=";")[[1]][1] %>% unlist)

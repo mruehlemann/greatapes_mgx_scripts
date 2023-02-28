@@ -167,9 +167,9 @@ panel_f = salmon_rare_pd %>% rownames_to_column("sid") %>% separate(sid, into = 
 
 phlyodiv=salmon_rare_pd %>% rownames_to_column("sid") %>% separate(sid, into = c("sample","depth","i"), sep="_") %>% mutate(depth=as.numeric(depth)) %>% filter(depth==1000000)
 
-panel_g = phlyodiv %>% group_by(sample) %>% summarise(PD=mean(PD)) %>% left_join(sample_meta)  %>% ggplot(aes(x=host_long, y=PD, fill=host_long)) + geom_boxplot(outlier.shape = NA) + geom_jitter(width=.1, size=1, shape=21) + theme(axis.text.x = element_text(angle=45, hjust=1)) + scale_fill_manual(values=colset$col, breaks=colset$host_long) + scale_y_continuous(limits=c(0,100), expand=c(0,0)) + theme(legend.position = "none", axis.text.x = element_blank(), axis.ticks.x=element_blank()) + ylab("PhyloDiv @ 1 Mio Reads") + xlab("Host") #+ ggpubr::stat_compare_means(comparisons = combn(colset$host_long, 2, simplify = F), hide.ns = T)
-
-pd_sign = panel_g$data %>%  ggpubr::compare_means(data=., PD ~ host_long)
+# panel_g = phlyodiv %>% group_by(sample) %>% summarise(PD=mean(PD)) %>% left_join(sample_meta)  %>% ggplot(aes(x=host_long, y=PD, fill=host_long)) + geom_boxplot(outlier.shape = NA) + geom_jitter(width=.1, size=1, shape=21) + theme(axis.text.x = element_text(angle=45, hjust=1)) + scale_fill_manual(values=colset$col, breaks=colset$host_long) + scale_y_continuous(limits=c(0,100), expand=c(0,0)) + theme(legend.position = "none", axis.text.x = element_blank(), axis.ticks.x=element_blank()) + ylab("PhyloDiv @ 1 Mio Reads") + xlab("Host") #+ ggpubr::stat_compare_means(comparisons = combn(colset$host_long, 2, simplify = F), hide.ns = T)
+# 
+# pd_sign = panel_g$data %>%  ggpubr::compare_means(data=., PD ~ host_long)
 
 
 
@@ -191,12 +191,12 @@ top_row2=align_plots(panel_d_top+theme(plot.margin = unit(c(0,0,0,0), "cm")),
                 axis ="lr",align="v", ncol=2)
 
 
-bottom_row = align_plots(panel_e+theme(plot.margin = unit(c(0,0,0,0), "cm")),panel_f+theme(plot.margin = unit(c(0,0.25,0,0), "cm")), panel_g+theme(plot.margin = unit(c(0,0.25,0,0), "cm")), axis ="bt",align="h")
+bottom_row = align_plots(panel_e+theme(plot.margin = unit(c(0,0,0,0), "cm")),panel_f+theme(plot.margin = unit(c(0,0.25,0,0), "cm")), axis ="bt",align="h")
 
 all_panels_right=plot_grid(
   plot_grid(NULL, NULL, top_row2[[1]], NULL, top_row[[1]], top_row[[2]],top_row[[3]], top_row[[4]],  rel_widths = c(0.25,.25, 0.4, 0.1), rel_heights = c(.1,.7), ncol=4,labels=c("b","c","d",""), label_size = 20),
-  plot_grid(bottom_row[[1]],bottom_row[[2]], bottom_row[[3]], ncol=3, rel_widths = c(.3,.3,.3),labels=c("e","f","g"), label_size = 20),
-  rel_heights = c(.5,.5), ncol=1)                     
+  plot_grid(bottom_row[[1]],bottom_row[[2]], ncol=2, rel_widths = c(.6,.4),labels=c("e","f"), label_size = 20),
+  rel_heights = c(.6,.4), ncol=1)                     
 
 
 all_panels_complete = cowplot::plot_grid(

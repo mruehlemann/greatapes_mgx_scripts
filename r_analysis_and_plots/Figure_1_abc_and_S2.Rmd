@@ -102,7 +102,7 @@ saveRDS(sgb_share, "../../../220303_Analysis_New/intermediate_data/sgb_share.Rds
 }
 
 if(file.exists("../../../220303_Analysis_New/intermediate_data/sgb_share_rand.Rds")){
-  random_trees_100k_rf=readRDS("../../../220303_Analysis_New/intermediate_data/sgb_share_rand.Rds")
+  sgb_share_rand=readRDS("../../../220303_Analysis_New/intermediate_data/sgb_share_rand.Rds")
 }else{
 sgb_share_rand = lapply(unique(sgb_long_red$host2), function(this_host) {
   mclapply(1:1000, function(i) {
@@ -116,25 +116,25 @@ sgb_share_rand = lapply(unique(sgb_long_red$host2), function(this_host) {
 saveRDS(sgb_share_rand, "../../../220303_Analysis_New/intermediate_data/sgb_share_rand.Rds")
 }
 
-panel_a_heatmap=sgb_share_rand %>% filter(!is.na(n_rel)) %>% left_join(sgb_share) %>% mutate(gt = n_rel <= mean_n, lt = n_rel >= mean_n) %>% group_by(ref_host, host2) %>% summarise(p_lt=1 - ((sum(lt)))/(n()+1), p_gt=1 -((sum(gt)))/(n()+1)) %>% left_join(sgb_share) %>% 
+panel_d_heatmap=sgb_share_rand %>% filter(!is.na(n_rel)) %>% left_join(sgb_share) %>% mutate(gt = n_rel <= mean_n, lt = n_rel >= mean_n) %>% group_by(ref_host, host2) %>% summarise(p_lt=1 - ((sum(lt)))/(n()+1), p_gt=1 -((sum(gt)))/(n()+1)) %>% left_join(sgb_share) %>% 
   ggplot(aes(x=host2, y=ref_host, alpha=mean_n, fill=ref_host)) + geom_tile() + scale_fill_manual(values=colset$col, breaks=colset$host) + scale_alpha(range=c(0,1)) + 
   geom_text(aes(label = ifelse(p_gt < 0.05, paste0(signif(p_gt,1),sprintf('\u2191')), "")), alpha=1, size=3) + 
   geom_text(aes(label = ifelse(p_lt < 0.05, paste0(signif(p_lt,1),sprintf('\u2193')), "")), alpha=1, size=3) + 
   theme_nothing() + theme(legend.position="none")
 
-panel_a_bottom = colset %>% filter(!host %in% c("Ggorilla2","Pttrog2")) %>% ggplot(aes(x=host, y=1, col=host, shape=host)) + geom_point(size=5) + 
+panel_d_bottom = colset %>% filter(!host %in% c("Ggorilla2","Pttrog2")) %>% ggplot(aes(x=host, y=1, col=host, shape=host)) + geom_point(size=5) + 
   scale_color_manual(values=colset$col, breaks=colset$host) +
   scale_shape_manual(values=c(15:19)[colset$shape], breaks=colset$host) +
   theme_nothing() + theme(legend.position="none")
 
 
 host_tree2 = host_tree %>% bind.tip(tree=., tip.label="Homo_sapiensA", where=which(host_tree$tip.label=="Homo_sapiens")) %>% bind.tip(tree=., tip.label="Homo_sapiensB", where=which(.$tip.label=="Homo_sapiensA"))
-panel_a_tree = ggtree(host_tree2, size=1) %>% ggtree::rotate(13) %>% ggtree::rotate(15) 
-panel_a_tree$data = panel_a_tree$data %>% left_join(colset %>% mutate(label = case_when(host=="HsA1" ~ "Homo_sapiensA", host=="HsA2" ~ "Homo_sapiensB", T ~ host_tree)))
-panel_a_tree = panel_a_tree + geom_tippoint(aes(col=host, shape=host), size=5) + scale_color_manual(values=colset$col, breaks=colset$host) +
+panel_d_tree = ggtree(host_tree2, size=1) %>% ggtree::rotate(13) %>% ggtree::rotate(15) 
+panel_d_tree$data = panel_a_tree$data %>% left_join(colset %>% mutate(label = case_when(host=="HsA1" ~ "Homo_sapiensA", host=="HsA2" ~ "Homo_sapiensB", T ~ host_tree)))
+panel_d_tree = panel_a_tree + geom_tippoint(aes(col=host, shape=host), size=5) + scale_color_manual(values=colset$col, breaks=colset$host) +
      scale_shape_manual(values=c(15:19)[colset$shape], breaks=colset$host) + theme_nothing() + theme(legend.position = "none") + scale_x_continuous(expand=c(0.5,.5))
 
-fig1_panel_a=plot_grid(plot_grid(panel_a_tree) + theme(plot.margin = unit(c(0,0,0,.5),"cm")), panel_a_heatmap+ theme(plot.margin = unit(c(0,0,0,0),"cm")), NULL, panel_a_bottom + theme(plot.margin = unit(c(0,0,0,0),"cm") ), rel_widths=c(.2,.8), rel_heights = c(.95,.1)) 
+fig1_panel_d=plot_grid(plot_grid(panel_d_tree) + theme(plot.margin = unit(c(0,0,0,.5),"cm")), panel_d_heatmap+ theme(plot.margin = unit(c(0,0,0,0),"cm")), NULL, panel_a_bottom + theme(plot.margin = unit(c(0,0,0,0),"cm") ), rel_widths=c(.2,.8), rel_heights = c(.95,.1)) 
 
 ```
 
@@ -161,7 +161,7 @@ ufplot1=cmdscale(uf) %>% data.frame() %>% rownames_to_column("sample") %>% left_
 ## unifrac unweighted
 uf_uw=UniFrac(phyloseq(otu_table(sgb_abundance, taxa_are_rows = F), tree=tree2),weighted = F, normalized = T)
 ufplot2=cmdscale(uf_uw) %>% data.frame() %>% rownames_to_column("sample") %>% left_join(sample_meta) %>% ggplot(aes(x=X1, y=X2, col=host_long, shape=host_long)) + geom_point(size=3) + scale_color_manual(values=colset$col, breaks=colset$host_long) + scale_shape_manual(values=c(15:19)[colset$shape], breaks=colset$host_long) + theme_bw() + theme(panel.grid = element_blank()) + xlab("UniFrac PCoA1")  + ylab("UniFrac PCoA2") 
-fig1_panel_b = ufplot2
+fig1_panel_c = ufplot2
 
 
 ## clr
@@ -293,9 +293,32 @@ funcpa_full=(unlist(random_trees_100k_rf["funcpa"]) <= phangorn::RF.dist(host_tr
 
 ```
 
-# Analysis of abundance and function differences
+### Panel A
 
-# Combined for Figure 1 a, b, c
+```{r, fig.height=11.5, fig.width=6.5}
+#####
+
+
+if(file.exists("../../../220303_Analysis_New/intermediate_data/salmon_rare_pd.Rds")){
+  salmon_rare_pd=readRDS("../../../220303_Analysis_New/intermediate_data/salmon_rare_pd.Rds")
+}else{
+  salmon_rare_pd = picante::pd(salmon_rare %>% mutate(sid = paste0(sample,"_",depth,"_",i)) %>% dcast(sid ~ bin, value.var="tpm", fill=0) %>% column_to_rownames("sid"), tree = tree2, include.root = T)
+  saveRDS(salmon_rare_pd, "../../../220303_Analysis_New/intermediate_data/salmon_rare_pd.Rds")
+}
+
+
+phlyodiv=salmon_rare_pd %>% rownames_to_column("sid") %>% separate(sid, into = c("sample","depth","i"), sep="_") %>% mutate(depth=as.numeric(depth)) %>% filter(depth==1000000)
+
+panel_a = phlyodiv %>% group_by(sample) %>% summarise(PD=mean(PD)) %>% left_join(sample_meta) %>% mutate(host2=ifelse(host_tree=="Homo_sapiens", host, gsub("[0-9]","",host))) %>% ggplot(aes(x=host2, y=PD, fill=host2, shape=host, group=host2)) + geom_boxplot(outlier.shape = NA) + geom_jitter(width=.2, size=1.5) + theme(axis.text.x = element_text(angle=45, hjust=1), axis.title = element_text(size=10)) + scale_fill_manual(values=colset$col, breaks=colset$host) + scale_y_continuous(limits=c(0,75), expand=c(0,0)) + theme(legend.position = "none", axis.text.x = element_blank(), axis.ticks.x=element_blank()) + ylab("PhyloDiv @ 1 Mio Reads") + xlab("Host") + scale_shape_manual(values=c(22,21,24,23,21)[colset$shape], breaks=colset$host2) #+ ggpubr::stat_compare_means(comparisons = combn(colset$host_long, 2, simplify = F), hide.ns = T)
+
+pd_sign = panel_a$data %>%  ggpubr::compare_means(data=., PD ~ host2)
+
+pd_nhp_human = panel_a$data %>% mutate(h_vs_nhp = (host2 %in% c("HsA1","HsA2","HsG"))) %>% ggpubr::compare_means(data=., PD ~ h_vs_nhp)
+
+
+```
+
+### Panel C
 
 ```{r, fig.height=11.5, fig.width=6.5}
 ### Suppl. Table S2
@@ -304,27 +327,32 @@ phylosym_pvals = data.frame(all=t(p_phylosym), row.names=c("CLR","UniFrac w.", "
 
 write.table(phylosym_pvals %>% rownames_to_column("distance"), "figures_and_tables/Suppl_Table_S3_Phylsymbiosis_pvals.tsv", sep="\t", row.names = F)
 
-panel_b_host = host_tree %>% ggtree(branch.length = "none", size=.8)   + theme_nothing() + scale_y_continuous(limits=c(0.5, 7.5)) + geom_tippoint(data = . %>% left_join(sample_meta, by=c("label"="host_tree")), aes(col=host_long, shape=host_long), size=3) + scale_color_manual(values=colset$col, breaks=colset$host_long) + scale_shape_manual(values=c(15:18)[colset$shape], breaks=colset$host_long)
+panel_c_host = host_tree %>% ggtree(branch.length = "none", size=.8)   + theme_nothing() + scale_y_continuous(limits=c(0.5, 7.5)) + geom_tippoint(data = . %>% left_join(sample_meta, by=c("label"="host_tree")), aes(col=host_long, shape=host_long), size=3) + scale_color_manual(values=colset$col, breaks=colset$host_long) + scale_shape_manual(values=c(15:18)[colset$shape], breaks=colset$host_long)
 
-panel_b_micro = tree_ufuw_host_full %>% root(node=10, resolve.root=T) %>% ape::rotate(8) %>% as.phylo() %>% ggtree(branch.length = "none", size=.8)  + scale_x_reverse() + theme_nothing() + scale_y_continuous(limits=c(0.5, 7.5)) + geom_tippoint(data = . %>% left_join(sample_meta, by=c("label"="host_tree")), aes(col=host_long, shape=host_long), size=3) + scale_color_manual(values=colset$col, breaks=colset$host_long) + scale_shape_manual(values=c(15:18)[colset$shape], breaks=colset$host_long)
+panel_c_micro = tree_ufuw_host_full %>% root(node=10, resolve.root=T) %>% ape::rotate(8) %>% as.phylo() %>% ggtree(branch.length = "none", size=.8)  + scale_x_reverse() + theme_nothing() + scale_y_continuous(limits=c(0.5, 7.5)) + geom_tippoint(data = . %>% left_join(sample_meta, by=c("label"="host_tree")), aes(col=host_long, shape=host_long), size=3) + scale_color_manual(values=colset$col, breaks=colset$host_long) + scale_shape_manual(values=c(15:18)[colset$shape], breaks=colset$host_long)
 
-panel_b_conn = panel_b_host$data %>% filter(isTip) %>% select(label,y_host=y) %>% left_join(panel_b_micro$data %>% filter(isTip) %>% select(label,y_micro=y)) %>% left_join(colset, by=c("label"="host_tree")) %>% ggplot(aes(x=1, xend=2, y=y_host, yend=y_micro)) + geom_segment(size=.8, lty=2) + theme_nothing() + scale_y_continuous(limits=c(0.5, 7.5))
+panel_c_conn = panel_c_host$data %>% filter(isTip) %>% select(label,y_host=y) %>% left_join(panel_c_micro$data %>% filter(isTip) %>% select(label,y_micro=y)) %>% left_join(colset, by=c("label"="host_tree")) %>% ggplot(aes(x=1, xend=2, y=y_host, yend=y_micro)) + geom_segment(size=.8, lty=2) + theme_nothing() + scale_y_continuous(limits=c(0.5, 7.5))
 
 ###
 
-fig1_panel_c = plot_grid(panel_b_host, panel_b_conn, panel_b_micro, align = "h", ncol=3 )
+fig1_panel_c = plot_grid(panel_c_host, panel_c_conn, panel_c_micro, align = "h", ncol=3 )
+```
 
-fig1_left = cowplot::plot_grid(fig1_panel_b+theme(legend.position = "none") + theme(plot.margin = unit(c(1, 0.4, 0, 0), "cm")), 
+# Combined for Figure 1 a, b, c, d
+
+```{r, fig.height=11.5, fig.width=6.5}
+fig1_left = cowplot::plot_grid(panel_a + theme(plot.margin = unit(c(1, 0.4, 0, 0), "cm")),
+                               fig1_panel_b+theme(legend.position = "none") + theme(plot.margin = unit(c(1, 0.4, 0, 0), "cm")), 
                                cowplot::plot_grid(
                                   get_legend(fig1_panel_b + guides(colour = guide_legend(ncol = 1, title="",byrow = TRUE), shape=guide_legend(ncol = 1, title="",byrow = TRUE)) + 
                                                theme(legend.spacing.y = unit(0.1, 'cm') ,legend.position = "bottom", legend.justification = "top", legend.text = element_text(size=10), legend.key.size = unit(0.2, "cm"))), 
-                                  fig1_panel_c, rel_widths=c(.5,.5), labels=c("","b")),
-                               fig1_panel_a+theme(legend.position = "none") + theme(plot.margin = unit(c(1, 0.4, 0, 0), "cm")),
-                               ncol=1, rel_heights = c(.4,.2,.4), labels=c("a","","c"))
+                                  fig1_panel_c, rel_widths=c(.5,.5), labels=c("","c")),
+                               fig1_panel_d+theme(legend.position = "none") + theme(plot.margin = unit(c(1, 0.4, 0, 0), "cm")),
+                               ncol=1, rel_heights = c(.2,.3,.2,.3), labels=c("a","b","","d"))
 
 plot(fig1_left)
 
-ggsave(filename = "figures_and_tables/fig1_left.png",fig1_left, width = 6.5, height=11.5, bg="white")
+ggsave(filename = "figures_and_tables/fig1_left.png",fig1_left, width = 6.5, height=13, bg="white")
 saveRDS(fig1_left, "figures_and_tables/fig1_left.Rds")
 
 ```
