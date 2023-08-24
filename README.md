@@ -1,6 +1,6 @@
 # GMBC_MGX_Scripts
 
-This repository holds all scripts used in the data processing and analysis of the Article "Comparative metagenomics reveals host-specific functional adaptation of intestinal microbiota across hominids" [BioRxiv](link_goes_here). 
+This repository holds all scripts used in the data processing and analysis of the Article "Functional host-specific adaptation of the intestinal microbiome in Hominids" [BioRxiv](https://www.biorxiv.org/content/10.1101/2023.03.01.530589v1). 
 
 It also holds the complete data as an R object that can be used to repeat all analyses and create all figures in the [Analysis and Plots](/r_analysis_and_plots) folder.
 
@@ -8,13 +8,19 @@ Additionaly, all cophylogeny results can be browsed here: [Co-phylogeny browser]
 
 # Figures
 ## Figure 1
-![Figure1](/r_analysis_and_plots/figures_and_tables/Figure_1.png)
+![Figure1](/r_analysis_and_plots/figures_and_tables/Figure_1_new.png)
 
 ## Figure 2
-![Figure2](/r_analysis_and_plots/figures_and_tables/Figure_2.png)
+![Figure2](/r_analysis_and_plots/figures_and_tables/Figure_2_new.png)
 
 ## Figure 3
-![Figure3](/r_analysis_and_plots/figures_and_tables/Figure_3.png)
+![Figure3](/r_analysis_and_plots/figures_and_tables/Figure_3_new.png)
+
+## Figure 4
+![Figure4](/r_analysis_and_plots/figures_and_tables/Figure_4_new.png)
+
+## Figure 5
+![Figure5](/r_analysis_and_plots/figures_and_tables/Figure_5_new.png)
 
 ## Figure S1
 ![FigureS1](/r_analysis_and_plots/figures_and_tables/Figure_S1.png)
