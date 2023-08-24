@@ -1,0 +1,326 @@
+---
+title: "Figure 2"
+author: "Malte Ruehlemann"
+date: "`r Sys.Date()`"
+output:
+   BiocStyle::html_document:
+      toc: true
+      df_print: paged
+      self_contained: true
+      code_download: true
+      highlight: tango
+#bibliography: mylib.bib
+editor_options:
+  chunk_output_type: console
+params:
+  FIGPATH: "figures/"
+---
+
+<style type="text/css">
+.main-container {
+  max-width: 1800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+
+```{r style}
+# Set knit global options
+library("knitr")
+options(digits = 3, width = 80)
+golden_ratio <- (1 + sqrt(5)) / 2
+opts_chunk$set(echo = FALSE,
+               tidy = FALSE,
+               include = TRUE,
+               fig.path = params$FIGPATH,
+               dev='png',
+               fig.height = 7.5,
+               fig.width = 6 * golden_ratio,
+               warning = F,
+               message =F, 
+               comment = '  ',
+               dpi = 300,
+               cache = FALSE)
+library("rmarkdown")
+
+# Pretty outputs
+library("BiocStyle")
+library("ggthemes") # add ggplot2 themes
+library("ggplot2")
+theme_set(theme_few(base_size = 18))
+
+# Set seed for reproducibility
+set.seed(222)
+```
+
+```{r}
+#setwd("r_analysis_and_plots")
+library(ggplot2)
+library(tidyverse)
+library(ape)
+library(ggtree)
+library(compositions)
+library(phyloseq)
+library(picante)
+library(ggrepel)
+library(reshape2)
+library(cowplot)
+library(plotly)
+library(TreeDist)
+library(phytools)
+library(parallel)
+library(ggpubr)
+
+interactive=F
+intermediatedata_folder="~/Desktop/Projects/190712_GreatApes/220303_Analysis_New/intermediate_data/"
+setwd("~/Desktop/Projects/190712_GreatApes/220616_dataprocessing/greatapes_mgx_scripts/r_analysis_and_plots//")
+load("0_all_preprocessed.Robj")
+```
+
+
+# Analysis
+
+## Functional convergence with hominid subgroup
+
+```{r}
+
+##### calculate number of SGBs within genera and host groups
+this_to_sgb = this_to_sgb %>% left_join(tax2)
+
+# candidates included in analysis: present in at least 5 human and 5 non-human samples
+cands_ph = this_to_sgb %>% filter(!is.na(host_group)) %>% left_join(tax2) %>% filter(!is.na(genus)) %>% mutate(trait=gsub("[-]",".",genus)) %>% select(GreatApes_95_final,host_group,genus, family) %>% distinct %>% group_by(host_group, genus) %>% summarize(n=n()) %>% reshape2::dcast(genus ~ host_group, value.var="n", fill=0) %>% mutate(nonH=G+P)
+
+### Calculate Human vs. NPH KO enrichments per genus
+
+cands_res_ph_file = paste0(intermediatedata_folder, "cands_res_ph.Rds")
+
+if(file.exists(cands_res_ph_file)){
+  cands_res_ph=readRDS(cands_res_ph_file)
+}else{
+  cands_res_ph = lapply(cands_ph %>% filter(H>=5, nonH>=5) %>% pull(genus), 
+                      function(tt){
+                        tax_sub = this_to_sgb %>% filter(!is.na(host_group)) %>% filter(!is.na(genus)) %>%
+                          mutate(trait=gsub("[-]",".",genus)) %>% filter(genus==tt) %>%
+                          mutate(status=ifelse(host_group=="H","H","nonH"),presence=1) %>% 
+                          select(GreatApes_95_final, status, ogs, presence) %>% distinct() %>% 
+                          reshape2::dcast(GreatApes_95_final+status ~ ogs, value.var="presence", fill=0)
+                        tax_res=lapply(colnames(tax_sub %>% 
+                                                  select(-GreatApes_95_final, -status))[between(colMeans(tax_sub[,-1][,-1]),.1,.9)],
+                                       function(x) 
+                                         return(list(
+                                           ogs=x, 
+                                           H_prev=mean(tax_sub[tax_sub$status=="H",x]), 
+                                           N_prev=mean(tax_sub[tax_sub$status=="nonH",x]), 
+                                           pval=fisher.test(table(tax_sub$status, tax_sub[,x]))$p.value)
+                                           )
+                                       ) %>% do.call("bind_rows",.) %>% mutate(tax=tt)
+                        tax_res %>% arrange(pval) %>% return()
+                        }) %>% do.call("bind_rows",.) %>% 
+  mutate(effect=log2((H_prev+0.01)/(N_prev+0.01))) %>% 
+  mutate(Zscore=-qnorm(pval/2)*sign(effect), ogs=paste0("ko:",ogs)) %>% 
+  left_join(KO_NAMES, by=c("ogs"="ko")) 
+  saveRDS(cands_res_ph, cands_res_ph_file)
+}
+
+write.table(cands_res_ph %>% select(tax, ogs, H_prev, N_prev, pval, effect, Zscore, annot), "figures_and_tables/Suppl_Table_S11_Results_Human.vs.NHA_KO_Tax.tsv", row.names = F, sep="\t")
+
+### meta analysis
+
+cands_meta_ph = cands_res_ph %>% 
+  (function(df) df %>% left_join(df %>% group_by(ogs))) %>% 
+  mutate(w=1, Z_w=Zscore*w) %>% group_by(ogs) %>% summarize(Z_sum = sum(Z_w), w_sum=sum(w^2)) %>% 
+  mutate(Z_meta=Z_sum/sqrt(w_sum), p_meta=2*pnorm(-abs(Z_meta))) %>% arrange(Z_meta) %>% 
+  mutate(qval=p.adjust(p_meta)) %>% filter(w_sum>=5) %>% 
+  left_join(KO_NAMES, by=c("ogs"="ko"))
+
+cands_meta_ph$gene = cands_meta_ph$annot %>% sapply(., function(x) strsplit(x, split=";")[[1]][1] %>% unlist)
+
+write.table(cands_meta_ph %>% select(ogs, Z_sum, w_sum, Z_meta, p_meta, q_meta = qval, gene, annot), "figures_and_tables/Suppl_Table_S12_Results_Human.vs.NHA_KO_Meta.tsv", row.names = F, sep="\t")
+
+meta_plot_data = cands_res_ph %>% filter(ogs %in% (cands_meta_ph %>% filter(qval<0.05) %>% pull(ogs))) %>% 
+  left_join(tax2 %>% select(phylum, tax=genus) %>% distinct()) %>% 
+  select(ogs, pval, Zscore, tax, phylum)  %>% 
+  bind_rows(., 
+            cands_meta_ph %>% filter(qval<0.05) %>% select(ogs, pval=qval, Zscore=Z_meta) %>% mutate(tax="META", phylum=ifelse(Zscore < 0, "NHA", "Human"))
+            ) %>% distinct() %>% left_join(KO_NAMES, by=c("ogs"="ko"))
+
+meta_plot_data$gene = meta_plot_data$annot %>% sapply(., function(x) strsplit(x, split=";")[[1]][1] %>% unlist)
+meta_plot_data$plot_name = paste0(meta_plot_data$ogs,": ",meta_plot_data$gene)
+
+meta_plot_data = meta_plot_data %>% 
+  mutate(plot_name2=fct_relevel(plot_name, meta_plot_data %>% filter(tax=="META") %>% select(plot_name, Zscore) %>% distinct() %>% mutate(rnk = rank(Zscore)) %>% pull(plot_name)) )
+
+panel_a = meta_plot_data %>%
+  ggplot(aes(x=plot_name2, y=-log10(pval), col=phylum)) + 
+  geom_point(aes(shape=ifelse(tax=="META","META","TAX"), size=ifelse(tax=="META",2,1), alpha=ifelse(tax=="META",2,1))) +
+  scale_size(range = c(1,2.5)) + scale_alpha(range = c(.3,1)) + 
+  geom_point(data=data.frame(plot_name2=meta_plot_data$plot_name[1], pval=1, tax="", phylum=""))  +
+  scale_color_manual(values=c("#FF8C00","blue","white", phylumcols_df$col, "white"), breaks=c("NHA","Human", "", phylumcols_df$phylum)) + 
+  guides(size="none", shape="none") + theme(legend.position = "bottom", axis.text.y = element_text(size=8)) + 
+  guides(colour = guide_legend(nrow = 3, title=""), alpha = "none") + 
+  ylab("")  + xlab("Function (KO)") + ylab("-log10(P)") + scale_y_continuous(expand=c(0,0)) + 
+  theme(axis.text.x = element_blank()) +
+  scale_shape_manual(values=c(18,16)) + 
+  ggrepel::geom_label_repel(data = . %>% filter(tax=="META") %>% group_by(sign(Zscore)) %>% slice_max(abs(Zscore), n=5), aes(label=plot_name), show.legend = F, ylim = c(5,35), size=3, box.padding = unit(.2,"cm") )
+
+panel_a
+
+# saveRDS(coph_plot$data, "../../../great_apes_shiny_app/data/sample_coph_plot.Rds")
+
+
+```
+
+## Prevotella analysis
+
+### Functions
+
+```{r}
+
+prevo_annot = cands_res_ph %>% filter(tax=="g__Prevotella")  %>%
+  left_join(tax2 %>% filter(genus %in% cands_res_ph$tax) %>% select(phylum, tax=genus) %>% distinct()) %>%
+  mutate(qval=p.adjust(pval))  %>% arrange(Zscore)
+prevo_annot$gene = prevo_annot$annot %>% sapply(., function(x) strsplit(x, split=";")[[1]][1] %>% unlist)
+
+prevo_func = prevo_annot %>%
+  ggplot(aes(x=H_prev, y=N_prev, col=as.character(sign(Zscore)), shape=as.factor(qval<0.05))) +
+  geom_point(aes(alpha=abs(Zscore))) +
+  scale_shape_manual(values=c(21,16)) + coord_fixed() +
+  ggrepel::geom_label_repel(data = . %>% mutate(dir=(Zscore>0)) %>% group_by(dir) %>% slice_max(abs(Zscore), n = 5), aes(label=gene)) +
+  scale_y_continuous(limits=c(0,1), breaks=c(0,0.5,1)) +
+  scale_x_continuous(limits=c(0,1), breaks=c(0,0.5,1)) +
+  xlab("Prevalence - Human") + ylab("Prevalence - NHA") +
+  scale_color_manual(values=c("#FF8C00","white","blue")) +
+  theme(legend.position = "none") +
+  geom_segment(x=0, xend=1, y=0, yend=1, col="lightgrey", lty=2)
+
+
+prevo_annot = cands_res_ph %>%
+  filter(tax=="g__Prevotella") %>%
+  left_join(tax2 %>% filter(genus %in% cands_res_ph$tax) %>% select(phylum, tax=genus) %>% distinct()) %>%
+  mutate(qval=p.adjust(pval)) %>%
+  arrange(Zscore)
+prevo_annot$gene = prevo_annot$annot %>% sapply(., function(x) strsplit(x, split=";")[[1]][1] %>% unlist)
+
+panel_b = prevo_annot %>%
+  ggplot(aes(x=H_prev, y=N_prev, col=as.character(sign(Zscore)), shape=as.factor(qval<0.05))) +
+  geom_point(aes(alpha=abs(Zscore))) + scale_shape_manual(values=c(21,16)) +
+  coord_fixed() +
+  ggrepel::geom_label_repel(data = . %>% mutate(dir=(Zscore>0)) %>% group_by(dir) %>% slice_max(abs(Zscore), n = 5), aes(label=gene), nudge_y = .1, min.segment.length = 0) +
+  scale_y_continuous(limits=c(0,1),  breaks=c(0,0.5,1)) +
+  scale_x_continuous(limits=c(0,1), breaks=c(0,0.5,1)) +
+  xlab("Prevalence - Human") + ylab("Prevalence - NHA")  +
+  scale_color_manual(values=c("#FF8C00","white","blue")) + theme(legend.position = "none") +
+  geom_segment(x=0, xend=1, y=0, yend=1, col="lightgrey", lty=2)
+
+
+```
+
+### Panel C - Prevo - cydA reconciliation
+
+```{r}
+
+gg_spe = ggtree(spe_tree %>% drop.tip("Outgroup")) 
+gg_spe$data = gg_spe$data %>% 
+  left_join(fullset %>% filter(newid %in% spe_tree$tip.label, host_group!="O") %>% 
+  select(newid, mag_id, host_group, species) %>% 
+  distinct() %>% 
+  group_by(newid, host_group, species) %>% summarise(num_mags=n()), by =c("label"="newid")) %>% 
+  mutate(cyda = label %in% (fullset %>% filter(Preferred_name == "cydA") %>% pull(newid)))
+
+#gg_spe = gg_spe + geom_tippoint(aes(col=host_group, shape=cyda)) + layout_dendrogram() + scale_color_manual(values=c("#29AB87", "blue","#FF8C00")) + scale_shape_manual(values=c(21,16))
+gg_spe = gg_spe + geom_tippoint(aes(col=host_group, shape=cyda), size=2) + scale_color_manual(values=c("#29AB87", "blue","#FF8C00")) + scale_shape_manual(values=c(21,16))
+
+events_spe_coords = events %>% filter(V1=="speciation") %>% left_join(gg_spe$data  %>% select(V3=label, x, y))
+gg_spe = gg_spe + geom_point(data = events_spe_coords %>% filter(n_rel >= .5), col="black", aes(size=n_rel)) + scale_size(range=c(0.1,1))
+
+events_rec_coords = events %>% filter(V1=="transfer") %>% group_by(V4) %>% summarise(n2=sum(n)) %>% mutate(n_rel=n2/1000) %>% left_join(gg_spe$data  %>% select(V4=label, x, y)) 
+gg_spe = gg_spe + geom_segment(data = events_rec_coords %>% filter(n_rel >= .5), col="red", aes(x=x+.01, xend=x+.005,y=y,yend=y), arrow=arrow(length = unit(0.1,"cm"))) + scale_size(range=c(0.1,1))
+
+
+
+events_tran_coords = events %>% filter(V1=="transfer") %>% left_join(gg_spe$data  %>% select(V3=label, x, y)) %>% left_join(gg_spe$data  %>% select(V4=label, x_end=x, y_end=y))
+gg_spe = gg_spe + geom_curve(data=events_tran_coords %>% filter(n_rel >= .5), aes(x=x,y=y, xend=x_end,yend=y_end, alpha=n_rel, linewidth=n_rel), arrow = arrow(length = unit(0.2,"cm")), col="red", lty=1, angle = 100, curvature = .25) +
+  scale_linewidth(range=c(0,1), limits = c(0,1)) + scale_alpha(range=c(0,1), limits = c(0,1))
+
+
+annot_names = spe %>% rownames_to_column() %>% reshape2::melt(.) %>% filter(grepl("Prevo", variable)) %>% group_by(variable) %>% summarise(mean=mean(value)) %>% arrange(-mean) %>% filter(!grepl("_spGreat|_sp[0-9]+", variable)) %>% head(10) %>% pull(variable) %>% as.vector()
+
+panel_c = gg_spe + geom_text(data= . %>% filter(isTip, species %in% annot_names), aes(label=species, x=.42), angle=0, size=3, hjust=0, vjust=0) + geom_segment(data= . %>% filter(isTip, species %in% annot_names), aes(x=x+0.005, xend=.41, yend=y), lty=3, col="grey") + geom_point(data=data.frame(x=0.6,y=0),color="white") + 
+  theme(legend.position = c(0.1,.85), legend.direction = "vertical") + 
+  guides(shape=guide_none(), alpha = guide_legend(title="Frequency"), color=guide_legend(title="Host Genus"), linewidth=guide_none(), size=guide_none(), ncol=2) 
+
+
+
+```
+
+
+<!-- ### Prevotella cyda tree -->
+
+<!-- ```{r} -->
+<!-- library(dendextend) -->
+
+<!-- dend_marker = chronos(marker_prevo_tree_root_renam) -->
+<!-- dend_cyda = chronos(cyda_prevo_tree_root_renam_onetip)  -->
+
+<!-- tg=tanglegram(dend_marker, dend_cyda, sort = TRUE, common_subtrees_color_lines = T, highlight_distinct_edges  = FALSE, highlight_branches_lwd = FALSE, margin_inner=0, axes=F,columns_width=c(1,1,1), lab.cex = NA, lwd=2)  -->
+<!-- tg2 = tg %>% untangle(method = "step2side")  -->
+
+<!-- png("figures_and_tables/cyda_tangle.png", width = 14, height=20, units = "cm", res = 300) -->
+<!-- tg2 %>% plot(common_subtrees_color_lines = T, highlight_distinct_edges  = FALSE, highlight_branches_lwd = FALSE, margin_inner=0.1, axes=F,columns_width=c(1,1,1), lab.cex = NA, lwd=2, edge.lwd=2, main_left = "GTDB Markers", main_right="cydA") -->
+<!-- dev.off() -->
+
+
+<!-- ``` -->
+
+```{r, fig.height=6, fig.width=15}
+# plot2 = plot_grid(
+#   plot_grid(
+#   plot_grid(plot_grid(panel_a + theme(legend.position = "none"), panel_b, align="h", ncol=2, axis = "tb", labels=c("a","b")),
+#   get_legend(panel_a), 
+# rel_heights=c(0.85,0.15),nrow=2, ncol=1)),
+# ggdraw() + draw_image("figures_and_tables/cyda_tangle.png", scale=.9, valign = 1), rel_widths = c(7,3), ncol=2, labels=c("","c"))
+
+lege=get_legend(ggplot(phylumcols_df %>% filter(phylum %in% meta_plot_data$phylum), aes(col=phylum, x=1,y=1)) + 
+                  geom_point() + 
+                  scale_color_manual(breaks=phylumcols_df$phylum, values=phylumcols_df$col) + 
+                  theme(legend.title = element_text(size=12), legend.text  = element_text(size=10), legend.spacing.y = unit(0.2, 'cm'), legend.key.size = unit(1, 'lines')) + guides(color=guide_legend(title="Phylum", ncol = 2)))
+
+plot4 = plot_grid(
+    plot_grid(panel_a + theme(legend.position = "none"), 
+                    lege,
+                      panel_b, 
+                      align="v", 
+                      ncol=1, axis = "tb", labels=c("a","","b"),
+                      rel_heights=c(0.45,0.15,.45)),
+panel_c, labels=c("","c"))
+
+plot4
+
+ggsave(filename = "figures_and_tables/Figure_4_new.png", plot4, height=10, width=10, bg="white")
+
+```
+
+
+## Source Data
+
+```{r}
+library("openxlsx")
+# Write the first data set in a new workbook
+
+wb=readRDS("SourceData_Figure123.Rds")
+
+fig4a_ext = panel_a$data %>% select(trait =ogs, pval, genus=tax, phylum, plot_name2)
+fig4b_ext = panel_b$data %>% select(trait =ogs, genus=tax, N_prev, H_prev, pval, annot)
+
+
+addWorksheet(wb, "Figure4a")
+writeData(wb, sheet = "Figure4a", fig4a_ext)
+
+addWorksheet(wb, "Figure4b")
+writeData(wb, sheet = "Figure4b", fig4b_ext)
+
+
+saveRDS(wb, "SourceData_Figure1234.Rds")
+
+
+```

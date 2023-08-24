@@ -53,7 +53,7 @@ echo "1:0);" >> ${PROJECTID}.bac120+ar53.rooted.tre
 # grep $this_local ${PROJECTID}.all_genomes.tsv | awk '{if($NF!="NA") print $1}' | xargs -I {} grep -w {} $workfolder/subgroups/$this_local/$this_local.cleanbins_list
 # done > ${PROJECTID}.cleanbins_list
 
-gtdbtk identify --batchfile $workfolder/allgroups/${PROJECTID}.cleanbins_list --cpus $SLURM_CPUS_PER_TASK -x fa  --out_dir ${PROJECTID}_cleanbins --prefix ${PROJECTID}_cleanbins
+gtdbtk identify --batchfile $workfolder/allgroups/${PROJECTID}.cleanbins_filtered --cpus $SLURM_CPUS_PER_TASK -x fa  --out_dir ${PROJECTID}_cleanbins --prefix ${PROJECTID}_cleanbins
 gtdbtk align --identify_dir ${PROJECTID}_cleanbins --out_dir ${PROJECTID}_cleanbins --prefix ${PROJECTID}_cleanbins --skip_gtdb_refs --cpus $SLURM_CPUS_PER_TASK
 gtdbtk align --identify_dir ${PROJECTID}_cleanbins --out_dir ${PROJECTID}_cleanbins --prefix ${PROJECTID}_cleanbins --cpus $SLURM_CPUS_PER_TASK
 #gtdbtk classify --align_dir ${PROJECTID}_cleanbins --batchfile $workfolder/allgroups/${PROJECTID}.cleanbins_list --out_dir ${PROJECTID}_cleanbins --prefix ${PROJECTID}_cleanbins --cpus $SLURM_CPUS_PER_TASK --pplacer_cpus $SLURM_CPUS_PER_TASK

@@ -1,8 +1,9 @@
 library(tidyverse)
 
-all_genomes = read.table("GreatApes.all_genomes.tsv", head=T, stringsAsFactors=F) %>% filter(!is.na(GreatApes_95_final))
+all_genomes = read.table("GreatApes.all_genomes.filtered.tsv", head=T, stringsAsFactors=F) %>% filter(!is.na(final)) %>% mutate(GreatApes_95_final=final)
 #all_genomes_uhgg = read.table("../subgroups/UHGG_v2/genomes-all_metadata.tsv", head=T, stringsAsFactors=F, sep="\t")
 #all_genomes_uhgg = all_genomes_uhgg %>% filter(Contamination < 10, Completeness>50)
+all_genomes_unf = read.table("GreatApes.all_genomes.tsv", head=T, stringsAsFactors=F) %>% filter(!is.na(final)) %>% mutate(GreatApes_95_final=final)
 
 
 tax=read.table("GreatApes.cluster_final_tax.tsv", head=T, stringsAsFactors=F, sep="\t")
@@ -25,18 +26,15 @@ tax2 = sapply(paste0(tax$bin,";",tax$classification), function(x){
 
 colnames(tax2) = c("bin","kingdom","phylum","class","order","family","genus","species")
 
-type_recode=data.frame(short=c("Ggorilla","Gberingei","HsA1","HsA2","HsG","Ptschw","Pttrog","Ptver","Ppan","HsUHGG"), 
-	short2=c("Ggorilla","Gberingei","Hs","Hs","Hs","Ptschw","Pttrog","Ptver","Ppan","Hs"), 
-	long=c("Gorilla_gorilla_gorilla","Gorilla_beringei","Homo_sapiens","Homo_sapiens","Homo_sapiens","Pan_troglodytes_schweinfurthii","Pan_troglodytes_troglodytes","Pan_troglodytes_verus","Pan_paniscus","Homo_sapiens"),stringsAsFactors=F)
+type_recode=data.frame(short=c("Ggorilla","Gberingei","HsA1","HsA2","HsG","Ptschw","Pttrog","Ptver","Ppan","HsUHGG","HsD"), 
+	short2=c("Ggorilla","Gberingei","Hs","Hs","Hs","Ptschw","Pttrog","Ptver","Ppan","Hs","Hs"), 
+	long=c("Gorilla_gorilla_gorilla","Gorilla_beringei","Homo_sapiens","Homo_sapiens","Homo_sapiens","Pan_troglodytes_schweinfurthii","Pan_troglodytes_troglodytes","Pan_troglodytes_verus","Pan_paniscus","Homo_sapiens","Homo_sapiens"),stringsAsFactors=F)
 
-host = read.table("/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/groupings_nozoo_campbell.txt", stringsAsFactors = F) %>% mutate(V2=ifelse(V2=="ZcambellGorilla","Ggorilla", V2), V2=ifelse(V2=="ZcambellPan","Pttrog", V2))
+host = read.table("/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/groupings_nozoo_campbell_dk.txt", stringsAsFactors = F) %>% mutate(V2=ifelse(V2=="ZcambellGorilla","Ggorilla", V2), V2=ifelse(V2=="ZcambellPan","Pttrog", V2))
 colnames(host) = c("sample","host")
 host = bind_rows(host, data.frame(sample="MGYG00000",host="HsUHGG"))
 
-all_genomes = all_genomes %>% left_join(tax2, by=c("GreatApes_95_final"="bin"))
-all_genomes = all_genomes %>% mutate(sample=ifelse(grepl("^SRR", genome), substr(genome,1,10), substr(genome,1,9))) %>% left_join(host) %>% left_join(type_recode, by=c("host"="short")) %>% filter(sample!="ManaraSGB")
-
-host_rep_genomes = all_genomes %>% arrange(-score) %>% distinct_at(.vars=c("long", "GreatApes_95_final"), .keep_all=T)
+host_rep_genomes = all_genomes %>% arrange(-Score) %>% distinct_at(.vars=c("long", "GreatApes_95_final"), .keep_all=T)
 
 #### TREE BASED CLUSTERING
 

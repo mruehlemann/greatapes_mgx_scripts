@@ -29,21 +29,22 @@ module load miniconda3
 
 source activate metagenome_env
 
-if [ -e "$workfolder/samples/${s}/${s}.hmm" ]; then exit; fi
+if [ -e "$workfolder/samples/${s}/binning/${s}.hmm" ]; then exit; fi
 echo $s
-mkdir -p $workfolder/samples/${s}
+mkdir -p $workfolder/samples/${s}/gene_calls
 mkdir -p ${s}_tmp_workfolder
 cat $datafolder/${s}/$s.spades_contigs.fasta | $PARALLEL -j ${SLURM_CPUS_PER_TASK} --block 999k --recstart '>' --pipe prodigal -p meta -a ${s}_tmp_workfolder/${s}.{#}.faa -d ${s}_tmp_workfolder/${s}.{#}.ffn -o tmpfile
-cat ${s}_tmp_workfolder/$s.*.faa > $workfolder/samples/${s}/${s}.prodigal.faa
-cat ${s}_tmp_workfolder/$s.*.ffn > $workfolder/samples/${s}/${s}.prodigal.ffn
+cat ${s}_tmp_workfolder/$s.*.faa > $workfolder/samples/${s}/gene_calls/${s}.prodigal.faa
+cat ${s}_tmp_workfolder/$s.*.ffn > $workfolder/samples/${s}/gene_calls/${s}.prodigal.ffn
 
-hmmsearch -o ${s}.hmm.tigr.out --tblout ${s}.hmm.tigr.hit.out --noali --notextw --cut_nc --cpu ${SLURM_CPUS_PER_TASK} //work_beegfs/sukmb276/github/MAGScoT/hmm/gtdbtk_rel207_tigrfam.hmm $workfolder/samples/${s}/${s}.prodigal.faa
+hmmsearch -o ${s}.hmm.tigr.out --tblout ${s}.hmm.tigr.hit.out --noali --notextw --cut_nc --cpu ${SLURM_CPUS_PER_TASK} //work_beegfs/sukmb276/github/MAGScoT/hmm/gtdbtk_rel207_tigrfam.hmm $workfolder/samples/${s}/gene_calls/${s}.prodigal.faa
 #pfam_scan.pl -cpu ${SLURM_CPUS_PER_TASK} -outfile ${sample}.hmm.pfam.hit.out -fasta $outdir/$sample/${sample}.prodigal.faa -dir /work_ifs/ikmb_repository/databases/GTDB-TK/release207/markers/pfam/
-hmmsearch -o ${s}.hmm.pfam.out --tblout ${s}.hmm.pfam.hit.out --noali --notextw --cut_nc --cpu ${SLURM_CPUS_PER_TASK} /work_beegfs/sukmb276/github/MAGScoT/hmm/gtdbtk_rel207_Pfam-A.hmm $workfolder/samples/${s}/${s}.prodigal.faa
+hmmsearch -o ${s}.hmm.pfam.out --tblout ${s}.hmm.pfam.hit.out --noali --notextw --cut_nc --cpu ${SLURM_CPUS_PER_TASK} /work_beegfs/sukmb276/github/MAGScoT/hmm/gtdbtk_rel207_Pfam-A.hmm $workfolder/samples/${s}/gene_calls/${s}.prodigal.faa
 
+mkdir -p $workfolder/samples/${s}/binning/
 cat ${s}.hmm.tigr.hit.out | grep -v "^#" | awk '{print $1"\t"$3"\t"$5}' > ${s}.tigr
 cat ${s}.hmm.pfam.hit.out | grep -v "^#" | awk '{print $1"\t"$4"\t"$5}' > ${s}.pfam
-cat ${s}.pfam ${s}.tigr > $workfolder/samples/${s}/${s}.hmm
+cat ${s}.pfam ${s}.tigr > $workfolder/samples/${s}/binning/${s}.hmm
 
 #cp $datafolder/${s}/${s}_depth.txt $workfolder/samples/${s}/${s}.depth.txt
 grep $s $workfolder/subgroups/${this_local}/${this_local}.${s}.depth.txt > $workfolder/samples/${s}/${s}.depth.txt

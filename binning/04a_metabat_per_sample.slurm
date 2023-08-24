@@ -32,11 +32,11 @@ source activate metagenome_env
 #for s in ${local_samples}; do
 #ava=$(grep $s $workfolder/samples_available.txt)
 
-if [ -e "$workfolder/samples/${s}/${s}.metabat2.contigs_to_bin.tsv" ]; then exit; fi
+if [ -e "$workfolder/samples/${s}/binning/${s}.metabat2.contigs_to_bin.tsv" ]; then exit; fi
 echo $s
 mkdir -p $workfolder/samples/${s}
 mkdir -p metabat
 metabat2 -i $datafolder/${s}/$s.spades_contigs.fasta -a $workfolder/samples/${s}/${s}.depth.txt -o ${s}_metabat/${s}.metabat2 -t ${SLURM_CPUS_PER_TASK} -m 2000
 for fa in $(ls ${s}_metabat/${s}.metabat2.*.fa); do mv $fa ${fa}sta; done
 
-grep '>' ${s}_metabat/*fasta | cut -d '/' -f 2 | sed 's/:>/\ /' > $workfolder/samples/${s}/${s}.metabat2.contigs_to_bin.tsv
+grep '>' ${s}_metabat/*fasta | cut -d '/' -f 2 | sed 's/:>/\ /' > $workfolder/samples/${s}/binning/${s}.metabat2.contigs_to_bin.tsv

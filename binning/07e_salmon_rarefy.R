@@ -1,5 +1,9 @@
 library(dplyr)
 library(parallel)
+args = commandArgs(trailingOnly=TRUE)
+salmon_profile = args[1]
+
+sample = strsplit(salmon_profile, split="[.]")[[1]][1]
 
 tax=read.table("/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final/allgroups/GreatApes.cluster_final_tax.tsv", head=T, stringsAsFactors=F, sep="\t") # nolint
 colnames(tax) = c("bin","classification")
@@ -23,16 +27,14 @@ colnames(tax2) = c("bin","kingdom","phylum","class","order","family","genus","sp
 
 
 
-for(this in list.files(pattern="^[GH]")){
-
-#this=rev(strsplit(getwd(),split="/")[[1]])[1]
-print(this)
-if(file.exists(paste0(this,"/",this,".salmon.out"))==F) next
-#this=rev(strsplit(getwd(),split="/")[[1]])[1]
-print(this)
-sf = read.table(paste0(this,"/",this,".salmon.out"),head=T, stringsAsFactors=F) %>% mutate(NumReads=as.integer(NumReads))
+sf = read.table(salmon_profile,head=T, stringsAsFactors=F) %>% mutate(Coverage=NumReads*300/EffectiveLength)  %>% 
+   mutate(EffectiveLengthCov=ifelse(Coverage>0.1, 1,0)*EffectiveLength)
+readthresh = sum(sf$NumReads)*0.0001
 sf_simp = sf %>% filter(NumReads>0)
 sf_name_count = rep(sf_simp$Name, times=sf_simp$NumReads)
+
+this=sample
+
 
 sf_rare_all = lapply(c(100000, 250000, 500000, 1000000, 2500000,5000000,10000000), function(depth){
     print(depth)
@@ -45,25 +47,26 @@ sf_rare_all = lapply(c(100000, 250000, 500000, 1000000, 2500000,5000000,10000000
             mutate(EffectiveLengthCov=ifelse(Coverage>0.1, 1,0)*EffectiveLength)
         sf_per_bin = sf_rare %>% mutate(totreads=sum(NumReadsRare), bin = gsub("_contig_[0-9]+", "", Name))%>%
             group_by(bin) %>% summarize(Length=sum(Length), EffectiveLength=sum(EffectiveLength), EffectiveLengthCov=sum(EffectiveLengthCov), Contigs=n(), ContigsCov=sum(Coverage>0.1), NumReadsRare=sum(NumReadsRare)) %>%
-            mutate(rpk = NumReadsRare/(EffectiveLength/readthresh)) %>% filter(NumReadsRare>=1000, (EffectiveLengthCov/EffectiveLength)>=.2 ) %>%
-            mutate(scaleFactor = sum(rpk)/1000000, tpm=rpk/scaleFactor , sample=this) %>% filter(tpm>=250) %>% mutate(scaleFactor = sum(rpk)/1000000, tpm=rpk/scaleFactor) %>%
+            filter(NumReadsRare>=1000, (EffectiveLengthCov/EffectiveLength)>=.2 ) %>% mutate(rpk = NumReadsRare/(EffectiveLength/1000)) %>% 
+             mutate(scaleFactor = sum(rpk)/1000000, tpm=rpk/scaleFactor , sample=sample) %>% filter(tpm>=250) %>% mutate(scaleFactor = sum(rpk)/1000000, tpm=rpk/scaleFactor) %>%
             mutate(sample=this, depth=depth, i=i) %>% select(sample, depth, i, bin, tpm)
         return(sf_per_bin)
     }, mc.cores=5) %>% do.call("bind_rows",.)
 }) %>% do.call("bind_rows",.)
 
 
-write.table(sf_rare_all, paste0(this,"/",this,".salmon_rarefied.tsv"), row.names=F, sep="\t")
-}
+
+write.table(sf_rare_all, paste0(this,".salmon_rarefied.tsv"), row.names=F, sep="\t")
 
 
-library(tidyverse)
 
-allsamples = list.files()
-#allsamples = allsamples[!allsamples %in% c("H07680-L1", "H07609-L1", "G02618-L1","H07610-L1","H07632-L1","H07664-L1","H07690-L1")]
-#allsamples = allsamples[grepl("^F",allsamples)==F]
-allrare = lapply(allsamples, function(x){print(x); tfile=paste0(x,"/",x,".salmon_rarefied.tsv"); if(file.exists(tfile)) read.table(tfile, head=T, stringsAsFactors=F)}) %>% do.call("bind_rows",.) %>% data.frame(stringsAsFactors=F)
+# library(tidyverse)
 
-write.table(allrare, paste0("../GreatApes.salmon_rarefied.tsv"), row.names=F, sep="\t")
+# allsamples = list.files()
+# #allsamples = allsamples[!allsamples %in% c("H07680-L1", "H07609-L1", "G02618-L1","H07610-L1","H07632-L1","H07664-L1","H07690-L1")]
+# #allsamples = allsamples[grepl("^F",allsamples)==F]
+# allrare = lapply(allsamples, function(x){print(x); tfile=paste0(x,"/",x,".salmon_rarefied.tsv"); if(file.exists(tfile)) read.table(tfile, head=T, stringsAsFactors=F)}) %>% do.call("bind_rows",.) %>% data.frame(stringsAsFactors=F)
+
+# write.table(allrare, paste0("../GreatApes.salmon_rarefied.tsv"), row.names=F, sep="\t")
 
 

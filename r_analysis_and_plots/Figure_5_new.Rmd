@@ -1,0 +1,515 @@
+---
+title: "Figure 2"
+author: "Malte Ruehlemann"
+date: "`r Sys.Date()`"
+output:
+  BiocStyle::html_document:
+  toc: true
+df_print: paged
+self_contained: true
+code_download: true
+highlight: tango
+#bibliography: mylib.bib
+editor_options:
+  chunk_output_type: console
+params:
+  FIGPATH: "figures/"
+---
+
+  
+```{r style}
+# Set knit global options
+library("knitr")
+options(digits = 3, width = 80)
+golden_ratio <- (1 + sqrt(5)) / 2
+opts_chunk$set(echo = FALSE,
+               tidy = FALSE,
+               include = TRUE,
+               fig.path = params$FIGPATH,
+               dev='png',
+               fig.height = 7.5,
+               fig.width = 6 * golden_ratio,
+               warning = F,
+               message =F, 
+               comment = '  ',
+               dpi = 300,
+               cache = FALSE)
+library("rmarkdown")
+
+# Pretty outputs
+library("BiocStyle")
+library("ggthemes") # add ggplot2 themes
+library("ggplot2")
+theme_set(theme_few(base_size = 18))
+
+# Set seed for reproducibility
+set.seed(222)
+```
+
+
+```{r}
+#setwd("r_analysis_and_plots")
+library(ggplot2)
+library(tidyverse)
+library(ape)
+library(ggtree)
+library(compositions)
+library(phyloseq)
+library(picante)
+library(ggrepel)
+library(reshape2)
+library(cowplot)
+library(plotly)
+library(TreeDist)
+library(phytools)
+library(parallel)
+library(ggpubr)
+
+
+interactive=F
+intermediatedata_folder="~/Desktop/Projects/190712_GreatApes/220303_Analysis_New/intermediate_data/"
+setwd("~/Desktop/Projects/190712_GreatApes/220616_dataprocessing/greatapes_mgx_scripts/r_analysis_and_plots//")
+load("0_all_preprocessed.Robj")
+```
+
+
+## Results Co-phylogeny analysis
+
+```{r}
+
+genomes_in_cospec = lapply(cospec_results$results, function(x) x$bionj_tree$tip.label) %>% unlist %>% unique
+
+gen_level_cutoff = cospec_results$stats %>% filter(grepl("^g", tax_cons)) 
+genomes_in_cospec_gen = lapply((gen_level_cutoff %>% pull(group)), function(x) cospec_results$results[[x]]$bionj_tree$tip.label) %>% unlist %>% unique
+sgb_in_cospec = all_genomes %>% filter(genome %in% genomes_in_cospec_gen) %>% pull(GreatApes_95_final) %>% unique
+
+results_cospec = lapply(cospec_results$results, function(x) x$res)  %>% do.call("bind_rows",.) %>% arrange(hommola_p_mean) %>% filter(clade %in% (gen_level_cutoff %>% pull(group)))
+
+results_cospec
+
+genomes_with_cophy = lapply(results_cospec %>% filter(hommola_p_mean<0.05) %>% pull(clade), function(x) cospec_results$results[[x]]$bionj_tree$tip.label) %>% unlist %>% unique()
+genomes_with_cophy_gen = genomes_with_cophy[genomes_with_cophy %in% genomes_in_cospec_gen]
+sgb_with_cophy = all_genomes %>% filter(genome %in% genomes_with_cophy_gen) %>% pull(GreatApes_95_final) %>% unique
+
+
+all_genomes %>% filter(!grepl("Manara", genome)) %>% mutate(in_analysis = (final %in% sgb_in_cospec), cophy = (final %in% sgb_with_cophy)) %>% filter(in_analysis) %>% mutate(human = grepl("Hs|MG",cluster_97_final)) %>% distinct_at(.var=c("GreatApes_95_final", "human", "cophy")) %>% select(cophy, human) %>% table 
+
+all_cospec_results = results_cospec %>% left_join(gen_level_cutoff, by=c("clade"="group"))
+write.table(all_cospec_results, "figures_and_tables/Suppl_Table_S13_Results_Cophylo.tsv", row.names = F, sep="\t")
+
+saveRDS(all_cospec_results, "../../../great_apes_shiny_app/data/all_cospec_results.Rds")
+saveRDS(cospec_results, "../../../great_apes_shiny_app/data/cospec_results.Rds")
+
+
+```
+
+
+### selected trees for plotting
+
+```{r}
+
+host = sample_meta %>% select(sample, host) %>% bind_rows(data.frame(sample="MGYG00000",host="HsUHGG"))
+
+colset2 = colset %>% bind_rows(data.frame(host="HsUHGG",host_long = "Homo sapiens (UHGG)", host_tree="Homo_sapiens",col="blue",shape=5, gid=5, location="UHGG"))
+
+all_genomes2 = all_genomes %>% filter(!grepl("Manara", genome), !(grepl("MGYG",genome) & cluster_97_final!=genome)) %>% mutate(sample = ifelse(grepl("MGYG", genome), "MGYG00000" , gsub("_cleanbin_[0-9]+","",genome))) %>% select(-host) %>%  left_join(host, by=c("sample")) %>% left_join(colset2)
+### tree bad
+
+tree_cophy_1 = cospec_results$results$f__UBA932_subtree_62$bionj_tree_rooted %>% drop.tip("outgroup")
+tree_cophy_1$node.label = tree_cophy_1$node.label %>% sapply(function(x) strsplit(x, split="/")[[1]][1] %>% as.numeric() )
+#if(input$pruned){tree=keep.tip(tree, alldata$results[[c]]$prune_info$genome)}
+pp=ggtree(tree_cophy_1, layout=ifelse(is.rooted(tree_cophy_1),"rectangular","equal_angle"), ladderize=T)
+pp$data$x = -pp$data$x
+pp$data<-left_join(pp$data, all_genomes2, by=c("label"="genome")) 
+pp_tax_cons = sgb_reps %>% filter(sgb %in% (pp$data %>% filter(isTip) %>% pull(GreatApes_95_final))) %>% pull(genus) %>% unique() %>% paste(collapse=";")
+pp_tc = pp$data %>% filter(isTip) %>% select(host_tree, col, shape) %>% distinct()
+
+pp=pp+geom_point(data=pp$data %>% filter(isTip==T), aes(x=x,y=y, shape=host, label=label, col=host, bin_id=GreatApes_95_final), size=3)+
+  scale_color_manual(values=colset2$col, breaks=colset2$host)+
+  scale_shape_manual(values=c(15,16,17,18,19)[colset2$shape],breaks=colset2$host) + coord_flip()
+pp=pp +  theme(legend.position = "none") + ggtitle(paste0(pp_tax_cons, " spp."))
+
+
+### tree no human
+
+tree_cophy_2 = cospec_results$results$f__Paludibacteraceae_subtree_11$bionj_tree_rooted %>% drop.tip("outgroup")
+tree_cophy_2$node.label = tree_cophy_2$node.label %>% sapply(function(x) strsplit(x, split="/")[[1]][1] %>% as.numeric() )
+#if(input$pruned){tree=keep.tip(tree, alldata$results[[c]]$prune_info$genome)}
+pp2=ggtree(tree_cophy_2, layout=ifelse(is.rooted(tree_cophy_2),"rectangular","equal_angle"), ladderize=T)
+pp2$data$x = -pp2$data$x
+pp2$data<-left_join(pp2$data, all_genomes2, by=c("label"="genome")) 
+pp2_tax_cons = sgb_reps %>% filter(sgb %in% (pp2$data %>% filter(isTip) %>% pull(GreatApes_95_final))) %>% pull(genus) %>% unique() %>% paste(collapse=";")
+pp2_tc = pp2$data %>% filter(isTip) %>% select(host_tree, col, shape) %>% distinct()
+
+pp2=pp2+geom_point(data=pp2$data %>% filter(isTip==T), aes(x=x,y=y, shape=host, label=label, col=host, bin_id=GreatApes_95_final), size=3)+
+  scale_color_manual(values=colset2$col, breaks=colset2$host)+
+  scale_shape_manual(values=c(15,16,17,18,19)[colset2$shape],breaks=colset2$host) + coord_flip()
+pp2=pp2 +  theme(legend.position = "none") + ggtitle(paste0(pp2_tax_cons, " spp."))
+
+
+### tree human
+
+tree_cophy_3 = cospec_results$results$f__Dialisteraceae_subtree_22$bionj_tree_rooted %>% drop.tip("outgroup")
+tree_cophy_3$node.label = tree_cophy_3$node.label %>% sapply(function(x) strsplit(x, split="/")[[1]][1] %>% as.numeric() )
+#if(input$pruned){tree=keep.tip(tree, alldata$results[[c]]$prune_info$genome)}
+pp3=ggtree(tree_cophy_3, layout=ifelse(is.rooted(tree_cophy_3),"rectangular","equal_angle"), ladderize=T)
+pp3$data$x = -pp3$data$x
+pp3$data<-left_join(pp3$data, all_genomes2, by=c("label"="genome")) 
+pp3_tax_cons = sgb_reps %>% filter(sgb %in% (pp3$data %>% filter(isTip) %>% pull(GreatApes_95_final))) %>% pull(genus) %>% unique() %>% paste(collapse=";")
+pp3_tc = pp3$data %>% filter(isTip) %>% select(host_tree, col, shape) %>% distinct()
+
+pp3=pp3+geom_point(data=pp3$data %>% filter(isTip==T), aes(x=x,y=y, shape=host, label=label, col=host, bin_id=GreatApes_95_final), size=3)+
+  scale_color_manual(values=colset2$col, breaks=colset2$host)+
+  scale_shape_manual(values=c(15,16,17,18,19)[colset2$shape],breaks=colset2$host) + coord_flip()
+pp3=pp3 +  theme(legend.position = "none") + ggtitle(paste0(pp3_tax_cons, " spp."))
+
+
+
+### tree archaea
+
+tree_cophy_4 = cospec_results$results$f__Methanomethylophilaceae_subtree_4$bionj_tree_rooted %>% drop.tip("outgroup")
+tree_cophy_4$node.label = tree_cophy_4$node.label %>% sapply(function(x) strsplit(x, split="/")[[1]][1] %>% as.numeric() )
+#if(input$pruned){tree=keep.tip(tree, alldata$results[[c]]$prune_info$genome)}
+pp4=ggtree(tree_cophy_4, layout=ifelse(is.rooted(tree_cophy_4),"rectangular","equal_angle"), ladderize=T)
+pp4$data$x = -pp4$data$x
+pp4$data<-left_join(pp4$data, all_genomes2, by=c("label"="genome")) 
+pp4_tax_cons = sgb_reps %>% filter(sgb %in% (pp4$data %>% filter(isTip) %>% pull(GreatApes_95_final))) %>% pull(genus) %>% unique() %>% paste(collapse=";")
+pp4_tc = pp4$data %>% filter(isTip) %>% select(host_tree, col, shape) %>% distinct()
+
+pp4=pp4+geom_point(data=pp4$data %>% filter(isTip==T), aes(x=x,y=y, shape=host, label=label, col=host, bin_id=GreatApes_95_final), size=3)+
+  scale_color_manual(values=colset2$col, breaks=colset2$host)+
+  scale_shape_manual(values=c(15,16,17,18,19)[colset2$shape],breaks=colset2$host) + coord_flip()
+pp4=pp4 +  theme(legend.position = "none") + ggtitle(paste0(pp4_tax_cons, " spp."))
+
+
+tree_legend= colset2 %>% arrange(host) %>% mutate(column = case_when(grepl("^G",host) ~ 1, grepl("^H", host) ~ 1, grepl("^P", host) ~ 2)) %>% group_by(column) %>% mutate(row=seq_along(column)) %>% 
+  ggplot(aes(x=column, y=-row, label=host_long)) + 
+  geom_point(aes(col=host_long, shape=host_long), size=3) + 
+  geom_text(aes(label=host_long), hjust=0, nudge_x = .1, size=3) + 
+  scale_x_continuous(limits=c(1,3)) + 
+  theme_nothing() + scale_color_manual(values=colset2$col, breaks=colset2$host_long)+
+   scale_shape_manual(values=c(15,16,17,18,19)[colset2$shape],breaks=colset2$host_long)
+
+cophy_tree_set = plot_grid(NULL, pp,pp2,pp3,pp4,NULL,tree_legend, NULL , rel_heights = c(0.05,0.2,0.2,0.2,0.2,0.025,0.1,0.025), ncol=1)
+panel_a = cophy_tree_set
+cophy_tree_set
+```
+
+### cophylogeny enrichment
+
+```{r}
+fam_cophy_stats = all_genomes %>% filter(GreatApes_95_final %in% sgb_in_cospec) %>% mutate(cophy=(final %in% sgb_with_cophy)) %>% select(GreatApes_95_final, cophy) %>% left_join(tax2) %>% distinct %>% select(family, cophy) %>% table %>% data.frame(stringsAsFactors = F) 
+
+fisher_out = lapply(as.character(unique(fam_cophy_stats$family)), function(ff){
+  fdf=fam_cophy_stats %>% mutate(this_fam = family==ff) %>% group_by(this_fam, cophy) %>% summarize(n=sum(Freq)) %>% reshape2::dcast(this_fam ~ cophy, value.var = "n") %>% column_to_rownames("this_fam")
+  p=(fdf %>% fisher.test())$p.value
+  return(data.frame(fam=ff, p_fisher=p, cosp_rat=fdf[2,2]/sum(fdf[2,])))
+}) %>% do.call("bind_rows",.)
+
+cophy_stats2 = fisher_out %>% left_join(fam_cophy_stats %>% group_by(family) %>% summarize(tot=sum(Freq)), by=c("fam"="family")) %>% arrange(p_fisher) %>% filter(tot>=10) %>% mutate(qval=p.adjust(p_fisher, "fdr")) %>% left_join(sgb_reps %>% select(phylum2,fam=family) %>% distinct()) %>% mutate(fam = fct_reorder(fam, -cosp_rat))
+
+cophy_mean = cophy_stats2 %>% filter(tot>=10) %>% pull(cosp_rat) %>% mean
+
+cophy_enrich_plot = cophy_stats2 %>% filter(tot>=10) %>% 
+  mutate(stars=case_when(qval < 0.001 ~ "***", qval < 0.01 ~ "**", qval < 0.05 ~ "*", T ~ "")) %>% 
+  ggplot(aes(y=cosp_rat*100, x=fam, fill=ifelse(qval < 0.05, phylum2, "ZZ"), col=phylum2)) + geom_col() + geom_hline(yintercept = cophy_mean*100, lty=2) + 
+  geom_text(aes(label=stars), nudge_y = 5, col="black") + 
+  scale_fill_manual(values=c(phylumcols_df$col,"white"), breaks=c(phylumcols_df$phylum,"ZZ")) + 
+  scale_color_manual(values=c(phylumcols_df$col,"white"), breaks=c(phylumcols_df$phylum,"ZZ")) + 
+  ylab("Cophylo-Ratio (%)") + xlab("")+ 
+  theme(axis.text.x = element_text(angle=45, hjust=1, size=9), axis.title = element_text(size=12), legend.position = "none") + 
+  scale_y_continuous(expand=c(.01,0), limits=c(0,110))
+  
+
+cophy_stats2
+write.table(cophy_stats2, "figures_and_tables/Suppl_Table_S14_Cophylo_Families.tsv", row.names = F, sep="\t")
+
+panel_b=cophy_enrich_plot
+saveRDS(cophy_stats2, "../../../great_apes_shiny_app/data/family_cophy_ratios.Rds")
+```
+
+
+### per-sample sgb co-phylo ratio
+
+
+```{r}
+
+coph_plot =  sgb_long %>% filter(variable %in% sgb_in_cospec) %>% mutate(pres = value > 0, cosp = variable %in% sgb_with_cophy) %>% filter(pres) %>% group_by(sample, host_long) %>% summarise(cophy_rat = mean(cosp)) %>% 
+  ggplot(aes(x=host_long,y=cophy_rat*100, fill=host_long)) + 
+  geom_boxplot(outlier.shape = NA) + geom_jitter(height=0, width=.2) +
+  scale_fill_manual(values=colset$col, breaks = colset$host_long) + 
+  theme(legend.position = "none", axis.title = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1, size=9)) +
+  ylab("Prop. of Co-Phylo SGBs (%)") + xlab("") + scale_y_continuous(expand=c(.01,0))
+
+panel_c = coph_plot
+ggpubr::compare_means(data=coph_plot$data, cophy_rat ~ host_long)
+
+
+saveRDS(coph_plot$data, "../../../great_apes_shiny_app/data/sample_coph_plot.Rds")
+
+
+```
+
+### sporulation genes
+
+```{r}
+
+all_sgb_in_cophan = all_genomes %>% filter(GreatApes_95_final %in% sgb_in_cospec) %>% mutate(cophy=(final %in% sgb_with_cophy)) %>% select(final, cophy) %>% distinct() %>% left_join(tax2, by=c("final"="GreatApes_95_final"))
+
+### sleect traitar traits to test: found in at least 50 and at most total n = 1017 - 50 SGBs in the cospec analysis 
+traits_test=traitar %>% filter(V1 %in% all_sgb_in_cophan$final) %>% pull(V2) %>% table() %>% data.frame() %>% filter(Freq>50, Freq<(nrow(all_sgb_in_cophan)-50)) %>% pull(1) %>% as.vector()
+
+
+traitar_tab = traitar %>% filter(V1 %in% all_sgb_in_cophan$final) %>% mutate(sgb = V1, trait = V2, pres = V3) %>% dcast(sgb ~ trait, value.var="pres", fill=0)
+
+# en=lapply(traits_test, function(x){
+#   p=all_sgb_in_cophan %>% left_join(traitar %>% filter(V2 == x), by=c("final"="V1")) %>% mutate(this_x = ifelse(is.na(V3),0,1)) %>% select(cophy, this_x) %>% table() %>% fisher.test()
+#   return(data.frame(x, p$p.value, p$estimate))
+# }) %>% do.call("bind_rows",.)
+
+library(lme4qtl)
+
+### cophenetic distance between SGBs for correction in model
+cophylo_coph_dist = as.matrix(cophenetic.phylo(tree_full %>% keep.tip(all_sgb_in_cophan$final)))
+### scaled cophenetic similarity
+coph_sim = 1-(cophylo_coph_dist/max(cophylo_coph_dist))
+
+### phylogenetics logistic regression of traitar traits 
+en2=lapply(traits_test, function(x){
+  dat=all_sgb_in_cophan %>% left_join(traitar %>% filter(V2 == x), by=c("final"="V1")) %>% mutate(this_x = ifelse(is.na(V3),0,1)) %>% select(final, cophy, this_x, phylum) 
+  mod_res = relmatGlmer(cophy ~ this_x + (1|phylum) + (1|final), dat, relmat = list(id=as.matrix(coph_sim)), family = binomial("probit")) %>% summary
+  return(data.frame(trait=x, t(mod_res$coefficients[2,])))
+}) 
+
+traitar_tab = traitar %>% filter(V1 %in% all_sgb_in_cophan$final) %>% mutate(sgb = V1, trait = V2, value = V3) %>% 
+  bind_rows(all_sgb_in_cophan %>% left_join(sgb_reps_full %>% select(final=sgb, genome_size)) %>% mutate(trait="genome_size") %>% select(sgb=final, trait, value=genome_size)) %>%
+  bind_rows(all_sgb_in_cophan %>% left_join(sgb_reps_full %>% select(final=sgb, genes_k)) %>% mutate(trait="gene_count_k") %>% select(sgb=final, trait, value=genes_k)) %>%
+  dcast(sgb ~ trait, value.var="value", fill=0) %>% relocate(gene_count_k, .after="sgb") %>% relocate(genome_size, .after="sgb")
+
+write.table(traitar_tab, "figures_and_tables/Suppl_Table_S15_Cophylo_SGB_Traitar.tsv", sep="\t", row.names = F)
+
+## same analysis as above, but with genome size (Mb)
+dat_gs = all_sgb_in_cophan %>% left_join(sgb_reps_full %>% select(final=sgb, genome_size)) %>% mutate(genome_size = genome_size/1000000)
+mod_res = relmatGlmer(cophy ~ genome_size + (1|phylum) + (1|final), dat_gs, relmat = list(id=as.matrix(coph_sim)), family = binomial("probit")) %>% summary
+
+## same analysis as above, but with gene counts (K)
+dat_gc=all_sgb_in_cophan %>% left_join(sgb_reps_full %>% select(final=sgb, genes_k))
+mod_res_gc = relmatGlmer(cophy ~ genes_k + (1|phylum) + (1|final), dat_gc, relmat = list(id=as.matrix(coph_sim)), family = binomial("probit")) %>% summary
+
+phylo_reg_results = list(en2, data.frame(trait="Genome Size (Mb)", t(mod_res$coefficients[2,])),  data.frame(trait="Gene count (k)", t(mod_res_gc$coefficients[2,]))) %>% do.call("bind_rows",.) %>% 
+  arrange(Pr...z..) %>% mutate(q = p.adjust(Pr...z..)) %>% data.frame()
+
+write.table(phylo_reg_results, "figures_and_tables/Suppl_Table_S16_Cophylo_Traits.tsv", sep="\t", row.names = F)
+
+
+  phylm_plot = phylo_reg_results %>% 
+  ggplot(aes(x=Estimate, y=-log10(Pr...z..))) + geom_vline(xintercept = 0, col="lightgrey", lty=2) + 
+  geom_hline(data = . %>% filter(q<0.05) %>% arrange(abs(z.value)) %>% head(1), aes(yintercept=-log10(Pr...z..)), col="lightgrey", lty=2) +
+  geom_point(aes(col=case_when(q>=0.05 ~ "A", Estimate < 0 ~ "B", Estimate > 0 ~ "C")), size=2) + scale_x_continuous(limits=c(-1.7,1.7)) + 
+  ggrepel::geom_text_repel(data= . %>% filter(q<0.05), aes(label=trait), min.segment.length = .1)  +
+  ylab("-log(P)") + scale_color_manual(values=c("grey","#f12400","#3d9ab2")) + theme(legend.position = "none", axis.title = element_text(size=12)) + xlab("Effect size")
+
+
+panel_d = phylm_plot
+
+### genome size plot
+plot_dat_gs = dat_gs %>% mutate(phylum2=ifelse(phylum %in% phylumcols_df$phylum, phylum,"other")) %>% (function(df) df  %>% filter(phylum %in% (df %>% select(phylum,cophy) %>% distinct %>% group_by(phylum) %>% summarise(n=n()) %>% filter(n==2) %>% pull(phylum)))) %>% (function(df) df %>% group_by(phylum) %>% summarise(mean_genome_size = mean(genome_size)) %>% left_join(df, .)) %>% mutate(rel_genome_size = log2(genome_size/mean_genome_size)) %>%
+ mutate(phy_id = as.numeric(as.factor(phylum)), plot_pos = phy_id-0.2+0.4*as.numeric(cophy))
+
+pvals_wilcox_gs = lapply(plot_dat_gs$phylum %>% unique, function(x){
+  p_out = (plot_dat_gs %>% filter(phylum == x) %>% select(cophy, genome_size) %>% wilcox.test(genome_size ~ cophy, data=.))$p.value
+  return(data.frame(phylum=x, p_wilcox=p_out))
+}) %>% do.call("bind_rows",.)  %>% mutate(stars=case_when(p_wilcox < 0.001 ~ "***", p_wilcox < 0.01 ~ "**", p_wilcox < 0.05 ~ "*", T ~ ""))
+
+
+gs_plot = plot_dat_gs %>%  ggplot(aes(x=plot_pos, y=rel_genome_size, fill=cophy, group=paste(phylum,cophy) )) + geom_boxplot(outlier.shape = NA, position = position_dodge()) +  geom_jitter(width=.05, size=.5) + scale_fill_manual(values=c("#f12400","#3d9ab2")) + theme(legend.position = "none") + ylab("Log-Relative Genome Size") + xlab("") + geom_hline(yintercept = 0, lty=2, color="grey") + scale_x_continuous(breaks = unique(plot_dat_gs$phy_id), labels=unique(plot_dat_gs$phylum), expand=c(0.01,0.01)) + theme(axis.text.x = element_text(angle=45, hjust=1), axis.title.y = element_text(size=12))
+
+### gene count plot
+plot_dat_gc = dat_gc %>% mutate(phylum2=ifelse(phylum %in% phylumcols_df$phylum, phylum,"other")) %>% 
+   (function(df) df  %>% filter(phylum %in% (df %>% select(phylum,cophy) %>% distinct %>% group_by(phylum) %>% summarise(n=n()) %>% filter(n==2) %>% pull(phylum)))) %>%
+   mutate(gene_count = genes_k*1000) %>%
+   mutate(phy_id = as.numeric(as.factor(phylum)), plot_pos = phy_id-0.2+0.4*as.numeric(cophy))
+
+
+pvals_wilcox = lapply(plot_dat_gc$phylum %>% unique, function(x){
+  p_out = (plot_dat_gc %>% filter(phylum == x) %>% select(cophy, gene_count) %>% wilcox.test(gene_count ~ cophy, data=.))$p.value
+  return(data.frame(phylum=x, p_wilcox=p_out))
+}) %>% do.call("bind_rows",.)  %>% mutate(stars=case_when(p_wilcox < 0.001 ~ "***", p_wilcox < 0.01 ~ "**", p_wilcox < 0.05 ~ "*", T ~ ""))
+
+gc_plot = plot_dat_gc %>%  ggplot(aes(x=plot_pos, y=gene_count, fill=cophy, group=paste(phylum,cophy) )) + geom_boxplot(outlier.shape = NA, position = position_dodge()) +  
+  geom_jitter(width=.05, size=.5) + 
+  scale_fill_manual(values=c("#f12400","#3d9ab2")) + theme(legend.position = "none") + ylab("Gene Count") + 
+  xlab("") + scale_x_continuous(breaks = unique(plot_dat_gs$phy_id), labels=unique(plot_dat_gs$phylum), expand=c(0.01,0.01)) + 
+  scale_y_continuous(limits=c(0,5500)) +
+  theme(axis.text.x = element_text(angle=45, hjust=1), axis.title.y = element_text(size=12)) + 
+  geom_text(data = pvals_wilcox, aes(y=5200, x=as.numeric(as.factor(phylum)), group=NA, fill=NA, label=stars))
+
+
+
+
+## D-Xylose
+dat_xylo=all_sgb_in_cophan %>% left_join(traitar %>% filter(V2 == "D-Xylose"), by=c("final"="V1")) %>% mutate(this_x = ifelse(is.na(V3),0,1)) %>% select(final, cophy, this_x, phylum) %>% (function(df) df  %>% filter(phylum %in% (df %>% select(phylum,cophy) %>% distinct %>% group_by(phylum) %>% summarise(n=n()) %>% filter(n==2) %>% pull(phylum)  )))
+
+p_vals_fisher = lapply(dat_xylo$phylum %>% unique, function(x){
+  p_out = (dat_xylo %>% filter(phylum == x) %>% select(cophy, this_x) %>% mutate(cophy=factor(cophy, levels=c(F,T)), this_x=factor(this_x, levels=c(0,1))) %>% table %>% fisher.test())$p.value
+  return(data.frame(phylum=x, p_fisher=p_out))
+}) %>% do.call("bind_rows",.)  %>% mutate(stars=case_when(p_fisher < 0.001 ~ "***", p_fisher < 0.01 ~ "**", p_fisher < 0.05 ~ "*", T ~ ""))
+
+xylo_plot = dat_xylo %>% 
+  group_by(phylum, cophy) %>% summarize(prev = mean(this_x), n=n()) %>% 
+  ggplot(aes(x=as.numeric(as.factor(phylum)), y=prev*100, fill=cophy)) + geom_col(position = position_dodge2(padding=.1), width=.8) + 
+  geom_text(aes(label=paste0("n = \n",n), y=100*prev+2.5), size=2, position = position_dodge(width=1)) + scale_fill_manual(values=c("#f12400","#3d9ab2")) + 
+  theme(axis.text.x = element_text(angle=45, hjust=1, size=9), axis.title.y = element_text(size=12)) + xlab("") + ylab("D-Xylose util.\nPrevalence  (%)") + theme(legend.position = "none") + 
+  scale_y_continuous(limits=c(0,105)) + 
+  scale_x_continuous(breaks = unique(plot_dat_gs$phy_id), labels=unique(plot_dat_gs$phylum), expand=c(0.01,0.01)) + 
+  geom_text(data = p_vals_fisher, aes(y=100, x=as.numeric(as.factor(phylum)), fill=NA, label=stars))
+
+
+panels_def = cowplot::plot_grid(
+  panel_d,
+cowplot::plot_grid(gc_plot+ theme(axis.text.x = element_blank())  + theme(plot.margin = unit(c(0, 0.5, 0, 1), "cm")), xylo_plot  + theme(plot.margin = unit(c(.1, 0.5, 0, 1), "cm")), ncol=1, align = "v", labels=c("e","f"), rel_heights = c(.4,.6)),
+labels=c("d",""))
+
+
+dat_spofo= all_sgb_in_cophan %>% left_join(traitar %>% filter(V2 == "Spore formation"), by=c("final"="V1")) %>% mutate(this_x = ifelse(is.na(V3),0,1)) %>% select(final, cophy, this_x, phylum) %>% (function(df) df  %>% filter(phylum %in% (df %>% select(phylum,cophy) %>% distinct %>% group_by(phylum) %>% summarise(n=n()) %>% filter(n==2) %>% pull(phylum)  )))
+
+p_vals_fisher_spofo = lapply(dat_spofo$phylum %>% unique, function(x){
+  p_out = (dat_spofo %>% filter(phylum == x) %>% select(cophy, this_x) %>% mutate(cophy=factor(cophy, levels=c(F,T)), this_x=factor(this_x, levels=c(0,1))) %>% table %>% fisher.test())$p.value
+  return(data.frame(phylum=x, p_fisher=p_out))
+}) %>% do.call("bind_rows",.)  %>% mutate(stars=case_when(p_fisher < 0.001 ~ "***", p_fisher < 0.01 ~ "**", p_fisher < 0.05 ~ "*", T ~ ""))
+
+
+spofo_plot = dat_spofo %>% 
+  group_by(phylum, cophy) %>% summarize(prev = mean(this_x), n=n()) %>% 
+  ggplot(aes(x=as.numeric(as.factor(phylum)), y=prev*100, fill=cophy)) + geom_col(position = position_dodge2(padding=.1), width=.8) + 
+  geom_text(aes(label=paste0("n = \n",n), y=100*prev+2.5), size=2, position = position_dodge(width=1)) + scale_fill_manual(values=c("#f12400","#3d9ab2")) + 
+  theme(axis.text.x = element_text(angle=45, hjust=1, size=9), axis.title.y = element_text(size=12)) + xlab("") + ylab("Spore formation\nPrevalence  (%)") + theme(legend.position = "none") + 
+  scale_y_continuous(limits=c(0,105)) + 
+  scale_x_continuous(breaks = unique(plot_dat_gs$phy_id), labels=unique(plot_dat_gs$phylum), expand=c(0.01,0.01)) + 
+  geom_text(data = p_vals_fisher_spofo, aes(y=100, x=as.numeric(as.factor(phylum)), fill=NA, label=stars))
+
+
+
+```
+
+
+### Bifido tree
+
+```{r}
+library(dendextend)
+library(phangorn)
+
+
+info_sub = gyrb_info %>% filter(genus=="g__Bifidobacterium", prot_id %in% bifido_gyrb_tree$tip.label) %>% filter(!is.na(host_tree)) %>% group_by(species, host_tree) %>% sample_n(1) %>% ungroup %>% mutate(dup = duplicated(GreatApes_95_final)) %>% mutate(label = paste0(species, " (",host_group,")")) %>% mutate(pre_lab = ifelse(dup, paste0(GreatApes_95_final,"_",host_group), GreatApes_95_final))
+
+bifido_gyrb_tree_sub = bifido_gyrb_tree %>% keep.tip(c("outgroup",  info_sub %>% pull(prot_id)))
+
+bifido_gyrb_tree_sub$tip.label = data.frame(info_sub)[match(bifido_gyrb_tree_sub$tip.label, info_sub$prot_id), "label"] %>%  ifelse(bifido_gyrb_tree_sub$tip.label == "outgroup", "outgroup",.) 
+
+bifido_marker_tree2 = add.tips(tree = bifido_marker_tree, where = info_sub %>% filter(dup) %>% pull(GreatApes_95_final), tips = info_sub %>% filter(dup) %>% pull(pre_lab) )
+
+bifido_marker_tree2$tip.label = data.frame(info_sub)[match(bifido_marker_tree2$tip.label, info_sub$pre_lab), "label"] %>% ifelse(bifido_marker_tree2$tip.label == "outgroup", "outgroup",.) 
+#bifido_marker_tree = bifido_marker_tree %>% keep.tip(., bifido_gyrb_tree_sub$tip.label)
+
+dend_marker = chronos(bifido_marker_tree2 %>% keep.tip(bifido_gyrb_tree_sub$tip.label) %>% ape::root(phy=., outgroup="outgroup",resolve.root=T) )
+dend_gyrb = chronos(bifido_gyrb_tree_sub) 
+
+tanglegram(dend_marker, dend_gyrb, margin_inner=20)
+
+
+tg=tanglegram(dend_marker, dend_gyrb, sort = TRUE, common_subtrees_color_lines = T, highlight_distinct_edges  = FALSE, highlight_branches_lwd = FALSE, margin_inner=0, axes=F,columns_width=c(1,1,1), lab.cex = NA, lwd=2) 
+tg2 = tg %>% untangle(method = "step2side") 
+
+png("gyrb_tangle.png", width = 14, height=20, units = "cm", res = 300)
+tg2 %>% plot(common_subtrees_color_lines = T, highlight_distinct_edges  = FALSE, highlight_branches_lwd = FALSE, margin_inner=0.1, axes=F,columns_width=c(1,1,1), lab.cex = 2, lwd=2, edge.lwd=2, main_left = "GTDB Markers", main_right="gyrB")
+dev.off()
+
+bifido_colors = bind_rows(bind_rows(info_sub[match(bifido_gyrb_tree_sub$tip.label, info_sub$label),] %>% mutate(host = ifelse(host=="HsUHGG", "HsG", host)) %>% left_join(colset)) %>% select(label, GreatApes_95_final, prot_id, host, host_tree, col, species, shape) %>% filter(!is.na(host)), data.frame(stringsAsFactors = F,label="outgroup", GreatApes_95_final="outgroup",prot_id="outgroup",host="outgroup",host_tree="outgroup",col="grey", species="outgroup", shape=1) %>% group_by(host_tree))
+
+
+bifido_marker = tg2$dend1 %>% as.phylo() %>% ape::root(phy=., outgroup="outgroup",resolve.root=T) %>% ggtree(, size=.8)  + theme_nothing() + scale_y_continuous(limits=c(0.5, 13)) + geom_tippoint(size=3, aes(color=label, shape=label)) + scale_color_manual(values=bifido_colors$col, breaks = bifido_colors$label) 
+#bifido_marker$data = bifido_marker$data %>% mutate(x=ifelse(label=="outgroup", bifido_marker$data %>% filter(isTip, label!="outgroup") %>% pull(x) %>% max(),x))
+bifido_marker = bifido_marker + geom_segment(data = . %>% filter(isTip), aes(x=x,xend= bifido_marker$data %>% filter(isTip, label!="outgroup") %>% pull(x) %>% max(), y=y, yend=y), lty=2, size=.2) + scale_shape_manual(values=c(15,16,17,18)[bifido_colors$shape], breaks=bifido_colors$label) + geom_point(data = . %>% mutate(label2 = gsub("/[0-9]+","",label)) %>% filter(!isTip, as.numeric(label2) > 80))
+
+
+bifido_gyrb = tg2$dend2 %>% as.phylo() %>% root(outgroup="outgroup", resolve.root=T) %>% ggtree(size=.8)  + scale_x_reverse() + theme_nothing() + scale_y_continuous(limits=c(0.5, 13)) + geom_tippoint(aes(color=label, shape=label), size=3)  
+#bifido_gyrb$data = bifido_gyrb$data %>% mutate(x=ifelse(label=="outgroup", bifido_gyrb$data %>% filter(isTip, label!="outgroup") %>% pull(x) %>% max(),x)) 
+bifido_gyrb = bifido_gyrb + scale_color_manual(values=bifido_colors$col, breaks = bifido_colors$label) + geom_segment(data = . %>% filter(isTip), aes(x=x,xend= bifido_gyrb$data %>% filter(isTip, label!="outgroup") %>% pull(x) %>% max(), y=y, yend=y), lty=2, size=.2) + scale_shape_manual(values=c(15,16,17,18)[bifido_colors$shape], breaks=bifido_colors$label) + geom_point(data = . %>% filter(!isTip, as.numeric(label) > 80))
+
+conn2 = bifido_marker$data %>% filter(isTip) %>% select(label,y_markers=y) %>% left_join(bifido_gyrb$data %>% filter(isTip) %>% select(label,y_gyrb=y)) %>% ggplot(aes(x=1, xend=2, y=y_markers, yend=y_gyrb)) + geom_segment(size=.8, lty=2, aes(color=label)) + theme_nothing() + scale_y_continuous(limits=c(0.5, 13)) + scale_color_manual(values=bifido_colors$col, breaks = bifido_colors$label)
+
+labelplot = bifido_marker$data %>% filter(isTip) %>% ggplot(aes(x=0, y=y, col=label)) + theme_nothing() + scale_shape_manual(values=c(16,17,18)[bifido_colors$shape], breaks = bifido_colors$label) + scale_color_manual(values=bifido_colors$col, breaks = bifido_colors$label) + geom_text(aes(label=label), hjust=0) + scale_x_continuous(limits=c(0,1.5)) + scale_y_continuous(limits=c(0.5, 13))
+
+bifido_plot = plot_grid(NULL,
+                        bifido_marker + geom_text(data=data.frame(x=0,y=12.5,label="GTDB\nMarkers"), hjust=0, aes(label=label)) , 
+                        labelplot,  conn2,
+                        bifido_gyrb + geom_text(data=data.frame(x=0,y=12.5,label="gyrB"), hjust=1, aes(label=label)), NULL,
+                        ncol=6,
+                        rel_widths = c(.025,0.15,0.3,0.1,0.15,.025)
+)
+
+# bifido_plot = plot_grid(
+#   bifido_marker + geom_text(data=data.frame(x=0,y=8,label="GTDB Markers"), hjust=0, aes(label=label)) , 
+#   conn2, 
+#   bifido_gyrb + geom_text(data=data.frame(x=0,y=8,label="gyrB"), hjust=1, aes(label=label)) ,
+#   get_legend(bifido_marker + theme(legend.position = "left", legend.justification = "center") +  guides(colour = guide_legend(col = 1, title=""), shape = guide_legend(col = 1, title=""))), ncol=4,
+#   rel_widths = c(0.2,0.2,0.2,0.4)
+# )
+
+bifido_moeller_info = data.frame(tip=bifido_moeller$tip.label, sample = bifido_moeller$tip.label %>% gsub("Spades_","",.) %>% lapply(., function(x) strsplit(x, split="_")[[1]][1]) %>% unlist %>% gsub("[0-9]{2,}$","",.), stringsAsFactors = F) %>% left_join(sample_meta) %>% mutate(hostnew=ifelse(is.na(host), sample, host)) %>% mutate(hostnew=ifelse(grepl("^Pt",hostnew), "Chimp",hostnew), hostnew=ifelse(grepl("^Hs|^MGYG",hostnew), "Human",hostnew), hostnew=ifelse(grepl("^Pp",hostnew), "Bonobo",hostnew), hostnew=ifelse(grepl("^G|^SRR",hostnew), "Gorilla",hostnew)) %>% mutate(group=ifelse(sample %in% c("Human","Gorilla","Bonobo","Chimp"),"Moeller","New")) %>% select(tip, hostnew,group)
+
+gg_moe = bifido_moeller %>% ggtree()
+gg_moe$data = gg_moe$data %>% left_join(bifido_moeller_info, by=c("label"="tip"))
+gg_moe + geom_tippoint(aes(col=hostnew, shape=group)) + scale_x_reverse() + scale_color_manual(values=c("red","orange","darkgreen","lightblue","grey","grey")) + scale_shape_manual(values=c(21,16))
+
+```
+
+```{r, fig.height=4, fig.width=15}
+top_right= align_plots(panel_b,
+                       panel_c, align = "h")
+
+plot5=plot_grid(
+  cophy_tree_set, NULL,
+  plot_grid(
+    plot_grid(top_right[[1]],NULL, top_right[[2]], labels=c("b","c"), ncol=3, rel_widths = c(.55,.025,.45)
+    ),
+    plot_grid(panels_def),
+    bifido_plot, ncol=1, rel_heights = c(.35,.35,.25), labels=c("","", "g")),
+  rel_widths = c(.3,.02,.7), labels=c("a","",""), ncol=3
+)
+
+
+plot5
+
+ggsave(filename = "figures_and_tables/Figure_5_new.png", plot5, height=12, width=15, bg="white")
+
+```
+
+
+## Source Data
+
+```{r}
+library("openxlsx")
+# Write the first data set in a new workbook
+
+wb=readRDS("SourceData_Figure1234.Rds")
+
+fig5c_ext = panel_c$data %>% select(-.group)
+fig5e_ext = gc_plot$data %>% select(final, cophy, phylum, gene_count)
+fig5f_ext = xylo_plot$data %>% select(phylum, cophy, n, prev)
+
+addWorksheet(wb, "Figure5c")
+writeData(wb, sheet = "Figure5c", fig5c_ext)
+
+addWorksheet(wb, "Figure5e")
+writeData(wb, sheet = "Figure5e", fig5e_ext)
+
+addWorksheet(wb, "Figure5f")
+writeData(wb, sheet = "Figure5f", fig5f_ext)
+
+
+saveRDS(wb, "SourceData_Figure12345.Rds")
+
+saveWorkbook(wb, "SourceData_Fig1-5.xlsx")
+
+```

@@ -54,7 +54,6 @@ set.seed(222)
 ```
 
 ```{r}
-#setwd("r_analysis_and_plots")
 library(ggplot2)
 library(tidyverse)
 library(ape)
@@ -72,6 +71,8 @@ library(parallel)
 library(ggpubr)
 
 interactive=F
+intermediatedata_folder="~/Desktop/Projects/190712_GreatApes/220303_Analysis_New/intermediate_data/"
+setwd("~/Desktop/Projects/190712_GreatApes/220616_dataprocessing/greatapes_mgx_scripts/r_analysis_and_plots//")
 
 load("0_all_preprocessed.Robj")
 ```
@@ -82,21 +83,21 @@ load("0_all_preprocessed.Robj")
 ## create large tree of SGBs in circular layout
 pp<-ggtree(tree2, ladderize=F, layout = "circular")
 pp$data=left_join(pp$data, sgb_reps, by=c("label"="sgb"))
-circ = pp + geom_tippoint(aes(col=phylum2)) + scale_shape_manual(values=c(0,1,2,15,16,17)) + scale_color_manual(values=phylumcols)
-panel_a = gheatmap(circ, circ$data %>% filter(isTip) %>% mutate(Human=ifelse(symbol %in% c("TRUEHuman","TRUEboth"),phylum2,"ZZ"),NHP=ifelse(symbol %in% c("TRUENHP","TRUEboth"),phylum2,"ZZ")) %>% select(label, Human, NHP) %>% column_to_rownames("label"), offset=0, width=.2, colnames_angle=90, colnames_offset_y = .25)  + scale_fill_manual(values=c(phylumcols,"white")) + theme(legend.position = "none")+theme(plot.margin = unit(c(0,0,0,0), "cm"))
+circ = pp + geom_tippoint(aes(col=phylum2)) + scale_shape_manual(values=c(0,1,2,15,16,17)) + scale_color_manual(values=phylumcols_df$col,breaks=phylumcols_df$phylum)
+panel_a = gheatmap(circ, circ$data %>% filter(isTip) %>% mutate(Human=ifelse(symbol %in% c("TRUEHuman","TRUEboth"),phylum2,"ZZ"),NHA=ifelse(symbol %in% c("TRUENHA","TRUEboth"),phylum2,"ZZ")) %>% select(label, Human, NHA) %>% column_to_rownames("label"), offset=0, width=.2, colnames_angle=90, colnames_offset_y = .25)  + scale_fill_manual(values=c(phylumcols_df$col,"white"), breaks=c(phylumcols_df$phylum,"ZZ")) + theme(legend.position = "none")+theme(plot.margin = unit(c(0,0,0,0), "cm"))
 ```
 
 ## Panel B - Source of SGB and novelty
 
 ```{r}
-panel_b=sgb_reps %>% mutate(host=ifelse(host=="both","Human+NHP",host)) %>% ggplot(aes(x=host, fill=novel)) + geom_bar() + scale_fill_manual(values=c("grey","#33A02C")) + ylab("Number of SGBs") + theme(legend.position = "none") + theme(axis.text.x = element_text(angle=45, hjust=1)) + xlab("") + scale_y_continuous(breaks=c(0,250,500,750,1000,1250), limits=c(0,1500), expand=c(0,0))
+panel_b=sgb_reps %>% mutate(host=ifelse(host=="both","Human+NHA",host)) %>% ggplot(aes(x=host, fill=novel)) + geom_bar() + scale_fill_manual(values=c("grey","#33A02C")) + ylab("Number of SGBs") + theme(legend.position = "none") + theme(axis.text.x = element_text(angle=45, hjust=1)) + xlab("") + scale_y_continuous(breaks=c(0,250,500,750,1000,1250), limits=c(0,1500), expand=c(0,0))
 ```
 
 
 ## Panel C - Score Plot
 
 ```{r}
-panel_c=sgb_reps %>% ggplot(aes(, y=score*100)) + geom_jitter(height=0, width=0.25, aes(x=as.numeric(as.factor(phylum2)), shape=novel, col=phylum2), size=1)  + geom_point(data = . %>% group_by(phylum2,novel) %>% summarize(score=median(score)), aes(x=as.numeric(as.factor(phylum2)), shape=novel), size=2) + scale_y_continuous(limits=c(0,100), expand=c(0,0))+ xlab("Phylum") + scale_shape_manual(values=c(21,16)) + ylab("SGB Score (%)") + scale_color_manual(values=phylumcols) + theme(legend.position = "none", axis.text.x = element_blank(), axis.ticks.x=element_blank())
+panel_c=sgb_reps %>% ggplot(aes(, y=score*100)) + geom_jitter(height=0, width=0.25, aes(x=as.numeric(as.factor(phylum2)), shape=novel, col=phylum2), size=1)  + geom_point(data = . %>% group_by(phylum2,novel) %>% summarize(score=median(score)), aes(x=as.numeric(as.factor(phylum2)), shape=novel), size=2) + scale_y_continuous(limits=c(0,100), expand=c(0,0))+ xlab("Phylum") + scale_shape_manual(values=c(21,16)) + ylab("SGB Score (%)") + scale_color_manual(values=phylumcols_df$col, breaks=phylumcols_df$phylum) + theme(legend.position = "none", axis.text.x = element_blank(), axis.ticks.x=element_blank())
 
 ```
 
@@ -116,27 +117,27 @@ panel_d_top = salmon_stats %>% left_join(sgb_long %>% left_join(sgb_reps %>% sel
 ## Panel E - Novel Phylodiv
 
 ```{r}
-### calculate novel diversity found for each genus for NHPs and humans
-
-if(file.exists("../../../220303_Analysis_New/intermediate_data/pd_novel.Rds")){
-  pd_novel=readRDS("../../../220303_Analysis_New/intermediate_data/pd_novel.Rds")
+### calculate novel diversity found for each genus for NHAs and humans
+pd_novel_file = paste0(intermediatedata_folder, "pd_novel.Rds")
+if(file.exists(pd_novel_file)){
+  pd_novel=readRDS(pd_novel_file)
 }else{
 pd_novel = lapply(unique(sgb_reps$genus), function(gg){
   print(gg)
-  gg_sgb_homo_all=sgb_reps %>% filter(host %in% c("10","11"), genus==gg) %>% pull(sgb)
+  gg_sgb_homo_all=sgb_reps %>% filter(host %in% c("Human","both"), genus==gg) %>% pull(sgb)
   gg_homo_all=ifelse(length(gg_sgb_homo_all) > 0, picante::pd(tree = tree2 %>% keep.tip(gg_sgb_homo_all), samp=sgb_per_host["All",])$PD, 0)
-  gg_sgb_homo_novel = sgb_reps %>% filter(host %in% c("10","11"), genus==gg, novel==T) %>% pull(sgb)
+  gg_sgb_homo_novel = sgb_reps %>% filter(host %in% c("Human","both"), genus==gg, novel==T) %>% pull(sgb)
   gg_homo_novel=ifelse(length(gg_sgb_homo_novel) > 0, picante::pd(tree = tree2 %>% keep.tip(gg_sgb_homo_novel), samp=sgb_per_host["All",])$PD,0)
-  gg_sgb_nhp_all = sgb_reps %>% filter(host %in% c("01","11"), genus==gg) %>% pull(sgb)
+  gg_sgb_nhp_all = sgb_reps %>% filter(host %in% c("NHA","both"), genus==gg) %>% pull(sgb)
   gg_nhp_all=ifelse(length(gg_sgb_nhp_all) > 0, picante::pd(tree = tree2 %>% keep.tip(gg_sgb_nhp_all), samp=sgb_per_host["All",])$PD, 0)
-  gg_sgb_nhp_novel = sgb_reps %>% filter(host %in% c("01","11"), genus==gg, novel==T) %>% pull(sgb)
+  gg_sgb_nhp_novel = sgb_reps %>% filter(host %in% c("NHA","both"), genus==gg, novel==T) %>% pull(sgb)
   gg_nhp_novel=ifelse(length(gg_sgb_nhp_novel) > 0, picante::pd(tree = tree2 %>% keep.tip(gg_sgb_nhp_novel), samp=sgb_per_host["All",])$PD, 0)
   return(list(tax=gg, gg_homo_all=gg_homo_all, gg_homo_novel=gg_homo_novel, gg_nhp_all=gg_nhp_all, gg_nhp_novel=gg_nhp_novel))
 }) %>% do.call("bind_rows",.)
-saveRDS(jackknife_trees, "../../../220303_Analysis_New/intermediate_data/pd_novel.Rds")
+saveRDS(pd_novel, pd_novel_file)
 }
 
-panel_e = pd_novel %>% left_join(sgb_reps %>% select(tax=genus, phylum2) %>% distinct) %>% mutate(nhp_rel_new = ifelse(gg_nhp_all>0, ((gg_nhp_novel+0.1)/(gg_nhp_all-gg_nhp_novel+0.1)),0), homo_rel_new = ifelse(gg_homo_all>0, ((gg_homo_novel+0.1)/(gg_homo_all-gg_homo_novel+0.1)),0)) %>% select(tax, phylum2, NHP = gg_nhp_novel, Homo = gg_homo_novel) %>% reshape2::melt() %>%  ggplot(aes(x=phylum2, y=value, label=tax)) + geom_boxplot(aes(group=phylum2), outlier.color = "white") + geom_jitter(aes(col=phylum2), width=.2) + scale_color_manual(values=phylumcols) + theme(legend.position = "none") + ylab("Novel PhyloDiv") + xlab("Phylum") + theme(axis.text.x = element_blank(), axis.ticks = element_blank()) + facet_wrap(~variable)
+panel_e = pd_novel %>% left_join(sgb_reps %>% select(tax=genus, phylum2) %>% distinct) %>% mutate(nhp_rel_new = ifelse(gg_nhp_all>0, ((gg_nhp_novel+0.1)/(gg_nhp_all-gg_nhp_novel+0.1)),0), homo_rel_new = ifelse(gg_homo_all>0, ((gg_homo_novel+0.1)/(gg_homo_all-gg_homo_novel+0.1)),0)) %>% select(tax, phylum2, NHA = gg_nhp_novel, Homo = gg_homo_novel) %>% reshape2::melt() %>%  ggplot(aes(x=phylum2, y=value, label=tax)) + geom_boxplot(aes(group=phylum2), outlier.color = "white") + geom_jitter(aes(col=phylum2), width=.2) + scale_color_manual(values=phylumcols_df$col, breaks=phylumcols_df$phylum) + theme(legend.position = "none") + ylab("Novel PhyloDiv") + xlab("Phylum") + theme(axis.text.x = element_blank(), axis.ticks = element_blank()) + facet_wrap(~variable)
 ```
 
 
@@ -149,11 +150,13 @@ phylodiv = picante::pd(rr, tree2)
 
 salmon_rare %>% mutate(sid = paste0(sample,"_",depth,"_",i)) %>% dcast(sid ~ bin, value.var="tpm", fill=0) %>% column_to_rownames("sid") %>% vegan::diversity() %>% data.frame(shannon=.) %>% rownames_to_column("sid") %>% separate(sid, into = c("sample","depth","i"), sep="_") %>% left_join(sample_meta) %>% ggplot(aes(x=as.numeric(depth), y=shannon, group=host_long, col=host_long)) + geom_point() + geom_line(data = . %>% group_by(host_long, depth) %>% summarise(shannon=mean(shannon))) + scale_x_log10() + scale_color_manual(values=c(colset$col), breaks=c(colset$host_long)) + ylab("Shannon Diversity") + scale_y_continuous(limits=c(0,6),expand=c(0,0))
 
-if(file.exists("../../../220303_Analysis_New/intermediate_data/salmon_rare_pd.Rds")){
-  salmon_rare_pd=readRDS("../../../220303_Analysis_New/intermediate_data/salmon_rare_pd.Rds")
+salmon_rare_pd_file = paste0(intermediatedata_folder, "salmon_rare_pd.Rds")
+
+if(file.exists(salmon_rare_pd_file)){
+  salmon_rare_pd=readRDS(salmon_rare_pd_file)
 }else{
   salmon_rare_pd = picante::pd(salmon_rare %>% mutate(sid = paste0(sample,"_",depth,"_",i)) %>% dcast(sid ~ bin, value.var="tpm", fill=0) %>% column_to_rownames("sid"), tree = tree2, include.root = T)
-  saveRDS(salmon_rare_pd, "../../../220303_Analysis_New/intermediate_data/salmon_rare_pd.Rds")
+  saveRDS(salmon_rare_pd, salmon_rare_pd_file)
 }
 
 
@@ -194,8 +197,8 @@ top_row2=align_plots(panel_d_top+theme(plot.margin = unit(c(0,0,0,0), "cm")),
 bottom_row = align_plots(panel_e+theme(plot.margin = unit(c(0,0,0,0), "cm")),panel_f+theme(plot.margin = unit(c(0,0.25,0,0), "cm")), axis ="bt",align="h")
 
 all_panels_right=plot_grid(
-  plot_grid(NULL, NULL, top_row2[[1]], NULL, top_row[[1]], top_row[[2]],top_row[[3]], top_row[[4]],  rel_widths = c(0.25,.25, 0.4, 0.1), rel_heights = c(.1,.7), ncol=4,labels=c("b","c","d",""), label_size = 20),
-  plot_grid(bottom_row[[1]],bottom_row[[2]], ncol=2, rel_widths = c(.6,.4),labels=c("e","f"), label_size = 20),
+  plot_grid(NULL, NULL, top_row2[[1]], NULL, top_row[[1]], top_row[[2]],top_row[[3]], top_row[[4]],  rel_widths = c(0.25,.25, 0.4, 0.1), rel_heights = c(.1,.7), ncol=4,labels=c("c","d","e",""), label_size = 20),
+  plot_grid(bottom_row[[1]],bottom_row[[2]], ncol=2, rel_widths = c(.6,.4),labels=c("f","g"), label_size = 20),
   rel_heights = c(.6,.4), ncol=1)                     
 
 
@@ -203,15 +206,20 @@ all_panels_complete = cowplot::plot_grid(
   cowplot::plot_grid(
                       panel_a+theme(plot.margin = unit(c(0,0,0,0), "cm")), 
                       all_panels_right+theme(plot.margin = unit(c(0,0,0,0), "cm")), 
-              rel_widths = c(0.55,0.45), ncol=2, labels=c("a",""), label_size = 20),
+              rel_widths = c(0.55,0.45), ncol=2, labels=c("b",""), label_size = 20),
   cowplot::plot_grid(
-                      cowplot::get_legend(panel_e + theme(legend.position = "right") + guides(color=guide_legend(ncol=3, title = "Phylum", label.theme = element_text(size=17)))), 
+                      cowplot::get_legend(panel_e + theme(legend.position = "right") + guides(color=guide_legend(ncol=3, override.aes = list(size = 5), title = "Phylum", label.theme = element_text(size=17)))), 
                       cowplot::get_legend(panel_d_main+theme(legend.position = "right") + guides(color=guide_legend(ncol=2, title="Host", label.theme = element_text(size=17)))), 
     rel_widths = c(.55,.45)),
   ncol=1, rel_heights = c(.8,0.2))
 
 #plot(all_panels_complete)
 
-ggsave(filename = "figures_and_tables/Figure_S1.png",all_panels_complete, width = 20, height=11.5, bg="white")
+all_panels2 = plot_grid(
+  cowplot::ggdraw() + cowplot::draw_image("figures_and_tables/Datapipe_cropped.png.png"),
+  all_panels_complete, ncol=1, rel_heights = c(.3,.7), labels=c("a","")
+)
+
+ggsave(filename = "figures_and_tables/Figure_S1.png",all_panels2, width = 20, height=15, bg="white")
 
 ```

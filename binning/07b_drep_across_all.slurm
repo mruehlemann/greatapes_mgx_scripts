@@ -31,26 +31,26 @@ source activate binning_env
 head -n 1 $workfolder/samples/$(ls $workfolder/samples | head -n 1)/*.refined.out > $workfolder/allgroups/${PROJECTID}.rep97.refined.out
 head -n 1 $workfolder/samples/$(ls $workfolder/samples | head -n 1)/*.refined.out > $workfolder/allgroups/${PROJECTID}.rep97_mq.refined.out
 
-for this_local in Gberingei Ggorilla HsA1 HsA2 HsG Ppan Ptschw Pttrog Ptver ZcambellGorilla ZcambellPan;do
+for this_local in Gberingei Ggorilla HsA1 HsA2 HsG HsD Ppan Ptschw Pttrog Ptver ZcambellGorilla ZcambellPan;do
 cd $workfolder/subgroups/$this_local/
-tail -n+2 ${this_local}.dRep_cluster97_representatives.tsv | awk '{if($4>=.7) print $1}'  | xargs -I {} grep {} ${this_local}.cleanbins_list >>  $workfolder/allgroups/${PROJECTID}.rep97.cleanbins_list
+tail -n+2 ${this_local}.dRep_cluster97_representatives.tsv | awk '{if($4>=.7) print $1}'  | xargs -I {} grep {} ${this_local}.cleanbins_list >>  $workfolder/allgroups/${PROJECTID}.rep97.cleanbins_filtered
 tail -n+2 ${this_local}.dRep_cluster97_representatives.tsv | awk '{if($4>=.7) print $1}'  | xargs -I {} grep {} ${this_local}.refined.out  >>  $workfolder/allgroups/${PROJECTID}.rep97.refined.out
-tail -n+2 ${this_local}.dRep_cluster97_representatives.tsv | awk '{if($4>=.5 && $4<.7) print $1}'  | xargs -I {} grep {} ${this_local}.cleanbins_list >>  $workfolder/allgroups/${PROJECTID}.rep97_mq.cleanbins_list
+tail -n+2 ${this_local}.dRep_cluster97_representatives.tsv | awk '{if($4>=.5 && $4<.7) print $1}'  | xargs -I {} grep {} ${this_local}.cleanbins_list >>  $workfolder/allgroups/${PROJECTID}.rep97_mq.cleanbins_filtered
 tail -n+2 ${this_local}.dRep_cluster97_representatives.tsv | awk '{if($4>=.5 && $4<.7) print $1}'  | xargs -I {} grep {} ${this_local}.refined.out  >>  $workfolder/allgroups/${PROJECTID}.rep97_mq.refined.out
 done
 
 this_local="UHGG"
 cd $workfolder/subgroups/UHGG_v2/
-tail -n+2 ${this_local}.dRep_cluster97_representatives.tsv | awk '{if($4>=.7) print $1}'  | xargs -I {} grep {} ${this_local}.cleanbins_list >>  $workfolder/allgroups/${PROJECTID}.rep97.cleanbins_list
+tail -n+2 ${this_local}.dRep_cluster97_representatives.tsv | awk '{if($4>=.7) print $1}'  | xargs -I {} grep {} ${this_local}.cleanbins_list >>  $workfolder/allgroups/${PROJECTID}.rep97.cleanbins_filtered
 tail -n+2 ${this_local}.dRep_cluster97_representatives.tsv | awk '{if($4>=.7) print $1}'  | xargs -I {} grep {} ${this_local}.scores.out | awk '{printf $1"\tUHGGv2"; for(i=2;i<=NF;++i) printf "\t"$i; printf "\n"}' >>  $workfolder/allgroups/${PROJECTID}.rep97.refined.out
-tail -n+2 ${this_local}.dRep_cluster97_representatives.tsv | awk '{if($4>=.5 && $4<.7) print $1}'  | xargs -I {} grep {} ${this_local}.cleanbins_list >>  $workfolder/allgroups/${PROJECTID}.rep97_mq.cleanbins_list
+tail -n+2 ${this_local}.dRep_cluster97_representatives.tsv | awk '{if($4>=.5 && $4<.7) print $1}'  | xargs -I {} grep {} ${this_local}.cleanbins_list >>  $workfolder/allgroups/${PROJECTID}.rep97_mq.cleanbins_filtered
 tail -n+2 ${this_local}.dRep_cluster97_representatives.tsv | awk '{if($4>=.5 && $4<.7) print $1}'  | xargs -I {} grep {} ${this_local}.scores.out | awk '{printf $1"\tUHGGv2"; for(i=2;i<=NF;++i) printf "\t"$i; printf "\n"}' >>  $workfolder/allgroups/${PROJECTID}.rep97_mq.refined.out
 
 this_local="ManaraNHP"
 cd $workfolder/subgroups/$this_local/
-tail -n+2 ${this_local}.dRep_cluster97_representatives.tsv | awk '{if($4>=.7) print $1}'  | xargs -I {} grep {} ${this_local}.cleanbins_list >>  $workfolder/allgroups/${PROJECTID}.rep97.cleanbins_list
+tail -n+2 ${this_local}.dRep_cluster97_representatives.tsv | awk '{if($4>=.7) print $1}'  | xargs -I {} grep {} ${this_local}.cleanbins_list >>  $workfolder/allgroups/${PROJECTID}.rep97.cleanbins_filtered
 tail -n+2 ${this_local}.dRep_cluster97_representatives.tsv | awk '{if($4>=.7) print $1}'  | xargs -I {} grep {} ${this_local}.scores.out | awk '{printf $1"\tManaraNHP"; for(i=2;i<=NF;++i) printf "\t"$i; printf "\n"}'  >>  $workfolder/allgroups/${PROJECTID}.rep97.refined.out
-tail -n+2 ${this_local}.dRep_cluster97_representatives.tsv | awk '{if($4>=.5 && $4<.7) print $1}'  | xargs -I {} grep {} ${this_local}.cleanbins_list >>  $workfolder/allgroups/${PROJECTID}.rep97_mq.cleanbins_list
+tail -n+2 ${this_local}.dRep_cluster97_representatives.tsv | awk '{if($4>=.5 && $4<.7) print $1}'  | xargs -I {} grep {} ${this_local}.cleanbins_list >>  $workfolder/allgroups/${PROJECTID}.rep97_mq.cleanbins_filtered
 tail -n+2 ${this_local}.dRep_cluster97_representatives.tsv | awk '{if($4>=.5 && $4<.7) print $1}'  | xargs -I {} grep {} ${this_local}.scores.out | awk '{printf $1"\tManaraNHP"; for(i=2;i<=NF;++i) printf "\t"$i; printf "\n"}'  >>  $workfolder/allgroups/${PROJECTID}.rep97_mq.refined.out
 
 cd $TMPDIR

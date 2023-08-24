@@ -7,5 +7,5 @@ alltax = lapply(allsamples, function(x){tfile=paste0("samples/",x,"/",x,".final_
 
 for(lv in unique(alltax$level)){
 	print(lv)
-	alltax %>% filter(level == lv) %>% reshape2::dcast(sample ~ tax, value.var="tpm", fill=0) %>% data.frame(row.names=1) %>% write.table(., paste0("allgroups/GreatApes_final_table_",lv,".tsv"), sep="\t")
+	alltax %>% filter(level == lv) %>% reshape2::dcast(sample ~ tax, value.var="tpm", fill=0) %>% data.frame(row.names=1) %>% write.table(., paste0("allgroups/abundance_tables/GreatApes_final_table_",lv,".tsv"), sep="\t")
 }

@@ -76,32 +76,44 @@ interactive=F
 ```
 
 ```{r}
-
 ## styles
-colset=data.frame(host=c("HsA1","HsA2","HsG","Ggorilla","Gberingei","Pttrog","Ptschw","Ptver","Ppan","Pttrog2","Ggorilla2"),host_long=c("Homo sapiens (CIV)","Homo sapiens (DRC)","Homo sapiens (GER)","Gorilla gorilla gorilla (GAB)","Gorilla beringei beringei","Pan troglodytes troglodytes (GAB)","Pan troglodytes schweinfurthii","Pan troglodytes verus","Pan paniscus","Pan troglodytes troglodytes (CG)","Gorilla gorilla gorilla (CG)"),
- host_tree=c("Homo_sapiens","Homo_sapiens","Homo_sapiens","Gorilla_gorilla_gorilla","Gorilla_beringei","Pan_troglodytes_troglodytes","Pan_troglodytes_schweinfurthii","Pan_troglodytes_verus","Pan_paniscus","Pan_troglodytes_troglodytes","Gorilla_gorilla_gorilla"),
- col=c("lightblue","lightblue3","darkblue","#29AB87","#0B6623","#fecc5c","#fd8d3c","#f03b20","#bd0026","#fecc5c","#29AB87" ),shape=c(1,2,3,1,2,1,2,3,4,5,5), gid=c(1,2,3,1,1.5,2,2.5,3,3.5,2,1), location=c("CIV","DRC","GER","GAB","UGA","GAB","UGA","CIV","DRC","CG","CG"),stringsAsFactors=F)
+colset=data.frame(
+  host=c("HsA1","HsA2","HsD","HsG","Ggorilla","Gberingei","Pttrog","Ptschw","Ptver","Ppan","Pttrog2","Ggorilla2"),
+  host_long=c("Homo sapiens (CIV)","Homo sapiens (DRC)","Homo sapiens (DK)","Homo sapiens (GER)","Gorilla gorilla gorilla (GAB)","Gorilla beringei beringei","Pan troglodytes troglodytes (GAB)","Pan troglodytes schweinfurthii","Pan troglodytes verus","Pan paniscus","Pan troglodytes troglodytes (CG)","Gorilla gorilla gorilla (CG)"),
+ host_tree=c("Homo_sapiens","Homo_sapiens","Homo_sapiens","Homo_sapiens","Gorilla_gorilla_gorilla","Gorilla_beringei","Pan_troglodytes_troglodytes","Pan_troglodytes_schweinfurthii","Pan_troglodytes_verus","Pan_paniscus","Pan_troglodytes_troglodytes","Gorilla_gorilla_gorilla"),
+ col=c("lightblue","lightblue3","deepskyblue4","darkblue","#29AB87","#0B6623","#fecc5c","#fd8d3c","#f03b20","#bd0026","#fecc5c","#29AB87" ),
+ shape=c(1,2,3,4,1,2,1,2,3,4,5,5), 
+ gid=c(1,2,3,4,1,1.5,2,2.5,3,3.5,2,1), 
+ location=c("CIV","DRC","DK","GER","GAB","UGA","GAB","UGA","CIV","DRC","CG","CG"),stringsAsFactors=F)
 
 ## sample meta data
-sample_meta = read.table("../../../220303_Analysis_New/data_w_manara///groupings_nozoo_campbell.txt", head=F, stringsAsFactors = F)
+sample_meta = read.table("../../../220303_Analysis_New/data_w_dk/groupings_nozoo_campbell_dk.txt", head=F, stringsAsFactors = F)
 colnames(sample_meta) = c("sample", "host")
 sample_meta = sample_meta %>% 
   mutate(host = case_when(host=="ZcambellGorilla" ~ "Ggorilla2", host=="ZcambellPan"~ "Pttrog2", TRUE ~ host),
     host_genus = ifelse(grepl("^P", host),"Pan",ifelse(grepl("^G", host),"Gorilla","Homo"))) %>% left_join(colset) 
 
 ## representative sequences per SGB
-all_genomes = read.table("../../../220303_Analysis_New/data_w_manara/GreatApes.all_genomes2.tsv", head=T, sep="\t")
+all_genomes = read.table("../../../220303_Analysis_New/data_w_dk/GreatApes.all_genomes.tsv", head=T, sep="\t") %>% mutate(GreatApes_95_final = final, score=Score)
+all_genomes = all_genomes %>% mutate(sample = ifelse(grepl("MGYG|Mana", genome), ifelse(grepl("MGY", genome),"HsUHGG","other") , gsub("_cleanbin_","",gsub("[0-9]+$","", genome)))) %>%
+  left_join(sample_meta %>% select(sample, host, host_genus, host_long))
 
-sgb_reps_full = read.table(file = "../../../220303_Analysis_New/data_w_manara/GreatApes.representatives_list")
+sgb_reps_full = read.table(file = "../../../220303_Analysis_New/data_w_dk/GreatApes.representatives_list")
 sgb_reps_full$genome = sapply(sgb_reps_full$V1, function(x) rev(strsplit(x, split="/")[[1]])[1]) %>% gsub("[.]f[n]*a$","",.)
 sgb_reps_full = sgb_reps_full %>% select(sgb=V2, genome)
 
+genome_sizes = read.table("../../../220303_Analysis_New/data_w_dk/GreatApes.reps_genome_sizes.tsv",head=F, stringsAsFactors = F) %>% select(sgb=V1, genome_size=V2)
+gene_count = read.table("../../../220303_Analysis_New/data_w_dk/GreatApes.reps_gene_count.tsv",head=F, stringsAsFactors = F) %>% mutate(sgb = gsub(".faa","", V2), genes_k=V1/1000) %>% select(sgb, genes_k)
+
+sgb_reps_full = sgb_reps_full %>% left_join(genome_sizes) %>% left_join(gene_count)
+
+
 ## SGB abundance table
-sgb_abundance = read.table("../../../220303_Analysis_New/data_w_manara/tax_tables/GreatApes_final_table_bin.tsv", head=T, sep="\t")
+sgb_abundance = read.table("../../../220303_Analysis_New/data_w_dk/abundance_tables/GreatApes_final_table_bin.tsv", head=T, sep="\t")
 sgb_abundance=sgb_abundance[rownames(sgb_abundance) %in% sample_meta$sample,]
 
 ## SGB taxonomy
-tax = read.table("../../../220303_Analysis_New/data_w_manara/GreatApes.cluster_final_tax.tsv", head=T, stringsAsFactors = F, sep="\t")
+tax = read.table("../../../220303_Analysis_New/data_w_dk/GreatApes.cluster_final_tax.tsv", head=T, stringsAsFactors = F, sep="\t")
 colnames(tax) = c("GreatApes_95_final","classification")
 tax2 = sapply(paste0(tax$GreatApes_95_final,";",tax$classification), function(x){
 	x_split=strsplit(x, split=";")[[1]]
@@ -120,19 +132,18 @@ tax2 = sapply(paste0(tax$GreatApes_95_final,";",tax$classification), function(x)
 colnames(tax2) = c("GreatApes_95_final","kingdom","phylum","class","order","family","genus","species")
 
 ## filter to keep SGBs not present in dataset; dataset was merged with UHGG, thus SGBs not occuring are present
-sgb_reps = sgb_reps_full %>% filter(sgb %in% colnames(sgb_abundance))
 sgb_reps_full = sgb_reps_full %>% left_join(tax2, by=c("sgb"="GreatApes_95_final"))
 sgb_reps_full$in_manara= sgb_reps_full$sgb %in% (all_genomes %>% filter(grepl("Manara", genome)) %>% pull(GreatApes_95_final) %>% unique())
 sgb_reps_full$in_uhgg= sgb_reps_full$sgb %in% (all_genomes %>% filter(grepl("MGYG", genome)) %>% pull(GreatApes_95_final) %>% unique())
 sgb_reps_full$novel = (sgb_reps_full$in_manara | sgb_reps_full$in_uhgg)==F
 
+sgb_reps_full = sgb_reps_full %>% left_join(all_genomes %>% select(genome, Domain, score, Completeness, Contamination))
+
+sgb_reps_full = sgb_reps_full %>% left_join(all_genomes %>% mutate(sample = gsub("_cleanbin_","",gsub("[0-9]+$","", genome))) %>% left_join(sample_meta) %>% filter(!is.na(host_genus)) %>% group_by(GreatApes_95_final, host_genus) %>% summarise(n=n()) %>% dcast(GreatApes_95_final ~ host_genus, value.var="n", fill=0), by=c("sgb"="GreatApes_95_final")) %>% mutate(host = case_when(Homo > 0 & (Gorilla+Pan) == 0 ~ "Human", Homo == 0 & (Gorilla+Pan) > 0 ~ "NHA", Homo > 0 & (Gorilla+Pan) > 0 ~ "both", TRUE ~ "DB"))  
+
 ## deliniate novelty
 ## novel = no UHGG_v2 or Manara et al genome in cluster a
-sgb_reps$in_manara= sgb_reps$sgb %in% (all_genomes %>% filter(grepl("Manara", genome)) %>% pull(GreatApes_95_final) %>% unique())
-sgb_reps$in_uhgg= sgb_reps$sgb %in% (all_genomes %>% filter(grepl("MGYG", genome)) %>% pull(GreatApes_95_final) %>% unique())
-sgb_reps$novel = (sgb_reps$in_manara | sgb_reps$in_uhgg)==F
-
-sgb_reps = sgb_reps %>% left_join(all_genomes %>% mutate(sample = gsub("_cleanbin_","",gsub("[0-9]+$","", genome))) %>% left_join(sample_meta) %>% filter(!is.na(host_genus)) %>% group_by(GreatApes_95_final, host_genus) %>% summarise(n=n()) %>% dcast(GreatApes_95_final ~ host_genus, value.var="n", fill=0), by=c("sgb"="GreatApes_95_final")) %>% mutate(host = case_when(Homo > 0 & (Gorilla+Pan) == 0 ~ "Human", Homo == 0 & (Gorilla+Pan) > 0 ~ "NHP", Homo > 0 & (Gorilla+Pan) > 0 ~ "both", TRUE ~ "DB"))
+sgb_reps = sgb_reps_full %>% filter(sgb %in% colnames(sgb_abundance))
 
 ## host-group presence/absence estimation; present = at least one sample with > 1000 TPM for the SGB
 sgb_long=sgb_abundance %>% rownames_to_column("sample")  %>% reshape2::melt(.)  %>% left_join(sample_meta)
@@ -160,18 +171,34 @@ sgb_per_host = bind_rows(sgb_long %>% group_by(host, variable) %>% summarise(max
 
 sgb_reps$symbol = paste0(sgb_reps$novel, sgb_reps$host)
 
-## introduce "phylum2" for plotting; setting all phyle with <= 10 SGBs to "other"
-sgb_reps = sgb_reps %>% left_join(tax2, by=c("sgb"="GreatApes_95_final")) %>% left_join(all_genomes %>% select(genome, score) %>% distinct())
+
+### color scheme for phyla
+## introduce "phylum2" for plotting; setting all phyla with <= 10 SGBs to "other"
+
 sgb_reps$phylum2 = ifelse(sgb_reps$phylum %in% (sgb_reps$phylum %>% table %>% data.frame(., stringsAsFactors = F) %>% select(phylum=1, Freq) %>% filter(Freq>10) %>% pull(phylum)),sgb_reps$phylum,"other")
-distinct_cols=c('#e6194B', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#42d4f4', '#f032e6', '#bfef45', '#fabed4', '#469990', '#dcbeff', '#9A6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#a9a9a9', '#ffffff', '#000000')
-phylumcols=c("grey",distinct_cols[c(11,2,5,10,4,19,7,1,12,8,3)])### colors for phyla
-phylumcols_df=data.frame(col=phylumcols, phylum=sort(unique(sgb_reps$phylum2)))
+
+#Reds
+reds=c("#ea7d82","#d23027","#8c1a21")
+
+#Blues
+blues=c("#a4c3ce","#5faac5","#4988a2","#575b7c", "#2b254d")
+
+#Yellows
+yellows=c("#ecb81f","#e3792f")
+
+#Greens
+greens=c("#85afa5","#188a75","#2d6049")
+
+phylumcols_df=data.frame(col=c("grey",reds[1],greens[1],greens[3] ,yellows[1],blues[1],blues[3],blues[5],reds[3],yellows[2],reds[2],greens[2]), phylum=sort(unique(sgb_reps$phylum2)))
+
+####
 
 ## import tree based on GTDBtk marker genes
-tree2 = read.tree("../../../220303_Analysis_New/data_w_manara/GreatApes.bac120+ar53.rooted.tre")
-tree2=tree2 %>% keep.tip(sgb_reps$sgb)
+tree_full = read.tree("../../../220303_Analysis_New/data_w_dk/GreatApes.bac120+ar53.rooted.tre")
+tree2=tree_full %>% keep.tip(sgb_reps$sgb)
 
-salmon_rare=read.table("../../../220303_Analysis_New/data_w_manara/GreatApes.salmon_rarefied.tsv",head=T,stringsAsFactors = F)
+### rarefied salmon mappings
+salmon_rare=read.table("../../../220303_Analysis_New/data_w_dk/GreatApes.salmon_rarefied.tsv",head=T,stringsAsFactors = F)
 
 ## create genus-level and species-level abundance table
 gen = sgb_abundance %>% rownames_to_column("sample") %>% reshape2::melt(.) %>% left_join(tax2, by=c("variable"="GreatApes_95_final")) %>% group_by(sample, genus) %>% summarise(value=sum(value)) %>% reshape2::dcast(sample ~ genus, value.var = "value") %>% column_to_rownames("sample")
@@ -181,15 +208,21 @@ spe = sgb_abundance %>% rownames_to_column("sample") %>% reshape2::melt(.) %>% l
 #sgb_long %>% left_join(sgb_reps %>% select(variable=sgb, novel)) %>% filter(novel) %>% group_by(sample) %>% summarize(rel_novel=sum(value)/10000) 
 
 ### salmon statistics for mappend reads
-salmon_stats=read.table("../../../220303_Analysis_New/data_w_manara/GreatApes.salmon_stats.tsv", head=F, stringsAsFactors = F)
-colnames(salmon_stats) = c("sample","mapped","total","mapped_rel")
+salmon_stats_long=read.table("../../../220303_Analysis_New/data_w_dk/GreatApes.salmon_stats.tsv", head=F, stringsAsFactors = F)
+salmon_stats = salmon_stats_long %>% reshape2::dcast(V1 ~ V2, value.var="V3") %>% mutate(total=round(mapped_reads/(mapping_rate/100))) %>% select(sample=V1, mapped=mapped_reads, total, mapped_rel=mapping_rate)
 sample_exclude = salmon_stats %>% filter(mapped_rel < 30 | mapped<1000000) %>% pull(sample) 
 
-sample_stats = read.table("../../../220303_Analysis_New/data_w_manara/GreatApes.sample_summaries.tsv", head=T, stringsAsFactors = F)
-colnames(sample_stats)[1] = "sample"
+### Traitar output
+traitar = read.table("../../../220303_Analysis_New/data_w_dk/all_predictions_flat_majority-votes_combined.txt",head=F,stringsAsFactors = F, sep="\t") %>% filter(V4=="phypat+GGL")
+
+#sample_stats = read.table("../../../220303_Analysis_New/data_w_dk/GreatApes.sample_summaries.tsv", head=T, stringsAsFactors = F)
+#colnames(sample_stats)[1] = "sample"
+```
 
 
+### Pangenome prep
 
+```{r}
 ### loading of functional annotations based on KO terms
 KO_TO_MODULE=read.table("../../../220303_Analysis_New/data/kegg_ko_to_module.tsv",head=F,stringsAsFactors=F)
 MODULE_NAMES=read.table("../../../220303_Analysis_New/data/kegg_modules_names.tsv",head=F,stringsAsFactors=F,sep="\t")
@@ -203,56 +236,79 @@ colnames(KO_NAMES) = c("ko","annot")
 KO_TO_ALL = bind_rows(KO_TO_MODULE, KO_TO_BRITE, KO_TO_PWY)
 ALL_NAMES = bind_rows(MODULE_NAMES, PWY_NAMES, BRITE_NAMES)
 
-this_to_sgb = readRDS("../../../220303_Analysis_New/data_w_manara/protein_catalogs/GreatApes.KEGG_ko_to_sgb.Rds") %>% filter(ogs!="ko")
+this_to_sgb = readRDS("../../../220303_Analysis_New/data_w_dk/protein_catalogs/GreatApes.KEGG_ko_to_sgb.Rds") %>% filter(ogs!="ko")
 
 #### Host-specific SGB pangenome inference
-# sgb_with_host = this_to_sgb %>% select(GreatApes_95_final, host_group) %>% distinct()
-# sgb_no_host =expand_grid(unique(sgb_with_host$GreatApes_95_final), c("P","H","G")) %>% select(GreatApes_95_final=1, host_group=2) %>% filter(!paste(GreatApes_95_final, host_group) %in% paste(sgb_with_host$GreatApes_95_final, sgb_with_host$host_group))
-# 
-# pangenome_recovered = this_to_sgb %>% group_by(GreatApes_95_final, ogs) %>% summarize(n=n()) %>% left_join(this_to_sgb %>% select(GreatApes_95_final,host_group) %>% distinct %>% group_by(GreatApes_95_final) %>% summarize(n_hg=n())) %>% mutate(sgb_cons = n/n_hg) %>% ungroup
-# # #
-# pangenome_inferred = apply(sgb_no_host, 1, function(x){
-#    this= unlist(x) %>% as.vector
-#    pangenome_recovered %>% filter(GreatApes_95_final==this[1], sgb_cons > 0.5) %>% mutate(host_group=this[2]) %>% select(GreatApes_95_final, host_group, ogs) %>% return}
-#    ) %>% do.call("bind_rows",.)
-# 
-# pangenome_all = bind_rows(this_to_sgb %>% select(GreatApes_95_final, host_group, ogs) %>% mutate(type="recovered"),pangenome_inferred %>% select(GreatApes_95_final, host_group, ogs) %>% mutate(type="inferred"))
-#saveRDS(pangenome_all, "../../../220303_Analysis_New/data_w_manara/pangenome_all.Rds")
-pangenome_all = readRDS("../../../220303_Analysis_New/data_w_manara/pangenome_all.Rds")
+sgb_with_host = this_to_sgb %>% select(GreatApes_95_final, host_group) %>% distinct()
+sgb_no_host =expand_grid(unique(sgb_with_host$GreatApes_95_final), c("P","H","G")) %>% select(GreatApes_95_final=1, host_group=2) %>% filter(!paste(GreatApes_95_final, host_group) %in% paste(sgb_with_host$GreatApes_95_final, sgb_with_host$host_group))
 
-host_tree = read.nexus("../../../220303_Analysis_New/cospec/host_trees_10kTrees/consensusTree_10kTrees_Primates_Version3_chrono.nex")
+if(file.exists("../../../220303_Analysis_New/data_w_dk/pangenome_all.Rds")){
+  pangenome_all = readRDS("../../../220303_Analysis_New/data_w_dk/pangenome_all.Rds")
+}else{
+  # recovered: found in MAGs reconstructed from host group (=genus)
+  pangenome_recovered = this_to_sgb %>% group_by(GreatApes_95_final, ogs) %>% summarize(n=n()) %>% 
+    left_join(this_to_sgb %>% select(GreatApes_95_final,host_group) %>% distinct %>% group_by(GreatApes_95_final) %>% summarize(n_hg=n())) %>% mutate(sgb_cons = n/n_hg) %>% ungroup
+  # inferred: no MAGs for this hostgroup, reconstructing from MAGs not in this host group
+  pangenome_inferred = apply(sgb_no_host, 1, function(x){
+     this= unlist(x) %>% as.vector
+     pangenome_recovered %>% filter(GreatApes_95_final==this[1], sgb_cons > 0.5) %>% mutate(host_group=this[2]) %>% select(GreatApes_95_final, host_group, ogs) %>% return}
+     ) %>% do.call("bind_rows",.)
+  # combine recovered and inferred
+  pangenome_all = bind_rows(this_to_sgb %>% select(GreatApes_95_final, host_group, ogs) %>% mutate(type="recovered"),pangenome_inferred %>% select(GreatApes_95_final, host_group, ogs) %>% mutate(type="inferred"))
+  saveRDS(pangenome_all, "../../../220303_Analysis_New/data_w_dk/pangenome_all.Rds")
+}
+  
+host_tree = read.nexus("../../../220303_Analysis_New/cospec_w_manara/host_trees_10kTrees//consensusTree_10kTrees_Primates_Version3_chrono.nex")
+host_tree3 = read.nexus("../../../220303_Analysis_New/cospec_w_manara/host_trees_10kTrees//consensusTree_10kTrees_Primates_Version3_chrono_multiHs.nex")
 
-### cydA data
-# 
-library(dendextend)
+```
 
-cyda_prevo_tree_root_renam = read.tree("../../../220303_Analysis_New/data_w_manara//analyses/cydab/GreatApes.cyda_sgb.prevo.rooted.renamed.tre")
-cyda_prevo_tree_root_renam_onetip = cyda_prevo_tree_root_renam %>% keep.tip(cyda_prevo_tree_root_renam$tip.label %>% data.frame(tiplab=., stringsAsFactors=F)  %>% mutate(genome=gsub("_cyda[0-9]","", tiplab)) %>% filter(!duplicated(genome)) %>% pull(tiplab))
-cyda_prevo_tree_root_renam_onetip$tip.label = cyda_prevo_tree_root_renam_onetip$tip.label %>% gsub("_cyda[0-9]","",.)
-marker_prevo_tree_root_renam = read.tree("../../../220303_Analysis_New/data_w_manara//analyses/cydab/GreatApes.gtdb_sgb.prevo.rooted.renamed.tre")
-marker_prevo_tree_root_renam_onetip = marker_prevo_tree_root_renam %>% keep.tip(cyda_prevo_tree_root_renam_onetip$tip.label)
-
+## results from cophylo analysis
+```{r}
 ### cospec results data
 
 cospec_results = readRDS("../../../220303_Analysis_New/cospec/cospec_final.Rds")
 cosped_input = readRDS("../../../220303_Analysis_New/cospec/groups_all_candidates.Rds")
 
 ###
-all_genomes_final = all_genomes %>% select(genome, magscot_domain = domain, magscot_score = score, cluster_97_final, genome_rep97, GreatApes_95_final) %>% left_join(sgb_reps_full %>% select(-genome), by=c("GreatApes_95_final"="sgb")) %>% arrange(GreatApes_95_final, -magscot_score)
+all_genomes_final = all_genomes %>% left_join(tax2)# %>% select(genome, magscot_domain = domain, magscot_score = score, cluster_97_final, genome_rep97, GreatApes_95_final) %>% left_join(sgb_reps_full %>% select(-genome), by=c("GreatApes_95_final"="sgb")) %>% arrange(GreatApes_95_final, -magscot_score)
 write.table(all_genomes_final, "figures_and_tables/Suppl_Table_S1_All_Genomes.tsv", sep="\t", row.names = F, quote=F)
+```
+
+
+```{r}
+library(dendextend)
+
+### cydA in Prevotella data
+ 
+cyda_tree = read.tree("../../../220303_Analysis_New/data_w_dk/analyses/genetree_ranger.tre")
+
+spe_tree = read.tree("../../../220303_Analysis_New/data_w_dk/analyses/markertree_ranger_w_bl.tre")
+spe_tree_nodenames = read.tree("../../../220303_Analysis_New/data_w_dk/analyses/species_tree.nodenames.tre")
+spe_tree$node.label = spe_tree_nodenames$node.label
+
+events = read.table("../../../220303_Analysis_New/data_w_dk/analyses/cydA.events.csv",head=F, stringsAsFactors = F, sep=",") %>% 
+  group_by(V1,V3,V4) %>% summarise(n=n()) %>% mutate(n_rel=n/1000)
+
+fullset = read.table("../../../220303_Analysis_New/data_w_dk/analyses/analysis_gene_set_complete.tsv", head=T, stringsAsFactors = F) %>% mutate(newid=gsub("_cluster95_","", GreatApes_95_final)) %>% mutate(host_group = case_when(host_group=="P" ~ "Pan", host_group=="H" ~ "Human", host_group == "G" ~ "Gorilla"))
 
 ### gyrb trees
-gyrb_info = read.table("../../../220303_Analysis_New/data_w_manara//analyses/gyrb/gyrb_prot_to_genome.tsv", head=T, stringsAsFactors = F) %>% left_join(colset) %>% mutate(host_group = substr(host,1,1))
+gyrb_info = read.table("../../../220303_Analysis_New/data_w_dk//analyses/gyrb/gyrb_prot_to_genome.tsv", head=T, stringsAsFactors = F) %>% left_join(colset) %>% mutate(host_group = substr(host,1,1))
 bifido_tax = tax2 %>% filter(genus=="g__Bifidobacterium")
-bifido_marker_tree = read.tree("../../../220303_Analysis_New/data_w_manara//analyses/gyrb/f__Bifidobacteriaceae.faa.treefile") %>% ape::root(phy=., outgroup="outgroup",resolve.root=T)
-bifido_gyrb_tree= read.tree("../../../220303_Analysis_New/data_w_manara//analyses/gyrb/GreatApes.bifido.gyrb.filt.aln.faa.treefile") %>% ape::root(phy=., outgroup="outgroup",resolve.root=T) 
-bifido_moeller = read.tree("../../../220303_Analysis_New/data_w_manara//analyses/gyrb/GyrB.GreatApes_and_Moeller.aln.fna.treefile") %>% root(outgroup="outgroup", resolve.root=T)
+bifido_marker_tree = read.tree("../../../220303_Analysis_New/data_w_dk//analyses/gyrb/f__Bifidobacteriaceae.faa.treefile") %>% ape::root(phy=., outgroup="outgroup",resolve.root=T)
+bifido_gyrb_tree= read.tree("../../../220303_Analysis_New/data_w_dk//analyses/gyrb/GreatApes.bifido.gyrb.filt.aln.faa.treefile") %>% ape::root(phy=., outgroup="outgroup",resolve.root=T) 
+#bifido_moeller = read.tree("../../../220303_Analysis_New/data_w_dk//analyses/gyrb/GyrB.GreatApes_and_Moeller.aln.fna.treefile") %>% root(outgroup="outgroup", resolve.root=T)
+bifido_moeller = read.tree("../../../220303_Analysis_New/data_w_dk//analyses/gyrb/GreatApes.bifido.gyrb.filt+moeller.aln.faa.treefile") %>% root(outgroup="outgroup", resolve.root=T)
+```
 
+
+```{r}
 ###write
 
 
 save(list = ls(), file = "0_all_preprocessed.Robj")
-save(list = c("cospec_results","colset","sample_meta","all_genomes_final","host_tree","salmon_stats","sample_stats","sample_exclude"), file = "../../../great_apes_shiny_app/data/0_all_preprocessed_app.Robj")
+
+#save(list = c("cospec_results","colset","sample_meta","all_genomes_final","host_tree","salmon_stats","sample_stats","sample_exclude"), file = "../../../great_apes_shiny_app/data/0_all_preprocessed_app.Robj")
 
 
 ```

@@ -34,7 +34,7 @@ type_recode=data.frame(short=c("Ggorilla","Gberingei","HsA1","HsA2","HsG","Ptsch
 
 long=c("Gorilla_gorilla_gorilla","Gorilla_beringei","Homo_sapiens","Homo_sapiens","Homo_sapiens","Pan_troglodytes_schweinfurthii","Pan_troglodytes_troglodytes","Pan_troglodytes_verus","Pan_paniscus","Homo_sapiens"),stringsAsFactors=F)
 
-host = read.table("/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/groupings_nozoo_campbell.txt", stringsAsFactors = F)
+host = read.table("/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/groupings_nozoo_campbell_dk.txt", stringsAsFactors = F)
 colnames(host) = c("sample","host")
 host = bind_rows(host, data.frame(sample="MGYG00000",host="HsUHGG")) %>% mutate(host = case_when(host=="ZcambellGorilla" ~ "Ggorilla", host=="ZcambellPan"~ "Pttrog", TRUE ~ host),
     host_genus = ifelse(grepl("^P", host),"Pan",ifelse(grepl("^G", host),"Gorilla","Homo")))
@@ -65,7 +65,7 @@ host_tree = mad(read.nexus("/work_beegfs/sukmb276/Metagenomes/projects/ApesCompl
 
 micro_tree=read.tree("../../allgroups/GreatApes.bac120+ar53.rooted.tre")
 
-alldata=list(stats=allstats, results=allres, genomes=all_genomes, micro_tree=micro_tree, host_tree=host_tree, type_recode=type_recode)
+alldata=list(stats=allstats, results=allres, micro_tree=micro_tree, host_tree=host_tree)
 
 saveRDS(alldata, "../cospec_final.Rds")
 

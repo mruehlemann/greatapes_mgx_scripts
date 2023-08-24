@@ -15,6 +15,11 @@ Rscript gyrb_cyda_tax_annot.R
 
 cd $workfolder/analyses/cydab
 
+### Prevotella ref tree with Paraprevotella as outgroup
+grep -w -E "g__Prevotella|g__Paraprevotella" ../../allgroups/${PROJECTID}.cluster_final_tax.tsv | cut -f 1  | /work_beegfs/sukmb276/software/bin/faSomeRecords /work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final/allgroups/gtdbtk_r207v2_out/align/GreatApes.bac120.user_msa.fasta.gz /dev/stdin GreatApes.bac120.user_msa.paraprevo.fasta
+/work_beegfs/sukmb276/software/bin/iqtree2 -s GreatApes.bac120.user_msa.paraprevo.fasta -T 24 --alrt 1000 -B 1000 -m WAG
+
+
 cat cyda_prot_to_genome.tsv  | cut -f 5 | /work_beegfs/sukmb276/software/bin/faSomeRecords /work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final/allgroups/protein_catalogs/GreatApes.allprot.faa.gz /dev/stdin GreatApes.cyda.faa
 cat GreatApes.cyda.faa | cut -f 1 -d ' ' | awk '/^>/ {printf("\n%s\n",$0);next; } { printf("%s",$0);}  END {printf("\n");}' | awk 'BEGIN {RS = ">" ; ORS = ""} length($2) >= 100 {print ">"$0}' > GreatApes.cyda.filt.faa
 
@@ -30,8 +35,6 @@ grep -w -E "g__Prevotella|g__Paraprevotella" ../../allgroups/${PROJECTID}.cluste
 /work_beegfs/sukmb276/software/bin/iqtree2 -s GreatApes.cyda_sgb.aln.faa -T 10 --alrt 1000 -B 1000 -m WAG
 
 
-grep -w -E "g__Prevotella|g__Paraprevotella" ../../allgroups/${PROJECTID}.cluster_final_tax.tsv | cut -f 1  | /work_beegfs/sukmb276/software/bin/faSomeRecords /work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final/allgroups/gtdbtk_r207v2_out/align/GreatApes.bac120.user_msa.fasta.gz /dev/stdin GreatApes.bac120.user_msa.paraprevo.fasta
-/work_beegfs/sukmb276/software/bin/iqtree2 -s GreatApes.bac120.user_msa.paraprevo.fasta -T 24 --alrt 1000 -B 1000 -m WAG
 
 
 #treefixDTL -s GreatApes.cyda_sgb.aln.faa.contree -S smap.txt -A .fasta -o .raxmlTree.rooted -n .treefixDTL.tree -e ‘‘-m PROTGAMMAJTT’’ -V1 -l treefixDTL.log geneFamily1.raxmlTree.rooted
@@ -85,7 +88,7 @@ write.tree(marker_prevo_tree_ranger, "GreatApes.gtdb_sgb.prevo.rooted.ranger.tre
 '
 
 cat GreatApes.gtdb_sgb.prevo.rooted.ranger.tre GreatApes.cyda_sgb.prevo.rooted.ranger_bs.tre > ranger_input.tre
-./Linux/SupplementaryPrograms/OptResolutions.linux -i ranger_input.tre -B 60 | tee ranger_optresolutions.log
+./Linux/SupplementaryPrograms/OptResolutions.linux -i ranger_input.tre -B 60 | tee ranger_optresolutions.log2
 grep Optimal ranger_optresolutions.log -A 1 | tail -n 1 > GreatApes.cyda_sgb.prevo.rooted.ranger_optim.tre
 
 cat GreatApes.gtdb_sgb.prevo.rooted.ranger.tre GreatApes.cyda_sgb.prevo.rooted.ranger_optim.tre > ranger_input_optim.tre
@@ -100,3 +103,7 @@ grep -E "Losses: [0-9]+" cyda_recon/rangerOutput* -o | awk 'BEGIN{i=0; c=0}{i=i+
 grep -E "Duplications: [0-9]+" cyda_recon/rangerOutput* -o | awk 'BEGIN{i=0; c=0}{i=i+1; c=c+($2-2.024)^2}END{print "Duplications_sd",i, c, (c/i)^0.5}' >> ranger_final_stats.tsv
 grep -E "Transfers: [0-9]+" cyda_recon/rangerOutput* -o | awk 'BEGIN{i=0; c=0}{i=i+1; c=c+($2-38.976)^2}END{print "Transfers_sd",i, c, (c/i)^0.5}' >> ranger_final_stats.tsv
 grep -E "Losses: [0-9]+" cyda_recon/rangerOutput* -o | awk 'BEGIN{i=0; c=0}{i=i+1; c=c+($2-34.024)^2}END{print "Losses_sd",i, c, (c/i)^0.5}' >> ranger_final_stats.tsv
+
+mkdir -p cyda_recon2
+/work_beegfs/sukmb276/software/bin/parallel -j 20 ./Linux/CorePrograms/Ranger-DTL.linux --seed {} -i ranger_input.tre -o cyda_recon2/rangerOutput{} ::: $(seq 1 100) | tee ranger_core.log
+./Linux/CorePrograms/AggregateRanger.linux cyda_recon2/rangerOutput >> cyda_ranger_AggregateOutput2.txt

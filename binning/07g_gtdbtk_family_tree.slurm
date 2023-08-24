@@ -17,17 +17,19 @@ source $scriptdir/00_sources.txt
 ###########################
 
 module load miniconda3
+
+cd $workfolder/allgroups
+
 source activate gtdbtk_2.1.0
 export GTDBTK_DATA_PATH=/work_beegfs/ikmb_repository/databases/GTDB-TK/release207_v2
 
-cd $workfolder/allgroups
 # cut -f 2 GreatApes.cluster_final_tax.tsv | tail -n+2 | cut -d ';' -f 5 | sort | uniq -c | awk '{if($1>=5) print $2}' > GreatApes.families.txt
 allfam=($(cat ${PROJECTID}.families.txt))
 this_fam=${allfam[$SLURM_ARRAY_TASK_ID]}
 
 mkdir -p fam_trees/$this_fam
 grep -w $this_fam ${PROJECTID}.cluster_final_tax.tsv | cut -f 1 | /work_beegfs/sukmb276/software/bin/faSomeRecords gtdbtk_r207v2_out/align/${PROJECTID}.bac120.user_msa.fasta.gz /dev/stdin fam_trees/$this_fam/${this_fam}.msa.faa
-grep -w $this_fam ${PROJECTID}.cluster_final_tax.tsv -v | grep -v Archaea | head -n 2 | tail -n 1 | cut -f 1 | /work_beegfs/sukmb276/software/bin/faSomeRecords gtdbtk_r207v2_out/align/${PROJECTID}.bac120.user_msa.fasta.gz /dev/stdin fam_trees/$this_fam/${this_fam}.outgroup.faa
+grep -w $this_fam ${PROJECTID}.cluster_final_tax.tsv -v | grep -v Archaea | tail -n+2 | shuf -n 1 | cut -f 1 | /work_beegfs/sukmb276/software/bin/faSomeRecords gtdbtk_r207v2_out/align/${PROJECTID}.bac120.user_msa.fasta.gz /dev/stdin fam_trees/$this_fam/${this_fam}.outgroup.faa
 
 #grep -w $this_fam ${PROJECTID}.cluster_final_tax.tsv | cut -f 1 | /work_beegfs/sukmb276/software/bin/faSomeRecords gtdbtk_r207v2_out/align/${PROJECTID}.ar53.user_msa.fasta.gz /dev/stdin fam_trees/$this_fam/${this_fam}.msa.faa
 #grep -w $this_fam ${PROJECTID}.cluster_final_tax.tsv -v | grep Archaea | head -n 2 | tail -n 1 | cut -f 1 | /work_beegfs/sukmb276/software/bin/faSomeRecords gtdbtk_r207v2_out/align/${PROJECTID}.ar53.user_msa.fasta.gz /dev/stdin fam_trees/$this_fam/${this_fam}.outgroup.faa

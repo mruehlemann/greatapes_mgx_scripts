@@ -43,6 +43,7 @@ done
 cat *.sample.fasta > ${this_local}.catalogue.fna
 
 minimap2 -I100G -d ${this_local}.catalogue.mmi ${this_local}.catalogue.fna # make index
+cp ${this_local}.catalogue.mmi ${this_local}.catalogue.fna  $workfolder/subgroups/${this_local}
 
 gzip ${this_local}.catalogue.fna
 

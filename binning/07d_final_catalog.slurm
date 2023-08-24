@@ -33,7 +33,7 @@ cat ${PROJECTID}_cluster95_*.fna >  ${PROJECTID}.catalogue.fna
 
 #minimap2 -I100G -d ${PROJECTID}.catalogue.mmi ${PROJECTID}.catalogue.fna # make index
 
-salmon index -t ${PROJECTID}.catalogue.fna -i ${PROJECTID}_salmon_index -p 20
+salmon index -t ${PROJECTID}.catalogue.fna -i ${PROJECTID}_salmon_index -p 24
 
 cp -r ${PROJECTID}_salmon_index $workfolder/allgroups/salmon_index
 
@@ -51,67 +51,77 @@ cp $workfolder/allgroups/${PROJECTID}.catalogue.fna.gz .
 
 mkdir -p cleanbins_faa
 cat $workfolder/subgroups/*/*.cleanbins_list | sed 's/work_ifs/work_beegfs/' > $workfolder/allgroups/${PROJECTID}.cleanbins_list
-/work_beegfs/sukmb276/software/bin/parallel -j 24 --colsep '\t' prodigal -i {1} -a cleanbins_faa/{2}.faa :::: $workfolder/allgroups/${PROJECTID}.cleanbins_list
-#/work_beegfs/sukmb276/software/bin/parallel -j 24 --colsep '\t' prodigal -i {1} -a cleanbins_faa/{2}.faa :::: /work_beegfs/sukmb276/Metagenomes/reference_data/UHGG_v2/UHGG.cleanbins_list
-cp -r cleanbins_faa $workfolder/allgroups
+cat $workfolder/subgroups/*/*.cleanbins_filtered | sed 's/work_ifs/work_beegfs/' > $workfolder/allgroups/${PROJECTID}.cleanbins_filtered
 
-cat cleanbins_faa/*.faa | gzip -c > protein_catalogs/${PROJECTID}.allprot.faa.gz
+/work_beegfs/sukmb276/software/bin/parallel -j 24 --colsep '\t' prodigal -i {1} -a cleanbins_faa/{2}.faa :::: $workfolder/allgroups/${PROJECTID}.cleanbins_filtered
+
 cat cleanbins_faa/*.faa > $TMPDIR/${PROJECTID}.allprot.faa
-gzip $TMPDIR/${PROJECTID}.allprot.faa
-cd cleanbins_faa 
-grep '>' * | awk '{print $1}' | sed -r 's/[.]faa[:][>]/\t/' > $workfolder/allgroups/${PROJECTID}.prot_to_genome.tsv
 
 cd $TMPDIR
 mmseqs easy-linclust --min-seq-id 0.95 --threads 24 --cov-mode 1 -c 0.8 --kmer-per-seq 80 ${PROJECTID}.allprot.faa ${PROJECTID}.prot95 $TMPDIR
-#mmseqs easy-linclust --min-seq-id 0.80 --threads 24 --cov-mode 1 -c 0.8 --kmer-per-seq 80 allprot.faa GreatApes.prot80 $TMPDIR
-#mmseqs easy-linclust --min-seq-id 0.50 --threads 24 --cov-mode 1 -c 0.8 --kmer-per-seq 80 allprot.faa GreatApes.prot50 $TMPDIR
+
 mkdir $workfolder/allgroups/protein_catalogs/
-cp ${PROJECTID}.prot*_cluster.tsv $workfolder/allgroups/protein_catalogs/
-cp ${PROJECTID}.prot*_rep_seq.fasta $workfolder/allgroups/protein_catalogs/
+
+### rename representative genomes 
+awk -v collection=$PROJECTID  '/^>/ {s = "0000000000"++i; j=substr(s, 1 + length(s) - 9); print ">"collection"_PROT95_" j; print $1"\t"collection"_PROT95_"j > "cluster_renamed.tsv"; next}{print}' ${PROJECTID}.prot95_rep_seq.fasta > ${PROJECTID}.prot95_rep_seq.faa
+sed -i "s/>//" cluster_renamed.tsv
+cp cluster_renamed.tsv ${PROJECTID}.PROT95_renamed.tsv
 
 
+source activate r_microbiome_env
+ln -s ${PROJECTID}.prot95_cluster.tsv clustering95.tsv
+
+R --vanilla <<< """
+library(tidyverse)
+cl = read_tsv('clustering95.tsv', col_names=c('clusterold', 'protid'))
+rename=read_tsv('cluster_renamed.tsv', col_names=c('clusterold', 'cluster'))
+cl2 = cl %>% left_join(rename) %>% select(cluster, protid)
+write.table(cl2, 'cl_renamed.tsv', sep='\t', row.names=F, col.names=F, quote=F)
+"""
+
+
+mv cl_renamed.tsv ${PROJECTID}.prot95_cluster.tsv
+
+cp ${PROJECTID}.PROT95_renamed.tsv ${PROJECTID}.allprot.faa ${PROJECTID}.prot95_rep_seq.faa  ${PROJECTID}.prot95_cluster.tsv $workfolder/allgroups/protein_catalogs/
+
+cp $workfolder/allgroups/protein_catalogs/${PROJECTID}.prot95_rep_seq.faa .
 mkdir $TMPDIR/emapper_tmp
-cp -r /work_beegfs/ikmb_repository/databases/eggnog_mapper/220425/ eggnog_db
-emapper.py --cpu  24 -i ${PROJECTID}.prot95_rep_seq.fasta --tax_scope 1,2,2157,10239 --itype proteins --data_dir /work_beegfs/ikmb_repository/databases/eggnog_mapper/220425/ --output ${PROJECTID}.prot95_rep_seq --temp_dir $TMPDIR/emapper_tmp --dbmem -m mmseqs
-
-# mkdir $workfolder/allgroups/protein_catalogs/emapper_batches
-# cut -f 1 ${PROJECTID}.prot95_cluster.tsv | uniq > ${PROJECTID}.prot95_cluster_repseq.list
-# split ${PROJECTID}.prot95_cluster_repseq.list -l 100000 -a 3 -d $workfolder/allgroups/protein_catalogs/emapper_batches/batch_
-
-####
-module load miniconda3
-conda activate mgx_tools_env
-btchs=$(ls $workfolder/allgroups/protein_catalogs/emapper_batches/ | head -n 1 | tail -n 1)
-cp $workfolder/allgroups/protein_catalogs/emapper_batches/$btchs $btchs.emapper.hits
-mkdir $TMPDIR/${btchs}_tmp
-emapper.py --cpu  ${SLURM_CPUS_PER_TASK} -i ${PROJECTID}.prot95_rep_seq.fasta --tax_scope 1,2,2157,10239 --itype proteins --data_dir /work_beegfs/ikmb_repository/databases/eggnog_mapper/220425/ --output $btchs --temp_dir $TMPDIR/${btchs}_tmp --dbmem -m mmseqs --resume
+emapper.py --cpu ${SLURM_CPUS_PER_TASK} -i ${PROJECTID}.prot95_rep_seq.faa --tax_scope 1,2,2157,10239 --itype proteins --data_dir /work_beegfs/ikmb_repository/databases/eggnog_mapper/220425/ --output ${PROJECTID}.prot95_rep_seq --temp_dir $TMPDIR/emapper_tmp --dbmem -m mmseqs
 
 
 conda activate r_microbiome_env
 
 R --vanilla < """
 library(tidyverse)
-prot_to_cluster = read_delim('GreatApes.prot95_cluster.tsv', delim='\t', col_names=c('cluster_id','prot_id'))
+cluster_annot = read_delim('protein_catalogs/GreatApes.prot95_rep_seq.emapper.annotations',col_names=c('cluster_id','seed_ortholog','evalue','score','eggNOG_OGs','max_annot_lvl','COG_category','Description','Preferred_name','GOs','EC','KEGG_ko','KEGG_Pathway','KEGG_Module','KEGG_Reaction','KEGG_rclass','BRITE','KEGG_TC','CAZy','BiGG_Reaction','PFAMs'), delim='\t', quote='', num_threads=10,comment='')
 
-cluster_annot = read_delim('GreatApes.prot95_rep_seq.emapper.annotations',col_names=c('cluster_id','seed_ortholog','evalue','score','eggNOG_OGs','max_annot_lvl','COG_category','Description','Preferred_name','GOs','EC','KEGG_ko','KEGG_Pathway','KEGG_Module','KEGG_Reaction','KEGG_rclass','BRITE','KEGG_TC','CAZy','BiGG_Reaction','PFAMs'), delim='\t', quote='', num_threads=10,comment='')
-
-cluster_annot = cluster_annot %>% filter(!duplicated(cluster_id))
-
-prot_to_genome = read_delim('../GreatApes.prot_to_genome.tsv', delim='\t', quote='', num_threads=10,col_names=c('mag_id','prot_id'))
-genome_to_sgb = read_delim('../GreatApes.all_genomes.tsv', delim='\t',col_names=T) %>% select(mag_id=genome, GreatApes_95_final) %>% filter(!is.na(GreatApes_95_final)) %>% mutate(sample=substr(mag_id,1,9))
-host = read_delim('../../../../groupings_nozoo_campbell.txt', delim='\t', col_names=c('sample', 'host')) %>% 
-    mutate(host_group=substr(gsub('Zcambell',"",host),1,1)) %>% 
+host = read_tsv("/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/groupings_nozoo_campbell_dk.txt", col_names=c('sample','host')) %>% 
+    mutate(host=ifelse(host=="ZcambellGorilla","Ggorilla", host), host=ifelse(host=="ZcambellPan","Pttrog", host)) %>%
+    mutate(host_group=substr(host,1,1)) %>% 
     bind_rows(., data.frame(sample='MGYG00000', host='HsUHGG',host_group='H')) %>% 
-    bind_rows(., data.frame(sample='ManaraNHP', host='HsUHGG',host_group='O')) %>% 
+    bind_rows(., data.frame(sample='Manara', host='Other',host_group='O')) %>% 
     select(-host) 
 
-sgb_host_to_cluster = genome_to_sgb %>% left_join(host) %>% left_join(prot_to_genome) %>% left_join(prot_to_cluster) %>% select(GreatApes_95_final, host_group, cluster_id) %>% distinct()
+all_genomes = read_delim('GreatApes.all_genomes.tsv', delim='\t',col_names=T) %>% 
+    filter(!is.na(final)) %>% mutate(GreatApes_95_final=final) %>% 
+    filter(!(grepl('MGYG', genome) & genome != cluster_99_final)) %>%
+    mutate(sample = case_when(grepl('MGYG', genome) ~ 'MGYG00000', grepl('Manara', genome) ~ 'Manara', T ~ gsub('_cleanbin_[0-9]+','', genome))) %>%
+    left_join(host) %>% filter(!duplicated(genome))
+
+
+prot_to_cluster = read_tsv('protein_catalogs/GreatApes.prot95_cluster.tsv', col_names=c('cluster_id','prot_id')) %>% mutate(contig_id = gsub('_[0-9]+$','',prot_id))
+contig_to_sgb = read_tsv('GreatApes.contig_to_bin.tsv', col_names=c('mag_id','contig_id'))
+mag_to_sgb = all_genomes %>% select(mag_id=genome, sample, GreatApes_95_final, host_group) 
+
+cluster_to_mag  = prot_to_cluster %>% left_join(contig_to_sgb) %>% select(cluster_id, mag_id)
+sgb_host_to_cluster = mag_to_sgb  %>% left_join(cluster_to_mag) %>% select(GreatApes_95_final, host_group, cluster_id) %>% distinct()
+
 sgb_host_w_annot = sgb_host_to_cluster  %>% left_join(cluster_annot)
 
-for(annot in c('Preferred_name', 'GOs', 'EC', 'KEGG_ko', 'KEGG_Pathway', 'KEGG_Module', 'KEGG_Reaction', 'KEGG_rclass', 'BRITE', 'KEGG_TC', 'CAZy', 'BiGG_Reaction', 'PFAMs')){
+for(annot in c('KEGG_ko', 'Preferred_name', 'GOs', 'EC', 'KEGG_Pathway', 'KEGG_Module', 'KEGG_Reaction', 'KEGG_rclass', 'BRITE', 'KEGG_TC', 'CAZy', 'BiGG_Reaction', 'PFAMs')){
     print(annot)
     this_annot = sgb_host_w_annot %>% select(GreatApes_95_final, host_group, ogs=!!annot) %>% filter(ogs!='-') %>% separate_rows(ogs) %>% distinct 
-    saveRDS(this_annot, paste0('GreatApes.',annot,'_to_sgb.Rds'))
+    saveRDS(this_annot, paste0('protein_catalogs/GreatApes.',annot,'_to_sgb.Rds'))
 }
 
 saveRDS(cluster_annot, 'GreatApes.emapper.Rds')

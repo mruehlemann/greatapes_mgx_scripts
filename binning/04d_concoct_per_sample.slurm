@@ -31,7 +31,7 @@ source activate concoct_env
 module load samtools/1.9
 
 
-if [ -e "$workfolder/samples/${s}/${s}.concoct.contigs_to_bin.tsv" ]; then exit; fi
+if [ -e "$workfolder/samples/${s}/binning/${s}.concoct.contigs_to_bin.tsv" ]; then exit; fi
 echo $s
 mkdir -p $workfolder/samples/${s}
 cat $datafolder/${s}/$s.spades_contigs.fasta  | awk '/^>/ {printf("\n%s\n",$0);next; } { printf("%s",$0);}  END {printf("\n");}'  | awk 'BEGIN {RS = ">" ; ORS = ""} length($2) >= 2000 {print ">"$0}' > ${s}.sample.fasta
@@ -43,6 +43,6 @@ concoct --composition_file ${s}.filtered.10k.fna --coverage_file ${s}.coverage_t
 
 merge_cutup_clustering.py ${s}_clustering_gt2000.csv > ${s}_clustering_merged.csv
 
-awk -F',' -v sample=$s '{if(NR>1) print sample"_concoct_bin_"$2".fasta\t"$1}'  ${s}_clustering_merged.csv > $workfolder/samples/${s}/${s}.concoct.contigs_to_bin.tsv
+awk -F',' -v sample=$s '{if(NR>1) print sample"_concoct_bin_"$2".fasta\t"$1}'  ${s}_clustering_merged.csv > $workfolder/samples/${s}/binning/${s}.concoct.contigs_to_bin.tsv
 
 #done
