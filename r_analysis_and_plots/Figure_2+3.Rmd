@@ -143,11 +143,11 @@ tax_thresh = res_gen %>% arrange(q) %>% filter(q<0.05) %>% tail(1) %>% pull(t.va
 fig2_panel_a=res_gen %>% reshape2::dcast(trait ~ comp, value.var="t.value") %>% left_join(res_gen %>% filter(comp=="human") %>% select(trait, log_fold_diff, q)) %>% 
   left_join(sgb_reps %>% mutate(genus2=gsub("[-]",".",genus)) %>% select(trait=genus2, phylum2) %>% distinct()) %>% 
   mutate(status=case_when(trait %in% taxa_pan ~ "Pan", trait %in% taxa_hihdi ~ "Human_EUR", trait %in% taxa_lohdi ~ "Human_AFR", trait %in% taxa_human ~ "Human", TRUE ~ "other")) %>% 
-  ggplot(aes(x=human, y=hdi_diff)) + geom_point(aes(col=status, size=abs(log_fold_diff)))  + 
+  ggplot(aes(x=human, y=hdi_diff)) + geom_point(aes(col=status), size=1.5)  + 
     scale_color_manual(values=c("blue","lightblue3","darkblue","grey","#FF8C00")) + theme(legend.position = "none") + 
     geom_hline(yintercept = c(-tax_thresh,tax_thresh), lty=2, color="lightgrey") + 
     geom_vline(xintercept = c(-tax_thresh,tax_thresh), lty=2, color="lightgrey") + 
-    ggrepel::geom_label_repel(data = . %>% filter(trait %in% c("g__Bacteroides","g__Akkermansia","g__Alistipes","g__Prevotella","g__Succinivibrio","g__Cryptobacteroides","g__Eubacterium_R","g__Methanobrevibacter_A","g__Coprococcus","g__SIG603","g__Senegalimassilia")), aes(label=trait, col=status), max.overlaps = 20, size=3) + 
+    ggrepel::geom_label_repel(data = . %>% filter(trait %in% c("g__Bacteroides","g__Akkermansia","g__Alistipes","g__Prevotella","g__Succinivibrio","g__Cryptobacteroides","g__Eubacterium_R","g__Methanobrevibacter_A","g__Coprococcus","g__SIG603","g__Senegalimassilia")), aes(label=trait, col=status), max.overlaps = 20, size=1.8) + 
     xlab("Pan vs. Human") + ylab("Human\nAFR vs. EUR") + scale_size_continuous(range=c(2,3)) 
 
 plotset = data.frame(tax=c("g__Eubacterium_R","g__Methanobrevibacter_A","g__SIG603","g__Senegalimassilia", "g__Coprococcus", "g__Agathobacter", "g__Prevotella","g__Succinivibrio", "g__Bacteroides","g__Akkermansia"), group=rep(c("neutral","NHA","Human","Low HDI", "High HDI"), each=2),stringsAsFactors = F)
@@ -160,13 +160,13 @@ fig2_panel_b_neutral = gen[,plotset %>% filter(group=="neutral") %>% pull(tax), 
   left_join(plotset, by=c("variable"="tax")) %>% 
   ggplot(aes(y=value/10000)) + 
   geom_boxplot(aes(x=as.numeric(factor(host_group, levels=c("NHA","A","Human_EUR","Human_AFR")))-0.125, fill=host_group), width=.25, outlier.shape = NA) + 
-  geom_jitter(width=.025, height=0, aes(x=gid2+shift, col=host_long)) + 
+  geom_jitter(width=.025, height=0, aes(x=gid2+shift, col=host_long), size=1) + 
   theme(axis.text.x = element_text(angle=45, hjust=1)) + 
   scale_color_manual(values=colset$col, breaks=colset$host_long) + 
   scale_y_continuous(expand=c(.1,0)) + ylab("Abundance (%)") + 
   theme(legend.position = "none") + facet_wrap(~variable, scales="free_y") + 
   scale_fill_manual(values=c("lightblue3","darkblue","#FF8C00")) + scale_x_continuous(breaks=c(1,3,4), labels=c("NHA","Human (EUR)","Human (AFR)")) + xlab("") + 
-  theme(strip.text.x = element_text(size = 10))
+  theme(strip.text.x = element_text(size = 7))
 
 fig2_panel_b_nha = gen[,plotset %>% filter(group=="NHA") %>% pull(tax), drop=F] %>% 
   rownames_to_column("sample")  %>% reshape2::melt() %>% left_join(sample_meta) %>% 
@@ -175,13 +175,13 @@ fig2_panel_b_nha = gen[,plotset %>% filter(group=="NHA") %>% pull(tax), drop=F] 
   left_join(plotset, by=c("variable"="tax")) %>% 
   ggplot(aes(y=value/10000)) + 
   geom_boxplot(aes(x=as.numeric(factor(host_group, levels=c("NHA","A","Human_EUR","Human_AFR")))-0.125, fill=host_group), width=.25, outlier.shape = NA) + 
-  geom_jitter(width=.025, height=0, aes(x=gid2+shift, col=host_long)) + 
+  geom_jitter(width=.025, height=0, aes(x=gid2+shift, col=host_long), size=1) + 
   theme(axis.text.x = element_text(angle=45, hjust=1)) + 
   scale_color_manual(values=colset$col, breaks=colset$host_long) + 
   scale_y_continuous(expand=c(.1,0)) + ylab("Abundance (%)") + 
   theme(legend.position = "none") + facet_wrap(~variable, scales="free_y") + 
   scale_fill_manual(values=c("lightblue3","darkblue","#FF8C00")) + scale_x_continuous(breaks=c(1,3,4), labels=c("NHA","Human (EUR)","Human (AFR)")) + xlab("") + 
-  theme(strip.text.x = element_text(size = 10))
+  theme(strip.text.x = element_text(size = 7))
 
 fig2_panel_b_human = gen[,plotset %>% filter(group=="Human") %>% pull(tax), drop=F] %>% 
   rownames_to_column("sample")  %>% reshape2::melt() %>% left_join(sample_meta) %>% 
@@ -190,13 +190,13 @@ fig2_panel_b_human = gen[,plotset %>% filter(group=="Human") %>% pull(tax), drop
   left_join(plotset, by=c("variable"="tax")) %>% 
   ggplot(aes(y=value/10000)) + 
   geom_boxplot(aes(x=as.numeric(factor(host_group, levels=c("NHA","A","Human_EUR","Human_AFR")))-0.125, fill=host_group), width=.25, outlier.shape = NA) + 
-  geom_jitter(width=.025, height=0, aes(x=gid2+shift, col=host_long)) + 
+  geom_jitter(width=.025, height=0, aes(x=gid2+shift, col=host_long), size=1) + 
   theme(axis.text.x = element_text(angle=45, hjust=1)) + 
   scale_color_manual(values=colset$col, breaks=colset$host_long) + 
   scale_y_continuous(expand=c(.1,0)) + ylab("Abundance (%)") + 
   theme(legend.position = "none") + facet_wrap(~variable, scales="free_y") + 
   scale_fill_manual(values=c("lightblue3","darkblue","#FF8C00")) + scale_x_continuous(breaks=c(1,3,4), labels=c("NHA","Human (EUR)","Human (AFR)")) + xlab("") + 
-  theme(strip.text.x = element_text(size = 10))
+  theme(strip.text.x = element_text(size = 7))
 
 fig2_panel_b_hdilo = gen[,plotset %>% filter(group=="Low HDI") %>% pull(tax), drop=F] %>% 
   rownames_to_column("sample")  %>% reshape2::melt() %>% left_join(sample_meta) %>% 
@@ -205,13 +205,13 @@ fig2_panel_b_hdilo = gen[,plotset %>% filter(group=="Low HDI") %>% pull(tax), dr
   left_join(plotset, by=c("variable"="tax")) %>% 
   ggplot(aes(y=value/10000)) + 
   geom_boxplot(aes(x=as.numeric(factor(host_group, levels=c("NHA","A","Human_EUR","Human_AFR")))-0.125, fill=host_group), width=.25, outlier.shape = NA) + 
-  geom_jitter(width=.025, height=0, aes(x=gid2+shift, col=host_long)) + 
+  geom_jitter(width=.025, height=0, aes(x=gid2+shift, col=host_long), size=1) + 
   theme(axis.text.x = element_text(angle=45, hjust=1)) + 
   scale_color_manual(values=colset$col, breaks=colset$host_long) + 
   scale_y_continuous(expand=c(.1,0)) + ylab("Abundance (%)") + 
   theme(legend.position = "none") + facet_wrap(~variable, scales="free_y") + 
   scale_fill_manual(values=c("lightblue3","darkblue","#FF8C00")) + scale_x_continuous(breaks=c(1,3,4), labels=c("NHA","Human (EUR)","Human (AFR)")) + xlab("") + 
-  theme(strip.text.x = element_text(size = 10)) 
+  theme(strip.text.x = element_text(size = 7))
 
 fig2_panel_b_hdihi = gen[,plotset %>% filter(group=="High HDI") %>% pull(tax), drop=F] %>% 
   rownames_to_column("sample")  %>% reshape2::melt() %>% left_join(sample_meta) %>% 
@@ -220,31 +220,36 @@ fig2_panel_b_hdihi = gen[,plotset %>% filter(group=="High HDI") %>% pull(tax), d
   left_join(plotset, by=c("variable"="tax")) %>% 
   ggplot(aes(y=value/10000)) + 
   geom_boxplot(aes(x=as.numeric(factor(host_group, levels=c("NHA","A","Human_EUR","Human_AFR")))-0.125, fill=host_group), width=.25, outlier.shape = NA) + 
-  geom_jitter(width=.025, height=0, aes(x=gid2+shift, col=host_long)) + 
+  geom_jitter(width=.025, height=0, aes(x=gid2+shift, col=host_long), size=1) + 
   theme(axis.text.x = element_text(angle=45, hjust=1)) + 
   scale_color_manual(values=colset$col, breaks=colset$host_long) + 
   scale_y_continuous(expand=c(.1,0)) + ylab("Abundance (%)") + 
   theme(legend.position = "none") + facet_wrap(~variable, scales="free_y") + 
   scale_fill_manual(values=c("lightblue3","darkblue","#FF8C00")) + scale_x_continuous(breaks=c(1,3,4), labels=c("NHA","Human (EUR)","Human (AFR)")) + xlab("") + 
-  theme(strip.text.x = element_text(size = 10)) 
+  theme(strip.text.x = element_text(size = 7))
 
 
 
-fig2_panel_b = cowplot::plot_grid(cowplot::plot_grid(fig2_panel_b_neutral + theme(axis.text.x = element_blank(), axis.text.y = element_text(size=12), plot.margin=margin(t = 0,b=0, l=1, r=1)) + ylab(""),
-                                                     ggplot(data=data.frame(x=1,y=1, label="unchanged"),aes(x=x,y=y,label=label)) + geom_text(col="darkgrey", size=4, angle=270) + theme_nothing(), rel_widths=c(.95,.05) ) ,
+fig2_panel_b = cowplot::plot_grid(
+  cowplot::plot_grid(fig2_panel_b_neutral + theme(axis.text.x = element_blank(), axis.text.y = element_text(size=6), plot.margin=margin(t = 0,b=0, l=2, r=1)) + ylab(""),
                                   NULL,
-                                  cowplot::plot_grid(fig2_panel_b_nha + theme(axis.text.x = element_blank(), axis.text.y = element_text(size=12), plot.margin=margin(t = 0,b=0, l=1, r=1)) + ylab(""),
-                                                     ggplot(data=data.frame(x=1,y=1, label="NHA"),aes(x=x,y=y,label=label)) + geom_text(col="#FF8C00", size=4, angle=270) + theme_nothing(), rel_widths=c(.95,.05) ) ,
+                                  fig2_panel_b_nha + theme(axis.text.x = element_blank(), axis.text.y = element_text(size=6), plot.margin=margin(t = 0,b=0, l=2, r=1)) + ylab(""),
                                   NULL,
-                                  cowplot::plot_grid(fig2_panel_b_human + theme(axis.text.x = element_blank(), axis.text.y = element_text(size=12), plot.margin=margin(t = 0,b=0, l=1, r=1)), 
-                                                     ggplot(data=data.frame(x=1,y=1, label="Human"),aes(x=x,y=y,label=label)) + geom_text(col="blue", size=4, angle=270) + theme_nothing(), rel_widths=c(.95,.05) ) ,
+                                  fig2_panel_b_human + theme(axis.text.x = element_blank(), axis.text.y = element_text(size=6), axis.title.y = element_text(size=7), plot.margin=margin(t = 0,b=0, l=2, r=1)) ,
                                   NULL,
-                                  cowplot::plot_grid(fig2_panel_b_hdihi + theme(axis.text.x = element_blank(), axis.text.y = element_text(size=12), plot.margin=margin(t = 0,b=0, l=1, r=1),plot.background = element_rect(fill='transparent')) + ylab(""),
-                                                     ggplot(data=data.frame(x=1,y=1, label="Human (EUR)"),aes(x=x,y=y,label=label)) + geom_text(col="darkblue", size=4, angle=270) + theme_nothing(), rel_widths=c(.95,.05) ) ,
+                                 fig2_panel_b_hdihi + theme(axis.text.x = element_blank(), axis.text.y = element_text(size=6), plot.margin=margin(t = 0,b=0, l=2, r=1), plot.background = element_rect(fill='transparent')) + ylab("") ,
                                   NULL,
-                                  cowplot::plot_grid(fig2_panel_b_hdilo + theme(plot.margin=margin(t = 0,b=0, l=1, r=1), axis.text = element_text(size=12)) + ylab(""), 
-                                                     ggplot(data=data.frame(x=1,y=1, label="Human (AFR)                   "),aes(x=x,y=y,label=label)) + geom_text(col="lightblue3", size=4, angle=270) + theme_nothing(), rel_widths=c(.95,.05) ) ,
-                                  ncol=1, rel_heights = c(.15,-.025,.15,-.025,.15,-.025,.15,-.025,.25), align="v")
+                                  fig2_panel_b_hdilo + theme(plot.margin=margin(t = 0, b=0, l=2, r=1), axis.text = element_text(size=6)) + ylab(""), 
+                                                     align="v", axis = "lr", rel_heights = c(.15,-.05,.15,-.05,.15,-.05,.15,-.05,.22), ncol=1) ,
+                                  cowplot::plot_grid(
+                                    ggplot(data=data.frame(x=1,y=1, label="unchanged"),aes(x=x,y=y,label=label)) + geom_text(col="darkgrey", size=2, angle=270) + theme_nothing(),NULL,
+                                    ggplot(data=data.frame(x=1,y=1, label="NHA"),aes(x=x,y=y,label=label)) + geom_text(col="#FF8C00", size=2, angle=270) + theme_nothing(),NULL,
+                                    ggplot(data=data.frame(x=1,y=1, label="Human"),aes(x=x,y=y,label=label)) + geom_text(col="blue", size=2, angle=270) + theme_nothing(),NULL,
+                                    ggplot(data=data.frame(x=1,y=1, label="Human (EUR)"),aes(x=x,y=y,label=label)) + geom_text(col="darkblue", size=2, angle=270) + theme_nothing(),NULL,
+                                    ggplot(data=data.frame(x=1,y=1, label="Human (AFR)              "),aes(x=x,y=y,label=label)) + geom_text(col="lightblue3", size=2, angle=270) + theme_nothing(), 
+                                  rel_heights = c(.15,-.05,.15,-.05,.15,-.05,.15,-.05,.22), ncol=1),
+                                  rel_widths=c(.95,.05) ,
+                                  ncol=2 )
 
 fig2_panel_b
 #####
@@ -316,16 +321,23 @@ p_enrich = 1-sum(unlist(aaa_rand) <= num_lohdi_in_nhp)/(999+1)
 
 ```{r, fig.height=11.5, fig.width=10}
 
+fig2_panel_c_final =  fig2_panel_c + theme(legend.position = "top", plot.margin = margin(b=0, t=0), legend.text = element_text(size=7), axis.title = element_text(size=7), axis.text = element_text(size=7)) + guides(color=guide_legend(title="", ncol=3), fill=guide_none())
+
 plot2 = cowplot::plot_grid(
-  plot_grid(fig2_panel_a + theme(axis.text = element_text(size=12), axis.title = element_text(size=15)), 
-            fig2_panel_c + theme(legend.position = "top", plot.margin = margin(b=0), legend.text = element_text(size=9), axis.title = element_text(size=15), axis.text = element_text(size=12)) + guides(color=guide_legend(title="", ncol=3), fill=guide_none()), ncol=1, align="v", labels=c("a","c")),
+  plot_grid(fig2_panel_a + theme(axis.text = element_text(size=7),axis.title = element_text(size=7)), 
+           cowplot::get_legend(fig2_panel_c_final),
+           fig2_panel_c_final + theme(legend.position = "none") 
+            
+            , ncol=1, align="v", axis="lr", labels=c("a","c",""), rel_heights = c(.5,.15,.35)),
   NULL,
-  fig2_panel_b, 
-  ncol=3, rel_widths=c(0.45,.05,.5), labels=c("","b",""))
+  fig2_panel_b , 
+  ncol=3, rel_widths=c(0.45,.01,.5), labels=c("","","b"))
 
 plot2
 
 ggsave(filename = "figures_and_tables/Figure_2_new.png", plot2, height=8, width=10, bg="white")
+ggsave(filename = "figures_and_tables/Figure_2_pub.pdf", plot2, height=110, width=180, bg="white", units = "mm")
+
 ```
 
 
@@ -390,7 +402,7 @@ fig3_panel_a = res_func %>% reshape2::dcast(trait ~ comp, value.var="t.value") %
   scale_color_manual(values=c("blue","lightblue3","darkblue","#FF8C00","grey")) + 
   theme(legend.position = "none") + 
   geom_hline(yintercept = c(-func_thresh,func_thresh), lty=2, color="lightgrey") + geom_vline(xintercept = c(-func_thresh,func_thresh), lty=2, color="lightgrey") + 
-  ggrepel::geom_label_repel(data = . %>% filter(trait %in% top_trait_func), aes(label=trait), max.overlaps = 20, size=3) +  
+  ggrepel::geom_label_repel(data = . %>% filter(trait %in% top_trait_func), aes(label=trait), max.overlaps = 20, size=1.8) +  
   xlab("NHA vs. Human") + ylab("Human AFR vs. EUR") + scale_size_continuous(range=c(1,2)) 
 
 #### enrichment of KOs in higher level annotations
@@ -438,7 +450,7 @@ panel_3b_data = res_func_mod_res2 %>% filter(q<0.05)  %>% select(comp, mod, desc
 
 fig3_panel_b = panel_3b_data %>% 
   ggplot(aes(x=forcats::fct_reorder(mod, t.value, .fun = median), y=t.value, col=plotcat)) + 
-  geom_jitter(width=.2, size=1) + 
+  geom_jitter(width=.2, size=.5) + 
   facet_grid( ~ compcat, scales = "free_x", space="free_x") + 
   theme(axis.text.x = element_text(angle=45, hjust=1)) + xlab("") + 
   geom_hline(yintercept = 0, lty=2, color="lightgrey") + 
@@ -526,7 +538,7 @@ res_meta_mod_res = res_meta_mod_res %>% left_join(panel_3c_data %>% group_by(gro
 write.table(res_meta_mod_res %>% select(group, group_name, num_kos, Z_mean, p.value, q.value), "figures_and_tables/Suppl_Table_S10_Results_Human.AFR_EUR_Meta_KEGG_enrich.tsv", row.names = F, sep="\t")
 write.table(res_meta_mod_res %>% filter(q.value<0.05)  %>% select(group, group_name, num_kos, Z_mean, p.value, q.value), "figures_and_tables/Table_1_Results_Human.AFR_EUR_Meta_KEGG_enrich.tsv", row.names = F, sep="\t")
 
-fig3_panel_c = panel_3c_data  %>% ggplot(aes(x=group, y=Z_meta, col=plotcat)) + geom_jitter(width=.2, size=1) + facet_grid( ~ compcat, scales = "free_x", space="free_x") + theme(axis.text.x = element_text(angle=45, hjust=1)) + xlab("") + geom_hline(yintercept = 0, lty=2, color="lightgrey") + scale_color_manual(values=c("darkblue","lightblue3","blue","#FF8C00","grey"), breaks=c("A","B","C","D","E")) + theme(legend.position = "none") + ylab("Z-Value") + stat_summary(fun = median, fun.ymin = median, fun.ymax = median, geom = "crossbar", width = 0.5, col="black", alpha=.5)
+fig3_panel_c = panel_3c_data  %>% ggplot(aes(x=group, y=Z_meta, col=plotcat)) + geom_jitter(width=.2, size=.5) + facet_grid( ~ compcat, scales = "free_x", space="free_x") + theme(axis.text.x = element_text(angle=45, hjust=1)) + xlab("") + geom_hline(yintercept = 0, lty=2, color="lightgrey") + scale_color_manual(values=c("darkblue","lightblue3","blue","#FF8C00","grey"), breaks=c("A","B","C","D","E")) + theme(legend.position = "none") + ylab("Z-Value") + stat_summary(fun = median, fun.ymin = median, fun.ymax = median, geom = "crossbar", width = 0.5, col="black", alpha=.5)
 
 
 
@@ -536,19 +548,21 @@ fig3_panel_c = panel_3c_data  %>% ggplot(aes(x=group, y=Z_meta, col=plotcat)) + 
 
 fig3_panel_d = cands_res %>% filter(ogs=="ko:K01712") %>% left_join(cands, by=c("tax"="family")) %>% select(LO_prev,HI_prev, tax) %>% reshape2::melt() %>% ggplot(aes(x=tax, y=value*100, fill=variable)) + geom_col(position = position_dodge2()) + geom_text(data = cands_res %>% filter(ogs=="ko:K01712") %>% mutate(value = .9, stars = case_when(pval < 0.001 ~ "***", pval < 0.01 ~ "**", pval < 0.05 ~ "*", T ~ "" )), aes(label=stars, fill="0")) + theme(legend.position = "none") + scale_fill_manual(values=c("white", "darkblue", "lightblue3")) + ylab("Prevalence (%)") + xlab("") + scale_y_continuous(limits=c(0,100))
 
-plot3=cowplot::plot_grid(fig3_panel_a, 
+plot3=cowplot::plot_grid(fig3_panel_a + theme(axis.text = element_text(size=5), axis.title = element_text(size=7)), 
                    cowplot::plot_grid(
-                     fig3_panel_b + theme(axis.text = element_text(size=9), plot.margin = margin(b=-.5), axis.title = element_text(size=12)), 
+                     fig3_panel_b + theme(axis.text = element_text(size=5), plot.margin = margin(b=-1), axis.title = element_text(size=6),plot.title = element_text(size=6), strip.text = element_text(size=6,margin = margin(0,0,2,0))), 
                      cowplot::plot_grid(plotlist = cowplot::align_plots(
-                       fig3_panel_c + theme(axis.text = element_text(size=9), axis.title = element_text(size=12)), 
-                       fig3_panel_d + theme(axis.text.x = element_text(size=9, angle=45, hjust=1), axis.text.y = element_text(size=9), plot.margin = margin(t=-0.5), axis.title = element_text(size=12), plot.title = element_text(size=12)) + ggtitle("K01712 - urocanate hydratase"),
+                       fig3_panel_c + theme(axis.text = element_text(size=5), axis.title = element_text(size=6), plot.margin = margin(t=0, b=0), plot.title = element_text(size=6), strip.text = element_text(size=6,margin = margin(0,0,2,0))), NULL,
+                       fig3_panel_d + theme(axis.text.x = element_text(size=5, angle=45, hjust=1), axis.text.y = element_text(size=5), plot.margin = margin(t=0, b=0), axis.title = element_text(size=6), plot.title = element_text(size=6,margin = margin(0,0,2,0))) + ggtitle("K01712 - urocanate hydratase"),
                        align="vh", axis = "btlr"
                        )
-                    , labels=c("c","d")), ncol=1, labels=c("b",""))
+                    , labels=c("c","d",""), rel_widths = c(.45,.1,.45), ncol=3), ncol=1, labels=c("b",""))
                    , ncol=2, labels=c("a",""))
 
 
 ggsave(filename = "figures_and_tables/Figure_3_new.png", plot3, height=5, width=12, bg="white")
+
+ggsave(filename = "figures_and_tables/Figure_3_pub.pdf", plot3, height=75, width=180, bg="white", units = "mm")
 
 ```
 

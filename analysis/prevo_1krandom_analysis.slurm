@@ -1,0 +1,120 @@
+#!/bin/bash
+#SBATCH -c 8
+#SBATCH --mem=80Gb
+#SBATCH --time=0-08:00
+#SBATCH --output=/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/output/log/%A_%a.out
+#SBATCH --job-name="ranger"
+
+###########################
+####    SETUP     #######
+###########################
+echo $SLURMD_NODENAME
+
+scriptdir="/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/greatapes_mgx_scripts"
+workfolder="/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final"
+source $scriptdir/00_sources.txt
+#####
+module load miniconda3
+conda activate r_microbiome_env
+
+all_genes=($(cut -f 1 $workfolder/analyses/host_core_genome_minprev_rand.tsv))
+
+gene=${all_genes[$SLURM_ARRAY_TASK_ID]}
+
+mkdir -p $workfolder/analyses/1krandom_analysis/$gene
+cd $workfolder/analyses/1krandom_analysis/$gene
+
+awk -vgene=$gene '{if($(NF-2) == gene) print}' $workfolder/analyses/analysis_gene_set_complete_minprev20.tsv > geneset
+cut -f 4 geneset | tr -d '\"'  | /work_beegfs/sukmb276/software/bin/faSomeRecords /work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final/allgroups/protein_catalogs/GreatApes.allprot.faa /dev/stdin $gene.faa
+
+/work_beegfs/sukmb276/software/bin/clustalo -i $gene.faa -o $gene.aln.faa --force
+/work_beegfs/sukmb276/software/bin/iqtree2 -s $gene.aln.faa -T $SLURM_CPUS_PER_TASK --alrt 1000 -B 1000 -M -mset LG,WAG
+
+
+
+R --vanilla <<< '''
+library(ape)
+library(phangorn)
+library(dplyr)
+
+spetree=read.tree("../../markertree_ranger_w_bl.tre")
+
+spetree=read.tree("/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final/analyses/1krandom_analysis/aln_merged.faa.contree.mad_rooted.tre")
+spetree$tip.label = gsub("_cluster95_","",spetree$tip.label)
+
+gsc=read.table("../../analysis_gene_set_complete.tsv", head=T, stringsAsFactors=F)
+rena= gsc %>% select(cluster=GreatApes_95_final, genus) %>%
+    mutate(rename=gsub("_cluster95_","",cluster)) %>% distinct %>%
+    filter(rename %in% spetree$tip.label)
+genetree = read.tree(list.files(pattern=".aln.faa.contree"))
+#rena=read.table("../../rename_list.tsv", head=T, stringsAsFactors=F)
+genes=read.table("geneset",head=F,stringsAsFactors=F)
+genes = genes %>% left_join(rena, by=c("V1"="cluster")) %>% 
+    mutate(genename=paste0(rename,"_gene1")) %>% 
+    select(geneid=V4, genename, genome=V2, genome_rename=rename) %>% 
+    filter(!is.na(genome_rename))
+
+genetree = genetree %>% keep.tip(genes$geneid)
+genetree$tip.label = genes[match(genetree$tip.label, genes$geneid),"genename"]
+genetree$edge.length = NULL
+genetree$node.label = (genetree$node.label %>% as.numeric)
+genetree$node.label = ifelse(is.na(genetree$node.label),"",genetree$node.label)
+write.tree(genetree, "genetree_ranger_clustal.tre")
+write.tree(spetree, "spetree_ranger_clustal.tre")
+
+genetree2 = genetree
+genetree2$tip.label = gsub("_gene[0-9]","",genetree2$tip.label)
+
+spetree2= keep.tip(spetree, genetree2$tip.label)
+
+
+'''
+
+
+cat ../../markertree_ranger_w_bl.tre genetree_ranger_mafft.tre > ranger_input.tre2
+../../../analyses_old2//cydab/Linux/SupplementaryPrograms/OptResolutions.linux -i ranger_input.tre2 -B 50 -N 100 | tee ranger_optresolutions2.log
+grep Optimal ranger_optresolutions2.log -A 1 | tail -n 1 > $gene.ranger_optim.tre2
+cat ../../markertree_ranger_w_bl.tre $gene.ranger_optim.tre2 > ranger_input_optim.tre2
+mkdir -p recon2
+/work_beegfs/sukmb276/software/bin/parallel -j $SLURM_CPUS_PER_TASK ../../../analyses_old2//cydab/Linux/CorePrograms/Ranger-DTL.linux --seed {} -i ranger_input_optim.tre2 -o recon2/rangerOutput{} ::: $(seq 1 100) 
+../../../analyses_old2//cydab/Linux/CorePrograms/AggregateRanger.linux recon2/rangerOutput > ${gene}.ranger_AggregateOutput.txt2
+grep -E "is: [0-9]+" recon2/rangerOutput* -o | awk 'BEGIN{i=0; c=0}{i=i+1; c=c+$2}END{print "Cost",i, c, c/i}' > ${gene}.ranger_final_stats.tsv2
+grep -E "Duplications: [0-9]+" recon2/rangerOutput* -o | awk 'BEGIN{i=0; c=0}{i=i+1; c=c+$2}END{print "Duplications",i, c, c/i}' >> ${gene}.ranger_final_stats.tsv2
+grep -E "Transfers: [0-9]+" recon2/rangerOutput* -o | awk 'BEGIN{i=0; c=0}{i=i+1; c=c+$2}END{print "Transfers",i, c, c/i}' >> ${gene}.ranger_final_stats.tsv2
+grep -E "Losses: [0-9]+" recon2/rangerOutput* -o | awk 'BEGIN{i=0; c=0}{i=i+1; c=c+$2}END{print "Losses",i, c, c/i}' >> ${gene}.ranger_final_stats.tsv2
+grep -E -o "Alignment has [0-9]+ sequences" ${gene}.mafft.faa.log | head -n 1 |  cut -d " " -f 3 | awk '{print "N_seq", $1, $1, $1}' >> ${gene}.ranger_final_stats.tsv2
+
+grep Transfer, recon/* | tr ":" "," | cut -d "," -f 1,5-6 | sed 's/ Mapping --> //' | sed 's/ Recipient --> //' | sed 's/recon\///' | awk '{print "transfer,"$0}' > $gene.events.csv
+grep Speciation, recon/* | tr ":" "," | cut -d "," -f 1,5 | sed 's/ Mapping --> //'  | sed 's/recon\///' | awk '{print "speciation,"$0","}' >> $gene.events.csv
+
+
+
+cat spetree_ranger_clustal.tre genetree_ranger_clustal.tre > ranger_input.tre3
+../../../analyses_old2//cydab/Linux/SupplementaryPrograms/OptResolutions.linux -i ranger_input.tre3 -B 50 -N 100 | tee ranger_optresolutions3.log
+grep Optimal ranger_optresolutions3.log -A 1 | tail -n 1 > $gene.ranger_optim.tre3
+cat spetree_ranger_clustal.tre $gene.ranger_optim.tre3 > ranger_input_optim.tre3
+mkdir -p recon3
+
+/work_beegfs/sukmb276/software/bin/parallel -j $SLURM_CPUS_PER_TASK ../../../analyses_old2//cydab/Linux/CorePrograms/Ranger-DTL.linux --seed {} -i ranger_input_optim.tre3 -o recon3/rangerOutput{} ::: $(seq 1 100) 
+
+../../../analyses_old2//cydab/Linux/CorePrograms/AggregateRanger.linux recon3/rangerOutput > ${gene}.ranger_AggregateOutput.txt3
+grep -E "is: [0-9]+" recon3/rangerOutput* -o | awk 'BEGIN{i=0; c=0}{i=i+1; c=c+$2}END{print "Cost",i, c, c/i}' > ${gene}.ranger_final_stats.tsv3
+grep -E "Duplications: [0-9]+" recon3/rangerOutput* -o | awk 'BEGIN{i=0; c=0}{i=i+1; c=c+$2}END{print "Duplications",i, c, c/i}' >> ${gene}.ranger_final_stats.tsv3
+grep -E "Transfers: [0-9]+" recon3/rangerOutput* -o | awk 'BEGIN{i=0; c=0}{i=i+1; c=c+$2}END{print "Transfers",i, c, c/i}' >> ${gene}.ranger_final_stats.tsv3
+grep -E "Losses: [0-9]+" recon3/rangerOutput* -o | awk 'BEGIN{i=0; c=0}{i=i+1; c=c+$2}END{print "Losses",i, c, c/i}' >> ${gene}.ranger_final_stats.tsv3
+grep -E -o "Alignment has [0-9]+ sequences" ${gene}.mafft.faa.log | head -n 1 |  cut -d " " -f 3 | awk '{print "N_seq", $1, $1, $1}' >> ${gene}.ranger_final_stats.tsv3
+
+grep Transfer, recon/* | tr ":" "," | cut -d "," -f 1,5-6 | sed 's/ Mapping --> //' | sed 's/ Recipient --> //' | sed 's/recon\///' | awk '{print "transfer,"$0}' > $gene.events.csv
+grep Speciation, recon/* | tr ":" "," | cut -d "," -f 1,5 | sed 's/ Mapping --> //'  | sed 's/recon\///' | awk '{print "speciation,"$0","}' >> $gene.events.csv
+
+
+
+| tee ranger_core.log2
+
+grep "Species Tree" recon/rangerOutput1 -A 1 | tail -n 1 > species_tree.nodenames.tre
+
+exit
+
+
+
+

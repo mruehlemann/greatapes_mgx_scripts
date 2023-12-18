@@ -127,7 +127,7 @@ pp_tc = pp$data %>% filter(isTip) %>% select(host_tree, col, shape) %>% distinct
 pp=pp+geom_point(data=pp$data %>% filter(isTip==T), aes(x=x,y=y, shape=host, label=label, col=host, bin_id=GreatApes_95_final), size=3)+
   scale_color_manual(values=colset2$col, breaks=colset2$host)+
   scale_shape_manual(values=c(15,16,17,18,19)[colset2$shape],breaks=colset2$host) + coord_flip()
-pp=pp +  theme(legend.position = "none") + ggtitle(paste0(pp_tax_cons, " spp."))
+pp=pp +  theme(legend.position = "none", title = element_text(size=7)) + ggtitle(paste0(pp_tax_cons, " spp."))
 
 
 ### tree no human
@@ -144,7 +144,7 @@ pp2_tc = pp2$data %>% filter(isTip) %>% select(host_tree, col, shape) %>% distin
 pp2=pp2+geom_point(data=pp2$data %>% filter(isTip==T), aes(x=x,y=y, shape=host, label=label, col=host, bin_id=GreatApes_95_final), size=3)+
   scale_color_manual(values=colset2$col, breaks=colset2$host)+
   scale_shape_manual(values=c(15,16,17,18,19)[colset2$shape],breaks=colset2$host) + coord_flip()
-pp2=pp2 +  theme(legend.position = "none") + ggtitle(paste0(pp2_tax_cons, " spp."))
+pp2=pp2 +  theme(legend.position = "none", title = element_text(size=7)) + ggtitle(paste0(pp2_tax_cons, " spp."))
 
 
 ### tree human
@@ -161,7 +161,7 @@ pp3_tc = pp3$data %>% filter(isTip) %>% select(host_tree, col, shape) %>% distin
 pp3=pp3+geom_point(data=pp3$data %>% filter(isTip==T), aes(x=x,y=y, shape=host, label=label, col=host, bin_id=GreatApes_95_final), size=3)+
   scale_color_manual(values=colset2$col, breaks=colset2$host)+
   scale_shape_manual(values=c(15,16,17,18,19)[colset2$shape],breaks=colset2$host) + coord_flip()
-pp3=pp3 +  theme(legend.position = "none") + ggtitle(paste0(pp3_tax_cons, " spp."))
+pp3=pp3 +  theme(legend.position = "none", title = element_text(size=7)) + ggtitle(paste0(pp3_tax_cons, " spp."))
 
 
 
@@ -179,18 +179,18 @@ pp4_tc = pp4$data %>% filter(isTip) %>% select(host_tree, col, shape) %>% distin
 pp4=pp4+geom_point(data=pp4$data %>% filter(isTip==T), aes(x=x,y=y, shape=host, label=label, col=host, bin_id=GreatApes_95_final), size=3)+
   scale_color_manual(values=colset2$col, breaks=colset2$host)+
   scale_shape_manual(values=c(15,16,17,18,19)[colset2$shape],breaks=colset2$host) + coord_flip()
-pp4=pp4 +  theme(legend.position = "none") + ggtitle(paste0(pp4_tax_cons, " spp."))
+pp4=pp4 +  theme(legend.position = "none", title = element_text(size=7)) + ggtitle(paste0(pp4_tax_cons, " spp."))
 
 
 tree_legend= colset2 %>% arrange(host) %>% mutate(column = case_when(grepl("^G",host) ~ 1, grepl("^H", host) ~ 1, grepl("^P", host) ~ 2)) %>% group_by(column) %>% mutate(row=seq_along(column)) %>% 
   ggplot(aes(x=column, y=-row, label=host_long)) + 
-  geom_point(aes(col=host_long, shape=host_long), size=3) + 
-  geom_text(aes(label=host_long), hjust=0, nudge_x = .1, size=3) + 
+  geom_point(aes(col=host_long, shape=host_long), size=1) + 
+  geom_text(aes(label=host_long), hjust=0, nudge_x = .1, size=1.6) + 
   scale_x_continuous(limits=c(1,3)) + 
   theme_nothing() + scale_color_manual(values=colset2$col, breaks=colset2$host_long)+
-   scale_shape_manual(values=c(15,16,17,18,19)[colset2$shape],breaks=colset2$host_long)
+   scale_shape_manual(values=c(15,16,17,18,19)[colset2$shape],breaks=colset2$host_long) 
 
-cophy_tree_set = plot_grid(NULL, pp,pp2,pp3,pp4,NULL,tree_legend, NULL , rel_heights = c(0.05,0.2,0.2,0.2,0.2,0.025,0.1,0.025), ncol=1)
+cophy_tree_set = plot_grid(NULL, pp,pp2,pp3,pp4,NULL,tree_legend, NULL , rel_heights = c(0.05,0.2,0.2,0.2,0.2,0.025,0.125,0.025), ncol=1)
 panel_a = cophy_tree_set
 cophy_tree_set
 ```
@@ -213,11 +213,11 @@ cophy_mean = cophy_stats2 %>% filter(tot>=10) %>% pull(cosp_rat) %>% mean
 cophy_enrich_plot = cophy_stats2 %>% filter(tot>=10) %>% 
   mutate(stars=case_when(qval < 0.001 ~ "***", qval < 0.01 ~ "**", qval < 0.05 ~ "*", T ~ "")) %>% 
   ggplot(aes(y=cosp_rat*100, x=fam, fill=ifelse(qval < 0.05, phylum2, "ZZ"), col=phylum2)) + geom_col() + geom_hline(yintercept = cophy_mean*100, lty=2) + 
-  geom_text(aes(label=stars), nudge_y = 5, col="black") + 
+  geom_text(aes(label=stars), nudge_y = 5, col="black", size=1.9) + 
   scale_fill_manual(values=c(phylumcols_df$col,"white"), breaks=c(phylumcols_df$phylum,"ZZ")) + 
   scale_color_manual(values=c(phylumcols_df$col,"white"), breaks=c(phylumcols_df$phylum,"ZZ")) + 
   ylab("Cophylo-Ratio (%)") + xlab("")+ 
-  theme(axis.text.x = element_text(angle=45, hjust=1, size=9), axis.title = element_text(size=12), legend.position = "none") + 
+  theme(axis.text.y=element_text(size=5), axis.text.x = element_text(angle=45, hjust=1, size=5), axis.title = element_text(size=7), legend.position = "none", axis.ticks=element_line(linewidth = 0.5)) + 
   scale_y_continuous(expand=c(.01,0), limits=c(0,110))
   
 
@@ -235,11 +235,14 @@ saveRDS(cophy_stats2, "../../../great_apes_shiny_app/data/family_cophy_ratios.Rd
 ```{r}
 
 coph_plot =  sgb_long %>% filter(variable %in% sgb_in_cospec) %>% mutate(pres = value > 0, cosp = variable %in% sgb_with_cophy) %>% filter(pres) %>% group_by(sample, host_long) %>% summarise(cophy_rat = mean(cosp)) %>% 
-  ggplot(aes(x=host_long,y=cophy_rat*100, fill=host_long)) + 
-  geom_boxplot(outlier.shape = NA) + geom_jitter(height=0, width=.2) +
+  filter(!sample %in% sample_exclude) %>%
+  (function(df) df %>% left_join(df %>% group_by(host_long) %>% summarise(n=n()))) %>%
+  mutate(host_long2 = paste0(host_long,", n=",n)) %>%
+  ggplot(aes(x=host_long2,y=cophy_rat*100, fill=host_long)) + 
+  geom_boxplot(outlier.shape = NA) + geom_jitter(height=0, width=.2, size=.25) +
   scale_fill_manual(values=colset$col, breaks = colset$host_long) + 
-  theme(legend.position = "none", axis.title = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1, size=9)) +
-  ylab("Prop. of Co-Phylo SGBs (%)") + xlab("") + scale_y_continuous(expand=c(.01,0))
+  theme(legend.position = "none", axis.title = element_text(size=7), axis.text.y = element_text(size=5), axis.text.x = element_text(angle=45, hjust=1, size=5), axis.ticks=element_line(linewidth = 0.5)) +
+  ylab("Prop. of\nCo-Phylo SGBs (%)") + xlab("") + scale_y_continuous(expand=c(.01,0.5), limits=c(0,70))
 
 panel_c = coph_plot
 ggpubr::compare_means(data=coph_plot$data, cophy_rat ~ host_long)
@@ -305,9 +308,9 @@ write.table(phylo_reg_results, "figures_and_tables/Suppl_Table_S16_Cophylo_Trait
   phylm_plot = phylo_reg_results %>% 
   ggplot(aes(x=Estimate, y=-log10(Pr...z..))) + geom_vline(xintercept = 0, col="lightgrey", lty=2) + 
   geom_hline(data = . %>% filter(q<0.05) %>% arrange(abs(z.value)) %>% head(1), aes(yintercept=-log10(Pr...z..)), col="lightgrey", lty=2) +
-  geom_point(aes(col=case_when(q>=0.05 ~ "A", Estimate < 0 ~ "B", Estimate > 0 ~ "C")), size=2) + scale_x_continuous(limits=c(-1.7,1.7)) + 
-  ggrepel::geom_text_repel(data= . %>% filter(q<0.05), aes(label=trait), min.segment.length = .1)  +
-  ylab("-log(P)") + scale_color_manual(values=c("grey","#f12400","#3d9ab2")) + theme(legend.position = "none", axis.title = element_text(size=12)) + xlab("Effect size")
+  geom_point(aes(col=case_when(q>=0.05 ~ "A", Estimate < 0 ~ "B", Estimate > 0 ~ "C")), size=.5) + scale_x_continuous(limits=c(-1.7,1.7)) + 
+  ggrepel::geom_text_repel(data= . %>% filter(q<0.05), aes(label=trait), min.segment.length = .1, size=1.9)  +
+  ylab("-log10(P)") + scale_color_manual(values=c("grey","#f12400","#3d9ab2")) + theme(legend.position = "none", axis.title = element_text(size=7), axis.text = element_text(size=5)) + xlab("Effect size")
 
 
 panel_d = phylm_plot
@@ -322,7 +325,7 @@ pvals_wilcox_gs = lapply(plot_dat_gs$phylum %>% unique, function(x){
 }) %>% do.call("bind_rows",.)  %>% mutate(stars=case_when(p_wilcox < 0.001 ~ "***", p_wilcox < 0.01 ~ "**", p_wilcox < 0.05 ~ "*", T ~ ""))
 
 
-gs_plot = plot_dat_gs %>%  ggplot(aes(x=plot_pos, y=rel_genome_size, fill=cophy, group=paste(phylum,cophy) )) + geom_boxplot(outlier.shape = NA, position = position_dodge()) +  geom_jitter(width=.05, size=.5) + scale_fill_manual(values=c("#f12400","#3d9ab2")) + theme(legend.position = "none") + ylab("Log-Relative Genome Size") + xlab("") + geom_hline(yintercept = 0, lty=2, color="grey") + scale_x_continuous(breaks = unique(plot_dat_gs$phy_id), labels=unique(plot_dat_gs$phylum), expand=c(0.01,0.01)) + theme(axis.text.x = element_text(angle=45, hjust=1), axis.title.y = element_text(size=12))
+gs_plot = plot_dat_gs %>%  ggplot(aes(x=plot_pos, y=rel_genome_size, fill=cophy, group=paste(phylum,cophy) )) + geom_boxplot(outlier.shape = NA, position = position_dodge()) +  geom_jitter(width=.05, size=.25) + scale_fill_manual(values=c("#f12400","#3d9ab2")) + theme(legend.position = "none") + ylab("Log-Relative Genome Size") + xlab("") + geom_hline(yintercept = 0, lty=2, color="grey") + scale_x_continuous(breaks = unique(plot_dat_gs$phy_id), labels=unique(plot_dat_gs$phylum), expand=c(0.01,0.01)) + theme(axis.text.x = element_text(angle=45, hjust=1), axis.title = element_text(size=7), axis.text = element_text(size=5))
 
 ### gene count plot
 plot_dat_gc = dat_gc %>% mutate(phylum2=ifelse(phylum %in% phylumcols_df$phylum, phylum,"other")) %>% 
@@ -336,13 +339,13 @@ pvals_wilcox = lapply(plot_dat_gc$phylum %>% unique, function(x){
   return(data.frame(phylum=x, p_wilcox=p_out))
 }) %>% do.call("bind_rows",.)  %>% mutate(stars=case_when(p_wilcox < 0.001 ~ "***", p_wilcox < 0.01 ~ "**", p_wilcox < 0.05 ~ "*", T ~ ""))
 
-gc_plot = plot_dat_gc %>%  ggplot(aes(x=plot_pos, y=gene_count, fill=cophy, group=paste(phylum,cophy) )) + geom_boxplot(outlier.shape = NA, position = position_dodge()) +  
-  geom_jitter(width=.05, size=.5) + 
+gc_plot = plot_dat_gc %>%  ggplot(aes(x=plot_pos, y=gene_count, fill=cophy, group=paste(phylum,cophy) )) + geom_boxplot(outlier.shape = NA, position = position_dodge(), size=.25) +  
+  geom_jitter(width=.05, size=.1) + 
   scale_fill_manual(values=c("#f12400","#3d9ab2")) + theme(legend.position = "none") + ylab("Gene Count") + 
   xlab("") + scale_x_continuous(breaks = unique(plot_dat_gs$phy_id), labels=unique(plot_dat_gs$phylum), expand=c(0.01,0.01)) + 
   scale_y_continuous(limits=c(0,5500)) +
-  theme(axis.text.x = element_text(angle=45, hjust=1), axis.title.y = element_text(size=12)) + 
-  geom_text(data = pvals_wilcox, aes(y=5200, x=as.numeric(as.factor(phylum)), group=NA, fill=NA, label=stars))
+  theme(axis.text.x = element_text(angle=45, hjust=1), axis.title = element_text(size=7), axis.text = element_text(size=5)) + 
+  geom_text(data = pvals_wilcox, aes(y=5200, x=as.numeric(as.factor(phylum)), group=NA, fill=NA, label=stars), size=1.8)
 
 
 
@@ -355,19 +358,25 @@ p_vals_fisher = lapply(dat_xylo$phylum %>% unique, function(x){
   return(data.frame(phylum=x, p_fisher=p_out))
 }) %>% do.call("bind_rows",.)  %>% mutate(stars=case_when(p_fisher < 0.001 ~ "***", p_fisher < 0.01 ~ "**", p_fisher < 0.05 ~ "*", T ~ ""))
 
+
+annot_xylo = plot_dat_gs %>% group_by(phy_id, phylum, cophy) %>% summarise(n=n()) %>% mutate(cophy=ifelse(cophy,"Yes","No")) %>% reshape2::dcast(phy_id + phylum ~ cophy) %>% mutate(phylum2=paste0(phylum, " (n = ",No,"/",Yes,")"))
+
 xylo_plot = dat_xylo %>% 
   group_by(phylum, cophy) %>% summarize(prev = mean(this_x), n=n()) %>% 
   ggplot(aes(x=as.numeric(as.factor(phylum)), y=prev*100, fill=cophy)) + geom_col(position = position_dodge2(padding=.1), width=.8) + 
-  geom_text(aes(label=paste0("n = \n",n), y=100*prev+2.5), size=2, position = position_dodge(width=1)) + scale_fill_manual(values=c("#f12400","#3d9ab2")) + 
-  theme(axis.text.x = element_text(angle=45, hjust=1, size=9), axis.title.y = element_text(size=12)) + xlab("") + ylab("D-Xylose util.\nPrevalence  (%)") + theme(legend.position = "none") + 
+  #geom_text(aes(label=paste0("n = \n",n), y=100*prev+4), size=1.9, position = position_dodge(width=1)) + 
+  scale_fill_manual(values=c("#f12400","#3d9ab2")) + 
+  theme(axis.text.x = element_text(angle=45, hjust=1, size=5), axis.text = element_text(size=5), axis.title = element_text(size=7)) + xlab("") + ylab("D-Xylose util.\nPrevalence  (%)") + theme(legend.position = "none") + 
   scale_y_continuous(limits=c(0,105)) + 
-  scale_x_continuous(breaks = unique(plot_dat_gs$phy_id), labels=unique(plot_dat_gs$phylum), expand=c(0.01,0.01)) + 
-  geom_text(data = p_vals_fisher, aes(y=100, x=as.numeric(as.factor(phylum)), fill=NA, label=stars))
+  scale_x_continuous(breaks = unique(annot_xylo$phy_id), labels=unique(annot_xylo$phylum2), expand=c(0.01,0.01)) + 
+  geom_text(data = p_vals_fisher, aes(y=100, x=as.numeric(as.factor(phylum)), fill=NA, label=stars), size=1.9)
 
 
 panels_def = cowplot::plot_grid(
   panel_d,
-cowplot::plot_grid(gc_plot+ theme(axis.text.x = element_blank())  + theme(plot.margin = unit(c(0, 0.5, 0, 1), "cm")), xylo_plot  + theme(plot.margin = unit(c(.1, 0.5, 0, 1), "cm")), ncol=1, align = "v", labels=c("e","f"), rel_heights = c(.4,.6)),
+cowplot::plot_grid(
+  NULL, gc_plot+ theme(axis.text.x = element_blank())  + theme(plot.margin = unit(c(0, 0.65, 0, .25), "cm")), 
+  NULL, xylo_plot  + theme(plot.margin = unit(c(0, 0.65, 0, .25), "cm")), ncol=2, align = "v", labels=c("e","","f"), rel_widths=c(.1,.9), rel_heights = c(.3,.7)),
 labels=c("d",""))
 
 
@@ -427,25 +436,25 @@ dev.off()
 bifido_colors = bind_rows(bind_rows(info_sub[match(bifido_gyrb_tree_sub$tip.label, info_sub$label),] %>% mutate(host = ifelse(host=="HsUHGG", "HsG", host)) %>% left_join(colset)) %>% select(label, GreatApes_95_final, prot_id, host, host_tree, col, species, shape) %>% filter(!is.na(host)), data.frame(stringsAsFactors = F,label="outgroup", GreatApes_95_final="outgroup",prot_id="outgroup",host="outgroup",host_tree="outgroup",col="grey", species="outgroup", shape=1) %>% group_by(host_tree))
 
 
-bifido_marker = tg2$dend1 %>% as.phylo() %>% ape::root(phy=., outgroup="outgroup",resolve.root=T) %>% ggtree(, size=.8)  + theme_nothing() + scale_y_continuous(limits=c(0.5, 13)) + geom_tippoint(size=3, aes(color=label, shape=label)) + scale_color_manual(values=bifido_colors$col, breaks = bifido_colors$label) 
+bifido_marker = tg2$dend1 %>% as.phylo() %>% ape::root(phy=., outgroup="outgroup",resolve.root=T) %>% ggtree(, size=.6)  + theme_nothing() + scale_y_continuous(limits=c(0.5, 13)) + geom_tippoint(size=1, aes(color=label, shape=label)) + scale_color_manual(values=bifido_colors$col, breaks = bifido_colors$label) 
 #bifido_marker$data = bifido_marker$data %>% mutate(x=ifelse(label=="outgroup", bifido_marker$data %>% filter(isTip, label!="outgroup") %>% pull(x) %>% max(),x))
 bifido_marker = bifido_marker + geom_segment(data = . %>% filter(isTip), aes(x=x,xend= bifido_marker$data %>% filter(isTip, label!="outgroup") %>% pull(x) %>% max(), y=y, yend=y), lty=2, size=.2) + scale_shape_manual(values=c(15,16,17,18)[bifido_colors$shape], breaks=bifido_colors$label) + geom_point(data = . %>% mutate(label2 = gsub("/[0-9]+","",label)) %>% filter(!isTip, as.numeric(label2) > 80))
 
 
-bifido_gyrb = tg2$dend2 %>% as.phylo() %>% root(outgroup="outgroup", resolve.root=T) %>% ggtree(size=.8)  + scale_x_reverse() + theme_nothing() + scale_y_continuous(limits=c(0.5, 13)) + geom_tippoint(aes(color=label, shape=label), size=3)  
+bifido_gyrb = tg2$dend2 %>% as.phylo() %>% root(outgroup="outgroup", resolve.root=T) %>% ggtree(size=.6)  + scale_x_reverse() + theme_nothing() + scale_y_continuous(limits=c(0.5, 13)) + geom_tippoint(aes(color=label, shape=label), size=1)  
 #bifido_gyrb$data = bifido_gyrb$data %>% mutate(x=ifelse(label=="outgroup", bifido_gyrb$data %>% filter(isTip, label!="outgroup") %>% pull(x) %>% max(),x)) 
 bifido_gyrb = bifido_gyrb + scale_color_manual(values=bifido_colors$col, breaks = bifido_colors$label) + geom_segment(data = . %>% filter(isTip), aes(x=x,xend= bifido_gyrb$data %>% filter(isTip, label!="outgroup") %>% pull(x) %>% max(), y=y, yend=y), lty=2, size=.2) + scale_shape_manual(values=c(15,16,17,18)[bifido_colors$shape], breaks=bifido_colors$label) + geom_point(data = . %>% filter(!isTip, as.numeric(label) > 80))
 
-conn2 = bifido_marker$data %>% filter(isTip) %>% select(label,y_markers=y) %>% left_join(bifido_gyrb$data %>% filter(isTip) %>% select(label,y_gyrb=y)) %>% ggplot(aes(x=1, xend=2, y=y_markers, yend=y_gyrb)) + geom_segment(size=.8, lty=2, aes(color=label)) + theme_nothing() + scale_y_continuous(limits=c(0.5, 13)) + scale_color_manual(values=bifido_colors$col, breaks = bifido_colors$label)
+conn2 = bifido_marker$data %>% filter(isTip) %>% select(label,y_markers=y) %>% left_join(bifido_gyrb$data %>% filter(isTip) %>% select(label,y_gyrb=y)) %>% ggplot(aes(x=1, xend=2, y=y_markers, yend=y_gyrb)) + geom_segment(size=.6, lty=2, aes(color=label)) + theme_nothing() + scale_y_continuous(limits=c(0.5, 13)) + scale_color_manual(values=bifido_colors$col, breaks = bifido_colors$label)
 
-labelplot = bifido_marker$data %>% filter(isTip) %>% ggplot(aes(x=0, y=y, col=label)) + theme_nothing() + scale_shape_manual(values=c(16,17,18)[bifido_colors$shape], breaks = bifido_colors$label) + scale_color_manual(values=bifido_colors$col, breaks = bifido_colors$label) + geom_text(aes(label=label), hjust=0) + scale_x_continuous(limits=c(0,1.5)) + scale_y_continuous(limits=c(0.5, 13))
+labelplot = bifido_marker$data %>% filter(isTip) %>% ggplot(aes(x=0, y=y, col=label)) + theme_nothing() + scale_shape_manual(values=c(16,17,18)[bifido_colors$shape], breaks = bifido_colors$label) + scale_color_manual(values=bifido_colors$col, breaks = bifido_colors$label) + geom_text(aes(label=label), hjust=0, size=1.5) + scale_x_continuous(limits=c(0,1.5)) + scale_y_continuous(limits=c(0.5, 13))
 
 bifido_plot = plot_grid(NULL,
-                        bifido_marker + geom_text(data=data.frame(x=0,y=12.5,label="GTDB\nMarkers"), hjust=0, aes(label=label)) , 
+                        bifido_marker + geom_text(data=data.frame(x=0,y=11.5,label="GTDB\nMarkers"), hjust=0, aes(label=label), size=2) , 
                         labelplot,  conn2,
-                        bifido_gyrb + geom_text(data=data.frame(x=0,y=12.5,label="gyrB"), hjust=1, aes(label=label)), NULL,
+                        bifido_gyrb + geom_text(data=data.frame(x=0,y=11.5,label="gyrB"), hjust=1, aes(label=label), size=2), NULL,
                         ncol=6,
-                        rel_widths = c(.025,0.15,0.3,0.1,0.15,.025)
+                        rel_widths = c(.05,0.15,0.18,0.07,0.15,.05)
 )
 
 # bifido_plot = plot_grid(
@@ -471,17 +480,19 @@ top_right= align_plots(panel_b,
 plot5=plot_grid(
   cophy_tree_set, NULL,
   plot_grid(
-    plot_grid(top_right[[1]],NULL, top_right[[2]], labels=c("b","c"), ncol=3, rel_widths = c(.55,.025,.45)
+    plot_grid(NULL,top_right[[1]],NULL, top_right[[2]], labels=c("b","","c"), ncol=4, rel_widths = c(.05,.6,.05,.4)
     ),
     plot_grid(panels_def),
-    bifido_plot, ncol=1, rel_heights = c(.35,.35,.25), labels=c("","", "g")),
-  rel_widths = c(.3,.02,.7), labels=c("a","",""), ncol=3
+    bifido_plot, ncol=1, rel_heights = c(.4,.4,.125), labels=c("","", "g")),
+  rel_widths = c(.3,.01,.7), labels=c("a","",""), ncol=3
 )
 
 
 plot5
 
 ggsave(filename = "figures_and_tables/Figure_5_new.png", plot5, height=12, width=15, bg="white")
+
+ggsave(filename = "figures_and_tables/Figure_5_pub.pdf", plot5, height=130, width=180, bg="white", units = "mm")
 
 ```
 

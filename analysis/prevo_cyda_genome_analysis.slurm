@@ -97,3 +97,10 @@ exit
 
 
 
+for i in $(ls | grep -v all); do n=$(grep N_seq ${i}/${i}.ranger_final_stats.tsv | cut -f 2 -d " "); 
+    prev=$(cut -f 3 $i/geneset | sort | uniq -c | grep "P" | awk '{print $1}'); 
+    los=$(awk -v n=$n '{print $1,$4}' ${i}/${i}.ranger_final_stats.tsv | grep Los | cut -f 2 -d " "); 
+    tran=$(awk -v n=$n '{print $1,$4}' ${i}/${i}.ranger_final_stats.tsv | grep Tran | cut -f 2 -d " "); 
+    echo -e "$i\t$n\t$prev\t$tran\t$los" | awk '{print $0"\t"$4/$2"\t"$5/$2}';
+#    awk -v p=$prev -v n=$n -v i=$i '{print i" "$0" "n" "$4/n" "p}' ${i}/${i}.ranger_final_stats.tsv | grep Los; 
+    done  > ../final_stats_single_copy.tsv

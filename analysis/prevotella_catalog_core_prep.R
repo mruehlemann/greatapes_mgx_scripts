@@ -65,15 +65,17 @@ sgb_host_to_cluster = mag_to_sgb  %>% left_join(cluster_to_mag) %>% select(Great
 sgb_host_w_annot = sgb_host_to_cluster  %>% left_join(cluster_annot)
 
 library(data.table)
-prot_to_genome = read_delim('GreatApes.prot_to_genome.tsv', delim='\t', quote='', num_threads=10,col_names=c('mag_id','prot_id'))
-prot_to_cluster = read_delim('protein_catalogs/GreatApes.prot95_cluster.tsv', delim='\t', col_names=c('cluster_id','prot_id'))
+#prot_to_genome = read_delim('protein_catalogs/GreatApes.prot_to_genome.tsv', delim='\t', quote='', num_threads=8,col_names=c('mag_id','prot_id'))
+prot_to_cluster = read_delim('protein_catalogs/GreatApes.prot95_cluster.tsv', delim='\t', col_names=c('cluster_id','prot_id')) %>% 
+	mutate(contig_id = gsub("_[0-9]+$","",prot_id))
 
 cluster_to_sgb = all_genomes %>% select(mag_id = genome, GreatApes_95_final, host, host_group) %>%
 	left_join(contig_to_sgb) %>%
 	left_join(prot_to_cluster) %>% 
 	select(GreatApes_95_final, mag_id, host_group, prot_id, cluster_id) %>% distinct()
 
-cluster_to_sgb_tax = cluster_to_sgb %>% left_join(tax2, by=c("GreatApes_95_final"="final")) %>% filter(genus %in% c("g__Prevotella"))
+cluster_to_sgb_tax = cluster_to_sgb %>% left_join(tax2, by=c("GreatApes_95_final"="final")) %>% 
+	filter(genus %in% c("g__Prevotella"), host_group!="O")
 
 ### keep only annotations of prot clusters in prevo / paraprevo
 annot_prevo = cluster_annot %>% filter(cluster_id %in% cluster_to_sgb_tax$cluster_id)
@@ -81,13 +83,17 @@ annot_prevo = cluster_annot %>% filter(cluster_id %in% cluster_to_sgb_tax$cluste
 cluster_to_sgb_tax_annot = cluster_to_sgb_tax %>% left_join(annot_prevo %>% select(cluster_id, Preferred_name)) %>% filter(Preferred_name != "-")
 n_per_host = cluster_to_sgb_tax_annot %>% select(GreatApes_95_final, host_group) %>% distinct %>% group_by(host_group) %>% summarise(n_total=n())
 n_per_prot = cluster_to_sgb_tax_annot %>% select(GreatApes_95_final, host_group, Preferred_name) %>% distinct %>% group_by(host_group, Preferred_name) %>% summarise(n=n()) %>% left_join(n_per_host)  %>% mutate(rel_host = n/n_total)
+n_per_all = cluster_to_sgb_tax_annot %>% select(GreatApes_95_final, Preferred_name) %>% distinct %>% group_by(Preferred_name) %>% summarise(n_across=n()) %>% left_join(n_per_prot)  %>% mutate(rel_across = n_across/(cluster_to_sgb_tax$GreatApes_95_final %>% unique %>% length))
 
-host_core_genome = n_per_prot %>% filter(host_group!="G", rel_host>=.8)
-host_core_genome = host_core_genome %>% left_join(cluster_to_sgb_tax_annot %>% filter(Preferred_name %in% host_core_genome$Preferred_name) %>% group_by(mag_id, Preferred_name) %>% summarise(n=n()) %>% group_by(Preferred_name) %>% summarise(mean_occ = mean(n)))
+
 
 ##### Test set: genes found in 80% of Prevotella genomes (n=878) and in max 10% of genomes in > 2 copies (n = 626)
 
-host_core_genome_testset = host_core_genome %>% filter(rel_host >= .8, mean_occ<1.1)
+host_core_genome = n_per_prot %>% filter(host_group!="G", host_group!="O", rel_host>=.8)
+host_core_genome = host_core_genome %>% left_join(cluster_to_sgb_tax_annot %>% filter(Preferred_name %in% host_core_genome$Preferred_name) %>% group_by(mag_id, Preferred_name) %>% summarise(n=n()) %>% group_by(Preferred_name) %>% summarise(mean_occ = mean(n)))
+
+
+host_core_genome_testset = host_core_genome %>% filter(rel_host >= .8, mean_occ<1.05)
 write.table(host_core_genome_testset, "/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final/analyses/host_core_genome_testset.tsv", sep="\t", row.names=F, quote=F)
 
 analysis_gene_set = cluster_to_sgb_tax_annot %>% filter(Preferred_name %in% host_core_genome_testset$Preferred_name)  %>% 
@@ -98,10 +104,41 @@ analysis_gene_set_rep = analysis_gene_set %>% filter(!duplicated(paste(GreatApes
 
 write.table(analysis_gene_set_rep, "/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final/analyses/analysis_gene_set_complete.tsv", sep="\t", row.names=F, quote=F)
 
-## Paraprevo clara as outgroup
+#### Test set: genes with similar prevalence as cydA across all SGBs (~ 55.7 +/- 10%)
+
+host_core_genome2 = n_per_all %>% filter(host_group=="H") %>% filter(between(rel_across, 0.557-0.1, 0.557+0.1))
+host_core_genome2 = host_core_genome2 %>% left_join(cluster_to_sgb_tax_annot %>% filter(Preferred_name %in% host_core_genome2$Preferred_name) %>% group_by(mag_id, Preferred_name) %>% summarise(n=n()) %>% group_by(Preferred_name) %>% summarise(mean_occ = mean(n)))
+write.table(host_core_genome2, "/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final/analyses/host_core_genome_freqacross_testset.tsv", sep="\t", row.names=F, quote=F)
 
 
 
+analysis_gene_set2 = cluster_to_sgb_tax_annot %>% filter(Preferred_name %in% host_core_genome2$Preferred_name)  %>% 
+	left_join(rep_list_prevo %>% select(GreatApes_95_final=V2, rep_genome = genome))  %>% mutate(is_rep = mag_id == rep_genome) %>% 
+	arrange(Preferred_name, GreatApes_95_final, -is_rep) 
+
+analysis_gene_set_rep2 = analysis_gene_set2 %>% filter(!duplicated(paste(GreatApes_95_final, Preferred_name)))
+
+write.table(analysis_gene_set_rep2, "/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final/analyses/analysis_gene_set_complete_freqacross.tsv", sep="\t", row.names=F, quote=F)
+
+
+
+#### Test set: 1000 random genes with at least 35% prevalence across the dataset
+
+host_core_genome3 = n_per_all %>% filter(host_group=="H") %>% filter(rel_across >= 0.2)
+host_core_genome3 = host_core_genome3 %>% left_join(cluster_to_sgb_tax_annot %>% filter(Preferred_name %in% host_core_genome3$Preferred_name) %>% group_by(mag_id, Preferred_name) %>% summarise(n=n()) %>% group_by(Preferred_name) %>% summarise(mean_occ = mean(n)))
+write.table(host_core_genome3, "/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final/analyses/host_core_genome_minprev.tsv", sep="\t", row.names=F, quote=F)
+
+host_core_genome3_rand = host_core_genome3 %>% filter(mean_occ<1.05)
+write.table(host_core_genome3_rand, "/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final/analyses/host_core_genome_minprev_rand.tsv", sep="\t", row.names=F, quote=F)
+
+
+analysis_gene_set3 = cluster_to_sgb_tax_annot %>% filter(Preferred_name %in% host_core_genome3$Preferred_name)  %>% 
+	left_join(rep_list_prevo %>% select(GreatApes_95_final=V2, rep_genome = genome))  %>% mutate(is_rep = mag_id == rep_genome) %>% 
+	arrange(Preferred_name, GreatApes_95_final, -is_rep) 
+
+analysis_gene_set_rep3 = analysis_gene_set3 %>% filter(!duplicated(paste(GreatApes_95_final, Preferred_name)))
+
+write.table(analysis_gene_set_rep3, "/work_beegfs/sukmb276/Metagenomes/projects/ApesComplete/output/220616_analysis_final/analyses/analysis_gene_set_complete_minprev20.tsv", sep="\t", row.names=F, quote=F)
 
 
 

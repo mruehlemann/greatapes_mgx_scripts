@@ -292,6 +292,8 @@ events = read.table("../../../220303_Analysis_New/data_w_dk/analyses/cydA.events
 
 fullset = read.table("../../../220303_Analysis_New/data_w_dk/analyses/analysis_gene_set_complete.tsv", head=T, stringsAsFactors = F) %>% mutate(newid=gsub("_cluster95_","", GreatApes_95_final)) %>% mutate(host_group = case_when(host_group=="P" ~ "Pan", host_group=="H" ~ "Human", host_group == "G" ~ "Gorilla"))
 
+dtl_stats = read_tsv("../../../220303_Analysis_New/data_w_dk/final_stats_single_copy.tsv", col_names=c("gene","in_sgbs","in_sgbs_pan","transfers","losses","transfers_norm","losses_norm")) 
+
 ### gyrb trees
 gyrb_info = read.table("../../../220303_Analysis_New/data_w_dk//analyses/gyrb/gyrb_prot_to_genome.tsv", head=T, stringsAsFactors = F) %>% left_join(colset) %>% mutate(host_group = substr(host,1,1))
 bifido_tax = tax2 %>% filter(genus=="g__Bifidobacterium")
@@ -299,6 +301,8 @@ bifido_marker_tree = read.tree("../../../220303_Analysis_New/data_w_dk//analyses
 bifido_gyrb_tree= read.tree("../../../220303_Analysis_New/data_w_dk//analyses/gyrb/GreatApes.bifido.gyrb.filt.aln.faa.treefile") %>% ape::root(phy=., outgroup="outgroup",resolve.root=T) 
 #bifido_moeller = read.tree("../../../220303_Analysis_New/data_w_dk//analyses/gyrb/GyrB.GreatApes_and_Moeller.aln.fna.treefile") %>% root(outgroup="outgroup", resolve.root=T)
 bifido_moeller = read.tree("../../../220303_Analysis_New/data_w_dk//analyses/gyrb/GreatApes.bifido.gyrb.filt+moeller.aln.faa.treefile") %>% root(outgroup="outgroup", resolve.root=T)
+
+
 ```
 
 

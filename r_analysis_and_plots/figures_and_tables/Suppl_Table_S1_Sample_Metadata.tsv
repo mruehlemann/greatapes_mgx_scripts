@@ -1,0 +1,225 @@
+sample	host	host_genus	host_long	host_tree	col	location	run_accession	sample_accession	study_accession
+E07139-L1	HsG	Homo	Homo sapiens (GER)	Homo_sapiens	darkblue	GER	SRR13434720	SAMN17312139	PRJNA692042
+E07145-L1	HsG	Homo	Homo sapiens (GER)	Homo_sapiens	darkblue	GER	SRR13434719	SAMN17312140	PRJNA692042
+E07146-L1	HsG	Homo	Homo sapiens (GER)	Homo_sapiens	darkblue	GER	SRR13434608	SAMN17312141	PRJNA692042
+E07147-L1	HsG	Homo	Homo sapiens (GER)	Homo_sapiens	darkblue	GER	SRR13434581	SAMN17312142	PRJNA692042
+E07148-L1	HsG	Homo	Homo sapiens (GER)	Homo_sapiens	darkblue	GER	SRR13434570	SAMN17312143	PRJNA692042
+E07150-L1	HsG	Homo	Homo sapiens (GER)	Homo_sapiens	darkblue	GER	SRR13434559	SAMN17312144	PRJNA692042
+E07152-L1	HsG	Homo	Homo sapiens (GER)	Homo_sapiens	darkblue	GER	SRR13434548	SAMN17312145	PRJNA692042
+E07154-L1	HsG	Homo	Homo sapiens (GER)	Homo_sapiens	darkblue	GER	SRR13434537	SAMN17312146	PRJNA692042
+E07160-L1	HsG	Homo	Homo sapiens (GER)	Homo_sapiens	darkblue	GER	SRR13434526	SAMN17312147	PRJNA692042
+E07172-L1	HsG	Homo	Homo sapiens (GER)	Homo_sapiens	darkblue	GER	SRR13434515	SAMN17312148	PRJNA692042
+E07175-L1	HsG	Homo	Homo sapiens (GER)	Homo_sapiens	darkblue	GER	SRR13434718	SAMN17312149	PRJNA692042
+E07178-L1	HsG	Homo	Homo sapiens (GER)	Homo_sapiens	darkblue	GER	SRR13434707	SAMN17312150	PRJNA692042
+E07180-L1	HsG	Homo	Homo sapiens (GER)	Homo_sapiens	darkblue	GER	SRR13434696	SAMN17312151	PRJNA692042
+E07182-L1	HsG	Homo	Homo sapiens (GER)	Homo_sapiens	darkblue	GER	SRR13434685	SAMN17312152	PRJNA692042
+E07183-L1	HsG	Homo	Homo sapiens (GER)	Homo_sapiens	darkblue	GER	SRR13434674	SAMN17312153	PRJNA692042
+E07184-L1	HsG	Homo	Homo sapiens (GER)	Homo_sapiens	darkblue	GER	SRR13434663	SAMN17312154	PRJNA692042
+E07187-L1	HsG	Homo	Homo sapiens (GER)	Homo_sapiens	darkblue	GER	SRR13434652	SAMN17312155	PRJNA692042
+E07188-L1	HsG	Homo	Homo sapiens (GER)	Homo_sapiens	darkblue	GER	SRR13434641	SAMN17312156	PRJNA692042
+E07189-L1	HsG	Homo	Homo sapiens (GER)	Homo_sapiens	darkblue	GER	SRR13434630	SAMN17312157	PRJNA692042
+E07190-L1	HsG	Homo	Homo sapiens (GER)	Homo_sapiens	darkblue	GER	SRR13434619	SAMN17312158	PRJNA692042
+E07192-L1	HsG	Homo	Homo sapiens (GER)	Homo_sapiens	darkblue	GER	SRR13434607	SAMN17312159	PRJNA692042
+E07193-L1	HsG	Homo	Homo sapiens (GER)	Homo_sapiens	darkblue	GER	SRR13434596	SAMN17312160	PRJNA692042
+E07196-L1	HsG	Homo	Homo sapiens (GER)	Homo_sapiens	darkblue	GER	SRR13434589	SAMN17312161	PRJNA692042
+E07197-L1	HsG	Homo	Homo sapiens (GER)	Homo_sapiens	darkblue	GER	SRR13434588	SAMN17312162	PRJNA692042
+G02605-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434523	SAMN17312217	PRJNA692042
+G02606-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434522	SAMN17312220	PRJNA692042
+G02607-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434521	SAMN17312225	PRJNA692042
+G02608-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434520	SAMN17312229	PRJNA692042
+G02609-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434519	SAMN17312232	PRJNA692042
+G02610-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434518	SAMN17312248	PRJNA692042
+G02611-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434517	SAMN17312251	PRJNA692042
+G02612-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434516	SAMN17312253	PRJNA692042
+G02613-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434514	SAMN17312254	PRJNA692042
+G02614-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434513	SAMN17312265	PRJNA692042
+G02615-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434512	SAMN17312267	PRJNA692042
+G02616-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434511	SAMN17312221	PRJNA692042
+G02617-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434510	SAMN17312226	PRJNA692042
+G02619-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434509	SAMN17312257	PRJNA692042
+G02620-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434508	SAMN17312216	PRJNA692042
+G02621-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434507	SAMN17312219	PRJNA692042
+G02622-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434506	SAMN17312228	PRJNA692042
+G02623-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434505	SAMN17312231	PRJNA692042
+G02624-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434717	SAMN17312234	PRJNA692042
+G02625-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434716	SAMN17312238	PRJNA692042
+G02626-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434715	SAMN17312240	PRJNA692042
+G02627-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434714	SAMN17312246	PRJNA692042
+G02628-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434713	SAMN17312259	PRJNA692042
+G02629-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434712	SAMN17312260	PRJNA692042
+G02630-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434711	SAMN17312222	PRJNA692042
+G02631-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434710	SAMN17312223	PRJNA692042
+G02632-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434709	SAMN17312224	PRJNA692042
+G02633-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434708	SAMN17312236	PRJNA692042
+G02634-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434706	SAMN17312262	PRJNA692042
+G02635-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434705	SAMN17312266	PRJNA692042
+G02636-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434704	SAMN17312245	PRJNA692042
+G02637-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434703	SAMN17312215	PRJNA692042
+G02638-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434702	SAMN17312218	PRJNA692042
+G02639-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434701	SAMN17312235	PRJNA692042
+G02640-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434700	SAMN17312237	PRJNA692042
+G02641-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434699	SAMN17312242	PRJNA692042
+G02642-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434698	SAMN17312243	PRJNA692042
+G02643-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434697	SAMN17312244	PRJNA692042
+G02644-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434695	SAMN17312255	PRJNA692042
+G02645-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434694	SAMN17312256	PRJNA692042
+G02646-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434693	SAMN17312261	PRJNA692042
+G02647-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434692	SAMN17312263	PRJNA692042
+G02648-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434691	SAMN17312264	PRJNA692042
+G02649-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434690	SAMN17312268	PRJNA692042
+G02651-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434689	SAMN17312250	PRJNA692042
+G02652-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434688	SAMN17312230	PRJNA692042
+G02653-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434687	SAMN17312239	PRJNA692042
+G02654-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434686	SAMN17312233	PRJNA692042
+H07597-L1	HsA2	Homo	Homo sapiens (DRC)	Homo_sapiens	lightblue3	DRC	SRR13434684	SAMN17312071	PRJNA692042
+H07598-L1	HsA2	Homo	Homo sapiens (DRC)	Homo_sapiens	lightblue3	DRC	SRR13434683	SAMN17312077	PRJNA692042
+H07599-L1	HsA2	Homo	Homo sapiens (DRC)	Homo_sapiens	lightblue3	DRC	SRR13434682	SAMN17312080	PRJNA692042
+H07600-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434681	SAMN17312258	PRJNA692042
+H07602-L1	Gberingei	Gorilla	Gorilla beringei beringei	Gorilla_beringei	#0B6623	UGA	SRR13434680	SAMN17312168	PRJNA692042
+H07603-L1	HsA1	Homo	Homo sapiens (CIV)	Homo_sapiens	lightblue	CIV	SRR13434679	SAMN17312058	PRJNA692042
+H07604-L1	HsA1	Homo	Homo sapiens (CIV)	Homo_sapiens	lightblue	CIV	SRR13434678	SAMN17312064	PRJNA692042
+H07605-L1	Ggorilla	Gorilla	Gorilla gorilla gorilla (GAB)	Gorilla_gorilla_gorilla	#29AB87	GAB	SRR13434677	SAMN17312176	PRJNA692042
+H07606-L1	Ptschw	Pan	Pan troglodytes schweinfurthii	Pan_troglodytes_schweinfurthii	#fd8d3c	UGA	SRR13434676	SAMN17312199	PRJNA692042
+H07607-L1	Ppan	Pan	Pan paniscus	Pan_paniscus	#bd0026	DRC	SRR13434675	SAMN17312189	PRJNA692042
+H07608-L1	Pttrog	Pan	Pan troglodytes troglodytes (GAB)	Pan_troglodytes_troglodytes	#fecc5c	GAB	SRR13434673	SAMN17312208	PRJNA692042
+H07611-L1	Ppan	Pan	Pan paniscus	Pan_paniscus	#bd0026	DRC	SRR13434671	SAMN17312190	PRJNA692042
+H07612-L1	Pttrog	Pan	Pan troglodytes troglodytes (GAB)	Pan_troglodytes_troglodytes	#fecc5c	GAB	SRR13434670	SAMN17312214	PRJNA692042
+H07613-L1	Ggorilla	Gorilla	Gorilla gorilla gorilla (GAB)	Gorilla_gorilla_gorilla	#29AB87	GAB	SRR13434669	SAMN17312180	PRJNA692042
+H07614-L1	Ggorilla	Gorilla	Gorilla gorilla gorilla (GAB)	Gorilla_gorilla_gorilla	#29AB87	GAB	SRR13434668	SAMN17312175	PRJNA692042
+H07615-L1	Ptschw	Pan	Pan troglodytes schweinfurthii	Pan_troglodytes_schweinfurthii	#fd8d3c	UGA	SRR13434667	SAMN17312203	PRJNA692042
+H07616-L1	Gberingei	Gorilla	Gorilla beringei beringei	Gorilla_beringei	#0B6623	UGA	SRR13434666	SAMN17312166	PRJNA692042
+H07617-L1	Gberingei	Gorilla	Gorilla beringei beringei	Gorilla_beringei	#0B6623	UGA	SRR13434665	SAMN17312170	PRJNA692042
+H07618-L1	HsA1	Homo	Homo sapiens (CIV)	Homo_sapiens	lightblue	CIV	SRR13434664	SAMN17312070	PRJNA692042
+H07619-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434662	SAMN17312252	PRJNA692042
+H07620-L1	HsA2	Homo	Homo sapiens (DRC)	Homo_sapiens	lightblue3	DRC	SRR13434661	SAMN17312075	PRJNA692042
+H07621-L1	HsA2	Homo	Homo sapiens (DRC)	Homo_sapiens	lightblue3	DRC	SRR13434660	SAMN17312073	PRJNA692042
+H07622-L1	HsA1	Homo	Homo sapiens (CIV)	Homo_sapiens	lightblue	CIV	SRR13434659	SAMN17312069	PRJNA692042
+H07623-L1	HsA1	Homo	Homo sapiens (CIV)	Homo_sapiens	lightblue	CIV	SRR13434658	SAMN17312059	PRJNA692042
+H07624-L1	HsA1	Homo	Homo sapiens (CIV)	Homo_sapiens	lightblue	CIV	SRR13434657	SAMN17312057	PRJNA692042
+H07625-L1	HsA1	Homo	Homo sapiens (CIV)	Homo_sapiens	lightblue	CIV	SRR13434656	SAMN17312068	PRJNA692042
+H07626-L1	Gberingei	Gorilla	Gorilla beringei beringei	Gorilla_beringei	#0B6623	UGA	SRR13434655	SAMN17312163	PRJNA692042
+H07627-L1	Gberingei	Gorilla	Gorilla beringei beringei	Gorilla_beringei	#0B6623	UGA	SRR13434654	SAMN17312169	PRJNA692042
+H07628-L1	HsA1	Homo	Homo sapiens (CIV)	Homo_sapiens	lightblue	CIV	SRR13434653	SAMN17312062	PRJNA692042
+H07629-L1	HsA1	Homo	Homo sapiens (CIV)	Homo_sapiens	lightblue	CIV	SRR13434651	SAMN17312067	PRJNA692042
+H07630-L1	HsA1	Homo	Homo sapiens (CIV)	Homo_sapiens	lightblue	CIV	SRR13434650	SAMN17312065	PRJNA692042
+H07631-L1	Gberingei	Gorilla	Gorilla beringei beringei	Gorilla_beringei	#0B6623	UGA	SRR13434649	SAMN17312171	PRJNA692042
+H07633-L1	Gberingei	Gorilla	Gorilla beringei beringei	Gorilla_beringei	#0B6623	UGA	SRR13434647	SAMN17312172	PRJNA692042
+H07634-L1	Gberingei	Gorilla	Gorilla beringei beringei	Gorilla_beringei	#0B6623	UGA	SRR13434646	SAMN17312164	PRJNA692042
+H07635-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434645	SAMN17312249	PRJNA692042
+H07636-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434644	SAMN17312247	PRJNA692042
+H07637-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434643	SAMN17312227	PRJNA692042
+H07638-L1	HsA2	Homo	Homo sapiens (DRC)	Homo_sapiens	lightblue3	DRC	SRR13434642	SAMN17312061	PRJNA692042
+H07639-L1	HsA2	Homo	Homo sapiens (DRC)	Homo_sapiens	lightblue3	DRC	SRR13434640	SAMN17312060	PRJNA692042
+H07640-L1	HsA2	Homo	Homo sapiens (DRC)	Homo_sapiens	lightblue3	DRC	SRR13434639	SAMN17312079	PRJNA692042
+H07641-L1	HsA2	Homo	Homo sapiens (DRC)	Homo_sapiens	lightblue3	DRC	SRR13434638	SAMN17312078	PRJNA692042
+H07642-L1	HsA2	Homo	Homo sapiens (DRC)	Homo_sapiens	lightblue3	DRC	SRR13434637	SAMN17312076	PRJNA692042
+H07643-L1	HsA2	Homo	Homo sapiens (DRC)	Homo_sapiens	lightblue3	DRC	SRR13434636	SAMN17312074	PRJNA692042
+H07644-L1	HsA2	Homo	Homo sapiens (DRC)	Homo_sapiens	lightblue3	DRC	SRR13434635	SAMN17312072	PRJNA692042
+H07645-L1	Ptver	Pan	Pan troglodytes verus	Pan_troglodytes_verus	#f03b20	CIV	SRR13434634	SAMN17312241	PRJNA692042
+H07646-L1	Gberingei	Gorilla	Gorilla beringei beringei	Gorilla_beringei	#0B6623	UGA	SRR13434633	SAMN17312165	PRJNA692042
+H07647-L1	Ptschw	Pan	Pan troglodytes schweinfurthii	Pan_troglodytes_schweinfurthii	#fd8d3c	UGA	SRR13434632	SAMN17312202	PRJNA692042
+H07648-L1	Ptschw	Pan	Pan troglodytes schweinfurthii	Pan_troglodytes_schweinfurthii	#fd8d3c	UGA	SRR13434631	SAMN17312197	PRJNA692042
+H07649-L1	Ptschw	Pan	Pan troglodytes schweinfurthii	Pan_troglodytes_schweinfurthii	#fd8d3c	UGA	SRR13434629	SAMN17312201	PRJNA692042
+H07650-L1	Ggorilla	Gorilla	Gorilla gorilla gorilla (GAB)	Gorilla_gorilla_gorilla	#29AB87	GAB	SRR13434628	SAMN17312179	PRJNA692042
+H07651-L1	Ggorilla	Gorilla	Gorilla gorilla gorilla (GAB)	Gorilla_gorilla_gorilla	#29AB87	GAB	SRR13434627	SAMN17312177	PRJNA692042
+H07652-L1	Ggorilla	Gorilla	Gorilla gorilla gorilla (GAB)	Gorilla_gorilla_gorilla	#29AB87	GAB	SRR13434626	SAMN17312178	PRJNA692042
+H07653-L1	Ppan	Pan	Pan paniscus	Pan_paniscus	#bd0026	DRC	SRR13434625	SAMN17312187	PRJNA692042
+H07654-L1	Ppan	Pan	Pan paniscus	Pan_paniscus	#bd0026	DRC	SRR13434624	SAMN17312185	PRJNA692042
+H07655-L1	Ppan	Pan	Pan paniscus	Pan_paniscus	#bd0026	DRC	SRR13434623	SAMN17312184	PRJNA692042
+H07656-L1	Pttrog	Pan	Pan troglodytes troglodytes (GAB)	Pan_troglodytes_troglodytes	#fecc5c	GAB	SRR13434622	SAMN17312211	PRJNA692042
+H07657-L1	Pttrog	Pan	Pan troglodytes troglodytes (GAB)	Pan_troglodytes_troglodytes	#fecc5c	GAB	SRR13434621	SAMN17312209	PRJNA692042
+H07658-L1	Pttrog	Pan	Pan troglodytes troglodytes (GAB)	Pan_troglodytes_troglodytes	#fecc5c	GAB	SRR13434620	SAMN17312206	PRJNA692042
+H07659-L1	Ppan	Pan	Pan paniscus	Pan_paniscus	#bd0026	DRC	SRR13434618	SAMN17312193	PRJNA692042
+H07660-L1	Ppan	Pan	Pan paniscus	Pan_paniscus	#bd0026	DRC	SRR13434617	SAMN17312186	PRJNA692042
+H07661-L1	Ptschw	Pan	Pan troglodytes schweinfurthii	Pan_troglodytes_schweinfurthii	#fd8d3c	UGA	SRR13434616	SAMN17312204	PRJNA692042
+H07662-L1	Ggorilla	Gorilla	Gorilla gorilla gorilla (GAB)	Gorilla_gorilla_gorilla	#29AB87	GAB	SRR13434615	SAMN17312181	PRJNA692042
+H07663-L1	Ptschw	Pan	Pan troglodytes schweinfurthii	Pan_troglodytes_schweinfurthii	#fd8d3c	UGA	SRR13434614	SAMN17312200	PRJNA692042
+H07665-L1	Pttrog	Pan	Pan troglodytes troglodytes (GAB)	Pan_troglodytes_troglodytes	#fecc5c	GAB	SRR13434612	SAMN17312210	PRJNA692042
+H07666-L1	Ppan	Pan	Pan paniscus	Pan_paniscus	#bd0026	DRC	SRR13434611	SAMN17312182	PRJNA692042
+H07667-L1	Ptschw	Pan	Pan troglodytes schweinfurthii	Pan_troglodytes_schweinfurthii	#fd8d3c	UGA	SRR13434610	SAMN17312196	PRJNA692042
+H07668-L1	Ppan	Pan	Pan paniscus	Pan_paniscus	#bd0026	DRC	SRR13434609	SAMN17312188	PRJNA692042
+H07670-L1	Ptschw	Pan	Pan troglodytes schweinfurthii	Pan_troglodytes_schweinfurthii	#fd8d3c	UGA	SRR13434606	SAMN17312205	PRJNA692042
+H07675-L1	Ptschw	Pan	Pan troglodytes schweinfurthii	Pan_troglodytes_schweinfurthii	#fd8d3c	UGA	SRR13434605	SAMN17312198	PRJNA692042
+H07676-L1	Ptschw	Pan	Pan troglodytes schweinfurthii	Pan_troglodytes_schweinfurthii	#fd8d3c	UGA	SRR13434604	SAMN17312194	PRJNA692042
+H07677-L1	Ptschw	Pan	Pan troglodytes schweinfurthii	Pan_troglodytes_schweinfurthii	#fd8d3c	UGA	SRR13434603	SAMN17312195	PRJNA692042
+H07678-L1	Ggorilla	Gorilla	Gorilla gorilla gorilla (GAB)	Gorilla_gorilla_gorilla	#29AB87	GAB	SRR13434602	SAMN17312174	PRJNA692042
+H07679-L1	Pttrog	Pan	Pan troglodytes troglodytes (GAB)	Pan_troglodytes_troglodytes	#fecc5c	GAB	SRR13434601	SAMN17312212	PRJNA692042
+H07681-L1	Ppan	Pan	Pan paniscus	Pan_paniscus	#bd0026	DRC	SRR13434600	SAMN17312192	PRJNA692042
+H07682-L1	Ppan	Pan	Pan paniscus	Pan_paniscus	#bd0026	DRC	SRR13434599	SAMN17312183	PRJNA692042
+H07683-L1	Ppan	Pan	Pan paniscus	Pan_paniscus	#bd0026	DRC	SRR13434598	SAMN17312191	PRJNA692042
+H07684-L1	Gberingei	Gorilla	Gorilla beringei beringei	Gorilla_beringei	#0B6623	UGA	SRR13434597	SAMN17312167	PRJNA692042
+H07685-L1	Gberingei	Gorilla	Gorilla beringei beringei	Gorilla_beringei	#0B6623	UGA	SRR13434595	SAMN17312173	PRJNA692042
+H07686-L1	HsA1	Homo	Homo sapiens (CIV)	Homo_sapiens	lightblue	CIV	SRR13434594	SAMN17312063	PRJNA692042
+H07687-L1	HsA1	Homo	Homo sapiens (CIV)	Homo_sapiens	lightblue	CIV	SRR13434593	SAMN17312066	PRJNA692042
+H07688-L1	Pttrog	Pan	Pan troglodytes troglodytes (GAB)	Pan_troglodytes_troglodytes	#fecc5c	GAB	SRR13434592	SAMN17312207	PRJNA692042
+H07689-L1	Pttrog	Pan	Pan troglodytes troglodytes (GAB)	Pan_troglodytes_troglodytes	#fecc5c	GAB	SRR13434591	SAMN17312213	PRJNA692042
+SRR8978220	Ggorilla2	Gorilla	Gorilla gorilla gorilla (CG)	Gorilla_gorilla_gorilla	#29AB87	CG	SRR8978220	SAMN11515219	PRJNA539933
+SRR8978221	Ggorilla2	Gorilla	Gorilla gorilla gorilla (CG)	Gorilla_gorilla_gorilla	#29AB87	CG	SRR8978221	SAMN11515218	PRJNA539933
+SRR8978223	Ggorilla2	Gorilla	Gorilla gorilla gorilla (CG)	Gorilla_gorilla_gorilla	#29AB87	CG	SRR8978223	SAMN11515216	PRJNA539933
+SRR8978224	Ggorilla2	Gorilla	Gorilla gorilla gorilla (CG)	Gorilla_gorilla_gorilla	#29AB87	CG	SRR8978224	SAMN11515215	PRJNA539933
+SRR8978225	Ggorilla2	Gorilla	Gorilla gorilla gorilla (CG)	Gorilla_gorilla_gorilla	#29AB87	CG	SRR8978225	SAMN11515214	PRJNA539933
+SRR8978226	Pttrog2	Pan	Pan troglodytes troglodytes (CG)	Pan_troglodytes_troglodytes	#fecc5c	CG	SRR8978226	SAMN11515213	PRJNA539933
+SRR8978227	Pttrog2	Pan	Pan troglodytes troglodytes (CG)	Pan_troglodytes_troglodytes	#fecc5c	CG	SRR8978227	SAMN11515212	PRJNA539933
+SRR8978232	Ggorilla2	Gorilla	Gorilla gorilla gorilla (CG)	Gorilla_gorilla_gorilla	#29AB87	CG	SRR8978232	SAMN11515221	PRJNA539933
+SRR8978233	Ggorilla2	Gorilla	Gorilla gorilla gorilla (CG)	Gorilla_gorilla_gorilla	#29AB87	CG	SRR8978233	SAMN11515220	PRJNA539933
+SRR8978254	Ggorilla2	Gorilla	Gorilla gorilla gorilla (CG)	Gorilla_gorilla_gorilla	#29AB87	CG	SRR8978254	SAMN11515217	PRJNA539933
+SRR8978295	Pttrog2	Pan	Pan troglodytes troglodytes (CG)	Pan_troglodytes_troglodytes	#fecc5c	CG	SRR8978295	SAMN11515210	PRJNA539933
+SRR8978296	Pttrog2	Pan	Pan troglodytes troglodytes (CG)	Pan_troglodytes_troglodytes	#fecc5c	CG	SRR8978296	SAMN11515211	PRJNA539933
+SRR8978299	Pttrog2	Pan	Pan troglodytes troglodytes (CG)	Pan_troglodytes_troglodytes	#fecc5c	CG	SRR8978299	SAMN11515202	PRJNA539933
+SRR8978300	Pttrog2	Pan	Pan troglodytes troglodytes (CG)	Pan_troglodytes_troglodytes	#fecc5c	CG	SRR8978300	SAMN11515203	PRJNA539933
+SRR8978301	Pttrog2	Pan	Pan troglodytes troglodytes (CG)	Pan_troglodytes_troglodytes	#fecc5c	CG	SRR8978301	SAMN11515204	PRJNA539933
+SRR8978302	Pttrog2	Pan	Pan troglodytes troglodytes (CG)	Pan_troglodytes_troglodytes	#fecc5c	CG	SRR8978302	SAMN11515205	PRJNA539933
+SRR8978304	Pttrog2	Pan	Pan troglodytes troglodytes (CG)	Pan_troglodytes_troglodytes	#fecc5c	CG	SRR8978304	SAMN11515207	PRJNA539933
+SRR8978319	Ggorilla2	Gorilla	Gorilla gorilla gorilla (CG)	Gorilla_gorilla_gorilla	#29AB87	CG	SRR8978319	SAMN11515238	PRJNA539933
+SRR8978320	Ggorilla2	Gorilla	Gorilla gorilla gorilla (CG)	Gorilla_gorilla_gorilla	#29AB87	CG	SRR8978320	SAMN11515229	PRJNA539933
+SRR8978321	Pttrog2	Pan	Pan troglodytes troglodytes (CG)	Pan_troglodytes_troglodytes	#fecc5c	CG	SRR8978321	SAMN11515206	PRJNA539933
+SRR8978322	Ggorilla2	Gorilla	Gorilla gorilla gorilla (CG)	Gorilla_gorilla_gorilla	#29AB87	CG	SRR8978322	SAMN11515225	PRJNA539933
+SRR8978323	Pttrog2	Pan	Pan troglodytes troglodytes (CG)	Pan_troglodytes_troglodytes	#fecc5c	CG	SRR8978323	SAMN11515199	PRJNA539933
+SRR8978334	Ggorilla2	Gorilla	Gorilla gorilla gorilla (CG)	Gorilla_gorilla_gorilla	#29AB87	CG	SRR8978334	SAMN11515228	PRJNA539933
+SRR8978354	Ggorilla2	Gorilla	Gorilla gorilla gorilla (CG)	Gorilla_gorilla_gorilla	#29AB87	CG	SRR8978354	SAMN11515226	PRJNA539933
+SRR8978356	Ggorilla2	Gorilla	Gorilla gorilla gorilla (CG)	Gorilla_gorilla_gorilla	#29AB87	CG	SRR8978356	SAMN11515223	PRJNA539933
+SRR8978360	Ggorilla2	Gorilla	Gorilla gorilla gorilla (CG)	Gorilla_gorilla_gorilla	#29AB87	CG	SRR8978360	SAMN11515222	PRJNA539933
+SRR8978363	Ggorilla2	Gorilla	Gorilla gorilla gorilla (CG)	Gorilla_gorilla_gorilla	#29AB87	CG	SRR8978363	SAMN11515240	PRJNA539933
+SRR8978364	Ggorilla2	Gorilla	Gorilla gorilla gorilla (CG)	Gorilla_gorilla_gorilla	#29AB87	CG	SRR8978364	SAMN11515241	PRJNA539933
+SRR8978370	Ggorilla2	Gorilla	Gorilla gorilla gorilla (CG)	Gorilla_gorilla_gorilla	#29AB87	CG	SRR8978370	SAMN11515227	PRJNA539933
+SRR8978371	Ggorilla2	Gorilla	Gorilla gorilla gorilla (CG)	Gorilla_gorilla_gorilla	#29AB87	CG	SRR8978371	SAMN11515239	PRJNA539933
+SRR8978372	Ggorilla2	Gorilla	Gorilla gorilla gorilla (CG)	Gorilla_gorilla_gorilla	#29AB87	CG	SRR8978372	SAMN11515236	PRJNA539933
+SRR8978373	Ggorilla2	Gorilla	Gorilla gorilla gorilla (CG)	Gorilla_gorilla_gorilla	#29AB87	CG	SRR8978373	SAMN11515237	PRJNA539933
+SRR8978406	Ggorilla2	Gorilla	Gorilla gorilla gorilla (CG)	Gorilla_gorilla_gorilla	#29AB87	CG	SRR8978406	SAMN11515231	PRJNA539933
+SRR8978407	Ggorilla2	Gorilla	Gorilla gorilla gorilla (CG)	Gorilla_gorilla_gorilla	#29AB87	CG	SRR8978407	SAMN11515230	PRJNA539933
+SRR8978442	Ggorilla2	Gorilla	Gorilla gorilla gorilla (CG)	Gorilla_gorilla_gorilla	#29AB87	CG	SRR8978442	SAMN11515234	PRJNA539933
+SRR8978445	Ggorilla2	Gorilla	Gorilla gorilla gorilla (CG)	Gorilla_gorilla_gorilla	#29AB87	CG	SRR8978445	SAMN11515235	PRJNA539933
+SRR8978446	Ggorilla2	Gorilla	Gorilla gorilla gorilla (CG)	Gorilla_gorilla_gorilla	#29AB87	CG	SRR8978446	SAMN11515232	PRJNA539933
+SRR8978449	Ggorilla2	Gorilla	Gorilla gorilla gorilla (CG)	Gorilla_gorilla_gorilla	#29AB87	CG	SRR8978449	SAMN11515233	PRJNA539933
+SRR8978458	Pttrog2	Pan	Pan troglodytes troglodytes (CG)	Pan_troglodytes_troglodytes	#fecc5c	CG	SRR8978458	SAMN11515197	PRJNA539933
+SRR8978459	Pttrog2	Pan	Pan troglodytes troglodytes (CG)	Pan_troglodytes_troglodytes	#fecc5c	CG	SRR8978459	SAMN11515196	PRJNA539933
+SRR8978461	Pttrog2	Pan	Pan troglodytes troglodytes (CG)	Pan_troglodytes_troglodytes	#fecc5c	CG	SRR8978461	SAMN11515198	PRJNA539933
+SRR8978467	Pttrog2	Pan	Pan troglodytes troglodytes (CG)	Pan_troglodytes_troglodytes	#fecc5c	CG	SRR8978467	SAMN11515201	PRJNA539933
+SRR8978468	Pttrog2	Pan	Pan troglodytes troglodytes (CG)	Pan_troglodytes_troglodytes	#fecc5c	CG	SRR8978468	SAMN11515200	PRJNA539933
+SRR8978484	Ggorilla2	Gorilla	Gorilla gorilla gorilla (CG)	Gorilla_gorilla_gorilla	#29AB87	CG	SRR8978484	SAMN11515224	PRJNA539933
+SRR8978503	Pttrog2	Pan	Pan troglodytes troglodytes (CG)	Pan_troglodytes_troglodytes	#fecc5c	CG	SRR8978503	SAMN11515208	PRJNA539933
+SRR8978504	Pttrog2	Pan	Pan troglodytes troglodytes (CG)	Pan_troglodytes_troglodytes	#fecc5c	CG	SRR8978504	SAMN11515209	PRJNA539933
+SID5462-1	HsD	Homo	Homo sapiens (DK)	Homo_sapiens	deepskyblue4	DK	SRR7989858	SAMN10093321	PRJNA491335
+SID5473-1	HsD	Homo	Homo sapiens (DK)	Homo_sapiens	deepskyblue4	DK	SRR7989932	SAMN10093349	PRJNA491335
+SID5457-1	HsD	Homo	Homo sapiens (DK)	Homo_sapiens	deepskyblue4	DK	SRR7989853	SAMN10093305	PRJNA491335
+SID5460-1	HsD	Homo	Homo sapiens (DK)	Homo_sapiens	deepskyblue4	DK	SRR7989821	SAMN10093313	PRJNA491335
+SID5433-1	HsD	Homo	Homo sapiens (DK)	Homo_sapiens	deepskyblue4	DK	SRR7989839	SAMN10093229	PRJNA491335
+SID5427-1	HsD	Homo	Homo sapiens (DK)	Homo_sapiens	deepskyblue4	DK	SRR7989982	SAMN10093217	PRJNA491335
+SID5438-1	HsD	Homo	Homo sapiens (DK)	Homo_sapiens	deepskyblue4	DK	SRR7989870	SAMN10093241	PRJNA491335
+SID5429-1	HsD	Homo	Homo sapiens (DK)	Homo_sapiens	deepskyblue4	DK	SRR7989811	SAMN10093225	PRJNA491335
+SID5451-1	HsD	Homo	Homo sapiens (DK)	Homo_sapiens	deepskyblue4	DK	SRR7989971	SAMN10093289	PRJNA491335
+SID5449-1	HsD	Homo	Homo sapiens (DK)	Homo_sapiens	deepskyblue4	DK	SRR7989997	SAMN10093281	PRJNA491335
+SID5428-1	HsD	Homo	Homo sapiens (DK)	Homo_sapiens	deepskyblue4	DK	SRR7989807	SAMN10093221	PRJNA491335
+SID5444-1	HsD	Homo	Homo sapiens (DK)	Homo_sapiens	deepskyblue4	DK	SRR7989916	SAMN10093265	PRJNA491335
+SID5420-1	HsD	Homo	Homo sapiens (DK)	Homo_sapiens	deepskyblue4	DK	SRR8097416	SAMN10281458	PRJNA491335
+SID5448-1	HsD	Homo	Homo sapiens (DK)	Homo_sapiens	deepskyblue4	DK	SRR7989928	SAMN10093277	PRJNA491335
+SID5450-1	HsD	Homo	Homo sapiens (DK)	Homo_sapiens	deepskyblue4	DK	SRR7989993	SAMN10093285	PRJNA491335
+SID5415-1	HsD	Homo	Homo sapiens (DK)	Homo_sapiens	deepskyblue4	DK	SRR7989923	SAMN10093193	PRJNA491335
+SID5461-1	HsD	Homo	Homo sapiens (DK)	Homo_sapiens	deepskyblue4	DK	SRR7989823	SAMN10093317	PRJNA491335
+SID5442-1	HsD	Homo	Homo sapiens (DK)	Homo_sapiens	deepskyblue4	DK	SRR7989885	SAMN10093257	PRJNA491335
+SID5413-1	HsD	Homo	Homo sapiens (DK)	Homo_sapiens	deepskyblue4	DK	SRR7989979	SAMN10093185	PRJNA491335
+SID5455-1	HsD	Homo	Homo sapiens (DK)	Homo_sapiens	deepskyblue4	DK	SRR7989849	SAMN10093301	PRJNA491335
+SID5443-1	HsD	Homo	Homo sapiens (DK)	Homo_sapiens	deepskyblue4	DK	SRR7989930	SAMN10093261	PRJNA491335
+SID5439-1	HsD	Homo	Homo sapiens (DK)	Homo_sapiens	deepskyblue4	DK	SRR7989874	SAMN10093245	PRJNA491335
+SID5466-1	HsD	Homo	Homo sapiens (DK)	Homo_sapiens	deepskyblue4	DK	SRR7989960	SAMN10093329	PRJNA491335
+SID5469-1	HsD	Homo	Homo sapiens (DK)	Homo_sapiens	deepskyblue4	DK	SRR7989940	SAMN10093341	PRJNA491335

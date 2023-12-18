@@ -1,0 +1,12 @@
+"group"	"group_name"	"num_kos"	"Z_mean"	"p.value"	"q.value"
+"md:M00159"	"V/A-type ATPase, prokaryotes"	9	11.1873520395288	3.23446631410969e-16	2.64255897862762e-13
+"path:map00190"	"Oxidative phosphorylation"	223	5.83474365321198	1.38883220304263e-08	1.13467590988583e-05
+"md:M00924"	"Cobalamin biosynthesis, anaerobic, uroporphyrinogen III => sirohydrochlorin => cobyrinate a,c-diamide"	22	3.58865314985005	2.38065115083539e-08	1.94499199023251e-05
+"path:map00860"	"Porphyrin metabolism"	139	3.51273482492903	5.08328796003505e-08	4.15304626334864e-05
+"md:M00045"	"Histidine degradation, histidine => N-formiminoglutamate => glutamate"	8	5.79451097919668	4.371592512698e-07	0.000357159108287427
+"path:map00010"	"Glycolysis / Gluconeogenesis"	106	1.81172570846652	5.20650550422424e-06	0.0042537149969512
+"md:M00846"	"Siroheme biosynthesis, glutamyl-tRNA => siroheme"	16	4.63599878048077	5.99308888112782e-06	0.00489635361588143
+"md:M00925"	"Cobalamin biosynthesis, aerobic, uroporphyrinogen III => precorrin 2 => cobyrinate a,c-diamide"	17	4.36251756076135	1.07444836503301e-05	0.00877824314231968
+"path:map00630"	"Glyoxylate and dicarboxylate metabolism"	101	1.94044721816923	3.59802783422488e-05	0.0293958874056173
+"path:map00260"	"Glycine, serine and threonine metabolism"	109	1.74035942898182	5.871751745542e-05	0.0479722117610782
+"path:map01230"	"Biosynthesis of amino acids"	238	1.40529116403796	6.05169044745912e-05	0.049442310955741

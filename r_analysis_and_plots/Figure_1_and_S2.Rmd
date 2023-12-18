@@ -112,7 +112,7 @@ if(file.exists(salmon_rare_pd_file)){
 ### used PD at 1 Million Reads
 phlyodiv=salmon_rare_pd %>% rownames_to_column("sid") %>% separate(sid, into = c("sample","depth","i"), sep="_") %>% mutate(depth=as.numeric(depth)) %>% filter(depth==1000000)
 
-fig1_panel_a = phlyodiv %>% group_by(sample) %>% summarise(PD=mean(PD)) %>% left_join(sample_meta) %>% mutate(host2=ifelse(host_tree=="Homo_sapiens", host, gsub("[0-9]","",host))) %>% ggplot(aes(x=host2, y=PD, fill=host2, shape=host, group=host2)) + geom_boxplot(outlier.shape = NA) + geom_jitter(width=.2, size=2) + theme(axis.text.x = element_text(angle=45, hjust=1), axis.title = element_text(size=10)) + scale_fill_manual(values=colset$col, breaks=colset$host) + scale_y_continuous(limits=c(0,75), expand=c(0,0)) + theme(legend.position = "none", axis.text.x = element_blank(), axis.ticks.x=element_blank()) + ylab("PhyloDiv @ 1 Mio Reads") + xlab("Host") + scale_shape_manual(values=c(22,21,24,23,21)[colset$shape], breaks=colset$host) #+ ggpubr::stat_compare_means(comparisons = combn(colset$host_long, 2, simplify = F), hide.ns = T)
+fig1_panel_a = phlyodiv %>% group_by(sample) %>% summarise(PD=mean(PD)) %>% left_join(sample_meta) %>% mutate(host2=ifelse(host_tree=="Homo_sapiens", host, gsub("[0-9]","",host))) %>% ggplot(aes(x=host2, y=PD, fill=host2, shape=host, group=host2)) + geom_boxplot(outlier.shape = NA) + geom_jitter(width=.2, size=1) + theme(axis.text.x = element_text(angle=45, hjust=1), axis.title = element_text(size=10)) + scale_fill_manual(values=colset$col, breaks=colset$host) + scale_y_continuous(limits=c(0,75), expand=c(0,0)) + theme(legend.position = "none", axis.text.x = element_blank(), axis.ticks.x=element_blank()) + ylab("PhyloDiv @ 1 Mio Reads") + xlab("Host") + scale_shape_manual(values=c(22,21,24,23,21)[colset$shape], breaks=colset$host) #+ ggpubr::stat_compare_means(comparisons = combn(colset$host_long, 2, simplify = F), hide.ns = T)
 
 pd_sign = fig1_panel_a$data %>%  ggpubr::compare_means(data=., PD ~ host2)
 
@@ -348,13 +348,13 @@ saveRDS(sgb_share_rand, sgb_share_rand_file)
 
 panel_d_tree = ggtree(host_tree3, size=1)  %>% ggtree::rotate(16) %>% ggtree::rotate(17) 
 panel_d_tree$data = panel_d_tree$data %>% left_join(colset %>% mutate(label = case_when(host=="HsA1" ~ "Homo_sapiensA", host=="HsA2" ~ "Homo_sapiensB", host=="HsD" ~ "Homo_sapiensC", T ~ host_tree)))
-panel_d_tree = panel_d_tree + geom_tippoint(aes(col=host, shape=host), size=5) + scale_color_manual(values=colset$col, breaks=colset$host) +
+panel_d_tree = panel_d_tree + geom_tippoint(aes(col=host, shape=host), size=3) + scale_color_manual(values=colset$col, breaks=colset$host) +
      scale_shape_manual(values=c(15:19)[colset$shape], breaks=colset$host) + theme_nothing() + theme(legend.position = "none") + scale_x_continuous(expand=c(0.5,.5))
 
 panel_d_heatmap=sgb_share_rand %>% filter(!is.na(n_rel)) %>% left_join(sgb_share) %>% mutate(gt = n_rel <= mean_n, lt = n_rel >= mean_n) %>% group_by(ref_host, host2) %>% summarise(p_lt=1 - ((sum(lt)))/(n()+1), p_gt=1 -((sum(gt)))/(n()+1)) %>% left_join(sgb_share) %>% 
   ggplot(aes(x=host2, y=ref_host, alpha=mean_n, fill=ref_host)) + geom_tile() + scale_fill_manual(values=colset$col, breaks=colset$host) + scale_alpha(range=c(0,1)) + 
-  geom_text(aes(label = ifelse(p_gt < 0.05, paste0(signif(p_gt,1),sprintf('\u2191')), "")), alpha=1, size=3) + 
-  geom_text(aes(label = ifelse(p_lt < 0.05, paste0(signif(p_lt,1),sprintf('\u2193')), "")), alpha=1, size=3) + 
+  geom_text(aes(label = ifelse(p_gt < 0.05, paste0(signif(p_gt,1),sprintf("\u2191")), "")), alpha=1, size=2, family="Arial") + 
+  geom_text(aes(label = ifelse(p_lt < 0.05, paste0(signif(p_lt,1),sprintf("\u2193")), "")), alpha=1, size=2, family="Arial") + 
   theme_nothing() + theme(legend.position="none")
 
 panel_d_bottom = colset %>% filter(!host %in% c("Ggorilla2","Pttrog2")) %>% ggplot(aes(x=host, y=1, col=host, shape=host)) + geom_point(size=5) + 
@@ -365,7 +365,7 @@ panel_d_bottom = colset %>% filter(!host %in% c("Ggorilla2","Pttrog2")) %>% ggpl
 
 #host_tree2 = host_tree %>% bind.tip(tree=., tip.label="Homo_sapiensA", where=which(host_tree$tip.label=="Homo_sapiens")) %>% bind.tip(tree=., tip.label="Homo_sapiensB", where=which(.$tip.label=="Homo_sapiensA"))
 
-fig1_panel_d=plot_grid(plot_grid(panel_d_tree) + theme(plot.margin = unit(c(0,0,0,.5),"cm")), panel_d_heatmap+ theme(plot.margin = unit(c(0,0,0,0),"cm")), NULL, panel_d_bottom + theme(plot.margin = unit(c(0,0,0,0),"cm") ), rel_widths=c(.2,.8), rel_heights = c(.95,.1)) 
+fig1_panel_d=plot_grid(plot_grid(panel_d_tree) + theme(plot.margin = unit(c(0,0,0,.5),"cm")), panel_d_heatmap+ theme(plot.margin = unit(c(0,0,0,0),"cm")), NULL, panel_d_bottom + theme(plot.margin = unit(c(0,0,0,0),"cm") ), rel_widths=c(.3,.7), rel_heights = c(.95,.1)) 
 
 
 ```
@@ -385,15 +385,26 @@ fig1_left = cowplot::plot_grid(fig1_panel_a + theme(plot.margin = unit(c(1, 0.4,
 
 plot(fig1_left)
 
-fig1_legend = get_legend(fig1_panel_b + guides(colour = guide_legend(ncol = 1, title="",byrow = TRUE), shape=guide_legend(ncol = 1, title="",byrow = TRUE)) + theme(legend.spacing.y = unit(0.1, 'cm') ,legend.position = "bottom", legend.justification = "center", legend.text = element_text(size=10), legend.key.size = unit(0.2, "cm")))
+fig1_legend = get_legend(fig1_panel_b + guides(colour = guide_legend(ncol = 1, title="",byrow = TRUE), shape=guide_legend(ncol = 1, title="",byrow = TRUE)) + theme(legend.spacing.y = unit(0.1, 'cm') ,legend.position = "bottom", legend.justification = "center", legend.text = element_text(size=7), legend.key.size = unit(0.2, "cm")))
 
 fig1_new=cowplot::plot_grid(
-    cowplot::plot_grid(fig1_panel_a, fig1_panel_b +theme(legend.position = "none"), fig1_legend, ncol=3, labels=c("a","b"), rel_widths = c(.3,.4,.3)),
-    cowplot::plot_grid(fig1_panel_c, fig1_panel_d, ncol=2, labels=c("c","d"), rel_widths=c(.45,.55)),
+    cowplot::plot_grid(fig1_panel_a + theme(axis.title = element_text(size=7), axis.text=element_text(size=6)), 
+                       fig1_panel_b +theme(legend.position = "none") + theme(axis.title = element_text(size=7), axis.text=element_text(size=6)), 
+                       fig1_legend, ncol=3, labels=c("a","b"), rel_widths = c(.3,.4,.3)),
+    cowplot::plot_grid(fig1_panel_c, fig1_panel_d, ncol=2, labels=c("c","d"), rel_widths=c(.4,.6)),
     ncol=1
     )
 
 ggsave(filename = "figures_and_tables/Figure_1_new.png",fig1_new, width = 10, height=7.5, bg="white")
+
+library(Cairo)
+
+ggsave(filename = "figures_and_tables/Figure_1_pub.pdf",fig1_new, width = 180, height=130, units = "mm", bg="white", device=cairo_pdf)
+
+
+grDevices::cairo_pdf("example.pdf")
+print(fig1_new)
+dev.off()
 
 ```
 

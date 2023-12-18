@@ -153,15 +153,15 @@ meta_plot_data = meta_plot_data %>%
 panel_a = meta_plot_data %>%
   ggplot(aes(x=plot_name2, y=-log10(pval), col=phylum)) + 
   geom_point(aes(shape=ifelse(tax=="META","META","TAX"), size=ifelse(tax=="META",2,1), alpha=ifelse(tax=="META",2,1))) +
-  scale_size(range = c(1,2.5)) + scale_alpha(range = c(.3,1)) + 
+  scale_size(range = c(.5,1)) + scale_alpha(range = c(.3,1)) + 
   geom_point(data=data.frame(plot_name2=meta_plot_data$plot_name[1], pval=1, tax="", phylum=""))  +
   scale_color_manual(values=c("#FF8C00","blue","white", phylumcols_df$col, "white"), breaks=c("NHA","Human", "", phylumcols_df$phylum)) + 
-  guides(size="none", shape="none") + theme(legend.position = "bottom", axis.text.y = element_text(size=8)) + 
+  guides(size="none", shape="none") + theme(legend.position = "bottom") + 
   guides(colour = guide_legend(nrow = 3, title=""), alpha = "none") + 
   ylab("")  + xlab("Function (KO)") + ylab("-log10(P)") + scale_y_continuous(expand=c(0,0)) + 
-  theme(axis.text.x = element_blank()) +
+  theme(axis.text.x = element_blank(), axis.text = element_text(size=5),axis.title = element_text(size=7), legend.text = element_text(size=7)) +
   scale_shape_manual(values=c(18,16)) + 
-  ggrepel::geom_label_repel(data = . %>% filter(tax=="META") %>% group_by(sign(Zscore)) %>% slice_max(abs(Zscore), n=5), aes(label=plot_name), show.legend = F, ylim = c(5,35), size=3, box.padding = unit(.2,"cm") )
+  ggrepel::geom_label_repel(data = . %>% filter(tax=="META") %>% group_by(sign(Zscore)) %>% slice_max(abs(Zscore), n=5), aes(label=plot_name), show.legend = F, ylim = c(5,35), size=1.8, box.padding = unit(.01,"cm") )
 
 panel_a
 
@@ -205,11 +205,11 @@ panel_b = prevo_annot %>%
   ggplot(aes(x=H_prev, y=N_prev, col=as.character(sign(Zscore)), shape=as.factor(qval<0.05))) +
   geom_point(aes(alpha=abs(Zscore))) + scale_shape_manual(values=c(21,16)) +
   coord_fixed() +
-  ggrepel::geom_label_repel(data = . %>% mutate(dir=(Zscore>0)) %>% group_by(dir) %>% slice_max(abs(Zscore), n = 5), aes(label=gene), nudge_y = .1, min.segment.length = 0) +
+  ggrepel::geom_label_repel(data = . %>% mutate(dir=(Zscore>0)) %>% group_by(dir) %>% slice_max(abs(Zscore), n = 5), aes(label=gene), nudge_y = .1, min.segment.length = 0, size=1.8) +
   scale_y_continuous(limits=c(0,1),  breaks=c(0,0.5,1)) +
   scale_x_continuous(limits=c(0,1), breaks=c(0,0.5,1)) +
   xlab("Prevalence - Human") + ylab("Prevalence - NHA")  +
-  scale_color_manual(values=c("#FF8C00","white","blue")) + theme(legend.position = "none") +
+  scale_color_manual(values=c("#FF8C00","white","blue")) + theme(legend.position = "none", axis.text = element_text(size=5), axis.title = element_text(size=6)) +
   geom_segment(x=0, xend=1, y=0, yend=1, col="lightgrey", lty=2)
 
 
@@ -220,6 +220,7 @@ panel_b = prevo_annot %>%
 ```{r}
 
 gg_spe = ggtree(spe_tree %>% drop.tip("Outgroup")) 
+gg_spe$data$x = -gg_spe$data$x
 gg_spe$data = gg_spe$data %>% 
   left_join(fullset %>% filter(newid %in% spe_tree$tip.label, host_group!="O") %>% 
   select(newid, mag_id, host_group, species) %>% 
@@ -228,10 +229,10 @@ gg_spe$data = gg_spe$data %>%
   mutate(cyda = label %in% (fullset %>% filter(Preferred_name == "cydA") %>% pull(newid)))
 
 #gg_spe = gg_spe + geom_tippoint(aes(col=host_group, shape=cyda)) + layout_dendrogram() + scale_color_manual(values=c("#29AB87", "blue","#FF8C00")) + scale_shape_manual(values=c(21,16))
-gg_spe = gg_spe + geom_tippoint(aes(col=host_group, shape=cyda), size=2) + scale_color_manual(values=c("#29AB87", "blue","#FF8C00")) + scale_shape_manual(values=c(21,16))
+gg_spe = gg_spe + geom_tippoint(aes(col=host_group, shape=cyda), size=0.5) + scale_color_manual(values=c("#29AB87", "blue","#FF8C00")) + scale_shape_manual(values=c(21,16))
 
 events_spe_coords = events %>% filter(V1=="speciation") %>% left_join(gg_spe$data  %>% select(V3=label, x, y))
-gg_spe = gg_spe + geom_point(data = events_spe_coords %>% filter(n_rel >= .5), col="black", aes(size=n_rel)) + scale_size(range=c(0.1,1))
+gg_spe = gg_spe + geom_point(data = events_spe_coords %>% filter(n_rel >= .5), col="black", aes(size=n_rel)) + scale_size(range=c(0.1,0.5))
 
 events_rec_coords = events %>% filter(V1=="transfer") %>% group_by(V4) %>% summarise(n2=sum(n)) %>% mutate(n_rel=n2/1000) %>% left_join(gg_spe$data  %>% select(V4=label, x, y)) 
 gg_spe = gg_spe + geom_segment(data = events_rec_coords %>% filter(n_rel >= .5), col="red", aes(x=x+.01, xend=x+.005,y=y,yend=y), arrow=arrow(length = unit(0.1,"cm"))) + scale_size(range=c(0.1,1))
@@ -239,18 +240,22 @@ gg_spe = gg_spe + geom_segment(data = events_rec_coords %>% filter(n_rel >= .5),
 
 
 events_tran_coords = events %>% filter(V1=="transfer") %>% left_join(gg_spe$data  %>% select(V3=label, x, y)) %>% left_join(gg_spe$data  %>% select(V4=label, x_end=x, y_end=y))
-gg_spe = gg_spe + geom_curve(data=events_tran_coords %>% filter(n_rel >= .5), aes(x=x,y=y, xend=x_end,yend=y_end, alpha=n_rel, linewidth=n_rel), arrow = arrow(length = unit(0.2,"cm")), col="red", lty=1, angle = 100, curvature = .25) +
-  scale_linewidth(range=c(0,1), limits = c(0,1)) + scale_alpha(range=c(0,1), limits = c(0,1))
+gg_spe = gg_spe + geom_curve(data=events_tran_coords %>% filter(n_rel >= .5), aes(x=x,y=y, xend=x_end,yend=y_end, alpha=n_rel, linewidth=n_rel), arrow = arrow(length = unit(0.1,"cm")), col="red", lty=1, angle = 100, curvature = .25) +
+  scale_linewidth(range=c(0,.5), limits = c(0,1)) + scale_alpha(range=c(0,1), limits = c(0,1))
 
 
 annot_names = spe %>% rownames_to_column() %>% reshape2::melt(.) %>% filter(grepl("Prevo", variable)) %>% group_by(variable) %>% summarise(mean=mean(value)) %>% arrange(-mean) %>% filter(!grepl("_spGreat|_sp[0-9]+", variable)) %>% head(10) %>% pull(variable) %>% as.vector()
 
-panel_c = gg_spe + geom_text(data= . %>% filter(isTip, species %in% annot_names), aes(label=species, x=.42), angle=0, size=3, hjust=0, vjust=0) + geom_segment(data= . %>% filter(isTip, species %in% annot_names), aes(x=x+0.005, xend=.41, yend=y), lty=3, col="grey") + geom_point(data=data.frame(x=0.6,y=0),color="white") + 
-  theme(legend.position = c(0.1,.85), legend.direction = "vertical") + 
-  guides(shape=guide_none(), alpha = guide_legend(title="Frequency"), color=guide_legend(title="Host Genus"), linewidth=guide_none(), size=guide_none(), ncol=2) 
+panel_c = gg_spe + geom_text(data= . %>% filter(isTip, species %in% annot_names), aes(label=species, x=-.42), angle=45, size=1.8, hjust=1, vjust=0) + geom_segment(data= . %>% filter(isTip, species %in% annot_names), aes(x=x+0.01, xend=-.41, yend=y), lty=3, col="grey") + geom_point(data=data.frame(x=-0.6,y=0),color="white") + 
+  theme(legend.position = c(0.05,.2), legend.direction = "vertical", legend.title = element_text(size=7), legend.text = element_text(size=6), legend.spacing.y = unit(0.02, 'cm'), legend.key.size = unit(0.2, 'lines')) + 
+  guides(shape=guide_none(), alpha = guide_legend(title="Frequency"), color=guide_legend(title="Host Genus"), linewidth=guide_none(), size=guide_none(), ncol=3) +
+  coord_flip()
 
 
-
+genestats=read_tsv("../../../220303_Analysis_New/data_w_dk/dtl_stats_singlecopy.out",col_names=c("gene","n_total","n_nonhuman","n_transfers","n_losses","trans_stand","loss_stand","trans_loss")) %>%
+  mutate(rank_transfers = rank(trans_stand), rank_losses = rank(loss_stand), perc_transfers = rank(trans_stand)/735, perc_losses = rank(loss_stand)/735)
+  
+  
 ```
 
 
@@ -283,7 +288,7 @@ panel_c = gg_spe + geom_text(data= . %>% filter(isTip, species %in% annot_names)
 lege=get_legend(ggplot(phylumcols_df %>% filter(phylum %in% meta_plot_data$phylum), aes(col=phylum, x=1,y=1)) + 
                   geom_point() + 
                   scale_color_manual(breaks=phylumcols_df$phylum, values=phylumcols_df$col) + 
-                  theme(legend.title = element_text(size=12), legend.text  = element_text(size=10), legend.spacing.y = unit(0.2, 'cm'), legend.key.size = unit(1, 'lines')) + guides(color=guide_legend(title="Phylum", ncol = 2)))
+                  theme(legend.title = element_text(size=6), legend.text  = element_text(size=5), legend.spacing.y = unit(0.01, 'cm'), legend.key.size = unit(0.2, 'lines')) + guides(color=guide_legend(title="Phylum", ncol = 2)))
 
 plot4 = plot_grid(
     plot_grid(panel_a + theme(legend.position = "none"), 
@@ -294,9 +299,21 @@ plot4 = plot_grid(
                       rel_heights=c(0.45,0.15,.45)),
 panel_c, labels=c("","c"))
 
+
+lege2=get_legend(ggplot(phylumcols_df %>% filter(phylum %in% meta_plot_data$phylum), aes(col=phylum, x=1,y=1)) + 
+                  geom_point() + 
+                  scale_color_manual(breaks=phylumcols_df$phylum, values=phylumcols_df$col) + 
+                  theme(legend.title = element_text(size=6), legend.text  = element_text(size=5), legend.spacing.y = unit(0.01, 'cm'), legend.key.size = unit(0.2, 'lines')) + guides(color=guide_legend(title="Host / Phylum", ncol = 1)))
+
+
+plot4_new = plot_grid(
+    plot_grid(panel_a + theme(legend.position = c(.15,.7), legend.title = element_text(size=6), legend.text  = element_text(size=5), legend.spacing.y = unit(0.01, 'cm'), legend.key.size = unit(0.2, 'lines'), axis.ticks = element_blank()) + guides(color=guide_legend(title="Host / Phylum", ncol = 1)), ncol=2, rel_widths=c(2,1), panel_b, labels=c("a","b")),
+    panel_c, ncol=1, rel_widths = c(.4,.4,.4), labels = c("","c"))
+
 plot4
 
-ggsave(filename = "figures_and_tables/Figure_4_new.png", plot4, height=10, width=10, bg="white")
+#ggsave(filename = "figures_and_tables/Figure_4_new.png", plot4, height=10, width=10, bg="white")
+ggsave(filename = "figures_and_tables/Figure_4_pub.pdf", plot4_new, height=120, width=180, bg="white", unit="mm")
 
 ```
 
